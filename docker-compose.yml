@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  lodge.api:
+    image: ${DOCKER_REGISTRY-}lodgeapi
+    build:
+      context: .
+      dockerfile: Lodge.Api/Dockerfile
