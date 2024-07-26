@@ -11,5 +11,5 @@ public interface IPasswordHashChecker
     /// <param name="passwordHash">The password hash.</param>
     /// <param name="providedPassword">The provided password hash.</param>
     /// <returns>True if the password hashes match, otherwise false.</returns>
-    bool HashesMatch(string passwordHash, string providedPassword);
+    bool HashesMatch(string? passwordHash, string? providedPassword);
 }
