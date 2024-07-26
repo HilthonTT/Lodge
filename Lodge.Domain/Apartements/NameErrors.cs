@@ -9,9 +9,9 @@ public static class NameErrors
 {
     public static readonly Error Empty = Error.Problem(
         "Name.Empty",
-        "The Name cannot be empty");
+        "The name cannot be empty");
 
     public static readonly Error TooLong = Error.Problem(
         "Name.TooLong",
-        "The Name exceeds the 256 characters limit");
+        "The name exceeds the 256 characters limit");
 }

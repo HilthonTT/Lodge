@@ -73,4 +73,22 @@ public static class Ensure
             throw new ArgumentOutOfRangeException(paramName);
         }
     }
+
+    /// <summary>
+    /// Ensures that the start date <see cref="DateOnly"/> doesn't precede the end date <see cref="DateOnly"/>.
+    /// </summary>
+    /// <param name="start">The start date.</param>
+    /// <param name="end">The end date.</param>
+    /// <param name="paramName">The name of the parameter being checked.</param>
+    /// <exception cref="ArgumentOutOfRangeException">if the start date precedes the end date</exception>
+    public static void StartDatePrecedesEndDate(
+        DateOnly start,
+        DateOnly end,
+        [CallerArgumentExpression("end")] string? paramName = default)
+    {
+        if (start >= end)
+        {
+            throw new ArgumentOutOfRangeException(paramName);
+        }
+    }
 }

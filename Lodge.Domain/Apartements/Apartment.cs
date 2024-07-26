@@ -5,6 +5,9 @@ using Lodge.Domain.Shared;
 
 namespace Lodge.Domain.Apartements;
 
+/// <summary>
+/// Represents the apartment entity.
+/// </summary>
 public sealed class Apartment : Entity, IAuditableEntity
 {
     /// <summary>
@@ -16,6 +19,7 @@ public sealed class Apartment : Entity, IAuditableEntity
     /// <param name="address">The apartment's address.</param>
     /// <param name="price">The apartment's price.</param>
     /// <param name="cleaningFee">The apartment's cleaning fee.</param>
+    /// <param name="imageId">The apartment's image id.</param>
     /// <param name="amenities">The apartment's amenities.</param>
     private Apartment(
         Guid id,
@@ -24,6 +28,7 @@ public sealed class Apartment : Entity, IAuditableEntity
         Address address,
         Money price,
         Money cleaningFee,
+        Guid imageId,
         List<Amenity> amenities)
         : base(id)
     {
@@ -32,11 +37,12 @@ public sealed class Apartment : Entity, IAuditableEntity
         Address = address;
         Price = price;
         CleaningFee = cleaningFee;
+        ImageId = imageId;
         Amenities = amenities;
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="Apartment"/> class.
+    /// Initializes a new blank instance of the <see cref="Apartment"/> class.
     /// </summary>
     /// <remarks>
     /// Required by EF Core.
@@ -55,6 +61,8 @@ public sealed class Apartment : Entity, IAuditableEntity
 
     public Money CleaningFee { get; private set; }
 
+    public Guid ImageId { get; private set; }
+
     public DateTime? LastBookedOnUtc  { get; internal set; }
 
     public List<Amenity> Amenities { get; private set; } = [];
@@ -71,14 +79,16 @@ public sealed class Apartment : Entity, IAuditableEntity
     /// <param name="address">The address.</param>
     /// <param name="price">The price.</param>
     /// <param name="cleaningFee">The cleaning fee.</param>
+    /// <param name="imageId">The apartment's image id.</param>
     /// <param name="amenities">The amenities.</param>
-    /// <returns>The newly created apartment instance</returns>
+    /// <returns>The newly created apartment instance.</returns>
     public static Apartment Create(
         Name name, 
         Description description, 
         Address address, 
         Money price, 
         Money cleaningFee, 
+        Guid imageId,
         List<Amenity> amenities)
     {
         var apartment = new Apartment(
@@ -88,6 +98,7 @@ public sealed class Apartment : Entity, IAuditableEntity
             address,
             price,
             cleaningFee,
+            imageId,
             amenities);
 
         apartment.RaiseDomainEvent(new ApartmentCreatedDomainEvent(apartment.Id));

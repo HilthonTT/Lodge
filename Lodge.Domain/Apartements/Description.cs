@@ -14,10 +14,10 @@ public sealed record Description
     public string Value { get; }
 
     /// <summary>
-    /// Creates a new description value object with the specified value
+    /// Creates a new description value object with the specified value.
     /// </summary>
-    /// <param name="value">The value</param>
-    /// <returns>The newly created description result</returns>
+    /// <param name="value">The value.</param>
+    /// <returns>The newly created description result.</returns>
     public static Result<Description> Create(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))

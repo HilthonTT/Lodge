@@ -14,10 +14,10 @@ public sealed record Name
     public string Value { get; }
 
     /// <summary>
-    /// Creates a new name value object with the specified value
+    /// Creates a new name value object with the specified value.
     /// </summary>
-    /// <param name="value">The value</param>
-    /// <returns>The newly created name result</returns>
+    /// <param name="value">The value.</param>
+    /// <returns>The newly created name result.</returns>
     public static Result<Name> Create(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
