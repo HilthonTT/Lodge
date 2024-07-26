@@ -7,17 +7,29 @@ namespace Lodge.Domain.Reviews;
 /// </summary>
 public sealed record Comment
 {
+    /// <summary>
+    /// The comment maximum length.
+    /// </summary>
     public const int MaxLength = 500;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Comment"/> record.
+    /// </summary>
+    /// <param name="value">The comment value.</param>
     private Comment(string value) => Value = value;
 
+    /// <summary>
+    /// Gets the comment value.
+    /// </summary>
     public string Value { get; }
 
     /// <summary>
-    /// Creates a new comment value object with the specified value.
+    /// Creates a new <see cref="Comment"/> instance based on the specified value.
     /// </summary>
-    /// <param name="value">The value.</param>
-    /// <returns>The newly created comment result.</returns>
+    /// <param name="value">The comment value.</param>
+    /// <returns>
+    /// The result of the comment creation process containing the comment or an error.
+    /// </returns>
     public static Result<Comment> Create(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
