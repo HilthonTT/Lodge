@@ -49,7 +49,7 @@ internal sealed class PasswordHasher : IPasswordHasher, IPasswordHashChecker
     /// </summary>
     /// <param name="password">The password to be hashed.</param>
     /// <returns>The bytes of the hash for the specified password.</returns>
-    private byte[] HashPasswordInternal(string password)
+    private static byte[] HashPasswordInternal(string password)
     {
         byte[] salt = GetRandomSalt();
 
