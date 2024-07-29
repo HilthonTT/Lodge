@@ -2,4 +2,4 @@
 
 namespace Lodge.Domain.Users.Events;
 
-public sealed record UserPasswordChangedDomainEvent(User user) : IDomainEvent;
+public sealed record UserPasswordChangedDomainEvent(User User) : IDomainEvent;

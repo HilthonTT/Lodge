@@ -25,10 +25,10 @@ public sealed class MessageBrokerSettings
     /// <summary>
     /// Gets or sets the password.
     /// </summary>
-    public string Password { get; private set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the password.
+    /// Gets or sets the queue name.
     /// </summary>
     public string QueueName { get; set; } = string.Empty;
 }
