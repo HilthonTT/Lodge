@@ -6,6 +6,7 @@ using Lodge.Domain.Reviews;
 using Lodge.Domain.Users;
 using Lodge.Persistence.Infrastructure;
 using Lodge.Persistence.Interceptors;
+using Lodge.Persistence.Outbox;
 using Lodge.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -27,6 +28,7 @@ public static class DependencyInjection
     {
         services.AddSingleton<UpdateAuditableEntitiesInterceptor>();
         services.AddSingleton<SoftDeleteEntitiesInterceptor>();
+        services.AddSingleton<InsertOutboxMessagesInterceptor>();
 
         string? connectionString = configuration.GetConnectionString(ConnectionString.SettingsKey);
 
@@ -41,7 +43,8 @@ public static class DependencyInjection
             .UseSnakeCaseNamingConvention()
             .AddInterceptors(
                 sp.GetRequiredService<UpdateAuditableEntitiesInterceptor>(),
-                sp.GetRequiredService<SoftDeleteEntitiesInterceptor>());
+                sp.GetRequiredService<SoftDeleteEntitiesInterceptor>(),
+                sp.GetRequiredService<InsertOutboxMessagesInterceptor>());
         });
 
         services.AddSingleton<IDbConnectionFactory>(_ =>
