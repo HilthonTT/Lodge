@@ -1,3 +1,4 @@
+using Lodge.Application;
 using Lodge.Infrastructure;
 using Lodge.Persistence;
 
@@ -8,7 +9,8 @@ builder.Services.AddSwaggerGen();
 
 builder.Services
     .AddInfrastructure(builder.Configuration)
-    .AddPersistence(builder.Configuration);
+    .AddPersistence(builder.Configuration)
+    .AddApplication();
 
 WebApplication app = builder.Build();
 
@@ -19,5 +21,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
+
+app.UseAuthorization();
 
 app.Run();

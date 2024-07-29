@@ -1,8 +1,60 @@
 version: '3.4'
 
 services:
-  lodge.api:
+  lodge-api:
     image: ${DOCKER_REGISTRY-}lodgeapi
+    container_name: lodge.api
     build:
       context: .
       dockerfile: Lodge.Api/Dockerfile
+    ports:
+      - 5000:5000
+      - 5001:5001 
+
+  lodge-database:
+    image: postgres:latest
+    container_name: lodge.database
+    environment:
+      - POSTGRES_DB=lodge
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./.containers/db:var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
+  lodge-queue:
+    image: rabbitmq:management
+    container_name: lodge.queue
+    hostname: lodge-mq
+    volumes:
+      - ./.containers/queue/data/:/var/lib/rabbitmq
+      - ./.containers/queue/log/:/var/log/rabbitmq
+    environment:
+        RABBITMQ_DEFAULT_USER: guest
+        RABBITMQ_DEFAULT_PASS: guest
+
+  lodge-redis:
+    image: redis:latest
+    container_name: lodge.redis
+    restart: always
+    ports:
+      - 6379:6379
+
+  lodge-blob-storage:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    container_name: lodge.blob-storage
+    volumes:
+      - ./.containers/blob_storage/data:/data
+    ports:
+      - "10000:10000"
+    command: "azurite-blob --blobHost 0.0.0.0 -l /data"
+
+  lodge-seq:
+    image: datalust/seq:latest
+    container_name: lodge.seq
+    environment:
+      - ACCEPT_EULA=Y
+    ports:
+      - 5341:5341
+      - 8081:80

@@ -77,12 +77,12 @@ public sealed class User : Entity, IAuditableEntity, ISoftDeletableEntity
     /// <param name="email">The email.</param>
     /// <param name="passwordHash">The password hash.</param>
     /// <returns>The newly created user instance.</returns>
-    public static User Crate(
+    public static User Create(
         FirstName firstName, 
         LastName lastName, 
         Email email, 
         string passwordHash, 
-        Guid? imageId)
+        Guid? imageId = null)
     {
         var user = new User(
             Guid.NewGuid(),

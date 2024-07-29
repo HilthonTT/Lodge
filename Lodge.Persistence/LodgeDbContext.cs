@@ -5,7 +5,6 @@ using Lodge.Domain.Reviews;
 using Lodge.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using System.Data;
 
 namespace Lodge.Persistence;
 
@@ -25,10 +24,10 @@ internal sealed class LodgeDbContext(DbContextOptions<LodgeDbContext> options)
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(LodgeDbContext).Assembly);
     }
 
-    public async Task<IDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+    public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
         IDbContextTransaction transaction = await Database.BeginTransactionAsync(cancellationToken);
 
-        return transaction.GetDbTransaction();
+        return transaction;
     }
 }

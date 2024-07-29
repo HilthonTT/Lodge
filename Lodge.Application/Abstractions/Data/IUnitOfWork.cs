@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using Microsoft.EntityFrameworkCore.Storage;
+using System.Data;
 
 namespace Lodge.Application.Abstractions.Data;
 
@@ -19,5 +20,5 @@ public interface IUnitOfWork
     /// </summary>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The new database context transaction.</returns>
-    Task<IDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
+    Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
 }

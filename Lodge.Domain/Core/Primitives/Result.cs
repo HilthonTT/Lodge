@@ -78,6 +78,27 @@ public class Result
     /// </remarks>
     public static Result<TValue> Failure<TValue>(Error error) =>
         new(default, false, error);
+
+    /// <summary>
+    /// Returns the first failure from the specified <paramref name="results"/>.
+    /// If there is no failure, a success is returned.
+    /// </summary>
+    /// <param name="results">The results array.</param>
+    /// <returns>
+    /// The first failure from the specified <paramref name="results"/> array, or a success it does not exist.
+    /// </returns>
+    public static Result FirstFailureOrSuccess(params Result[] results)
+    {
+        foreach (Result result in results)
+        {
+            if (result.IsFailure)
+            {
+                return result;
+            }
+        }
+
+        return Success();
+    }
 }
 
 /// <summary>
