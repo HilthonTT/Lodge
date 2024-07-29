@@ -1,5 +1,4 @@
-﻿using Lodge.Domain.Core.Primitives.Maybe;
-using Lodge.Domain.Users;
+﻿using Lodge.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lodge.Persistence.Repositories;
@@ -11,15 +10,15 @@ namespace Lodge.Persistence.Repositories;
 internal sealed class UserRepository(LodgeDbContext context) : IUserRepository
 {
     /// <inheritdoc />
-    public async Task<Maybe<User?>> GetByEmailAsync(Email email, CancellationToken cancellationToken = default)
+    public Task<User?> GetByEmailAsync(Email email, CancellationToken cancellationToken = default)
     {
-        return await context.Users.FirstOrDefaultAsync(user => user.Email.Value == email.Value, cancellationToken);
+        return context.Users.FirstOrDefaultAsync(user => user.Email.Value == email.Value, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<Maybe<User?>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await context.Users.FirstOrDefaultAsync(user => user.Id == id, cancellationToken);
+        return context.Users.FirstOrDefaultAsync(user => user.Id == id, cancellationToken);
     }
 
     /// <inheritdoc />

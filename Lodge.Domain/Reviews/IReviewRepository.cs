@@ -1,6 +1,4 @@
-﻿using Lodge.Domain.Core.Primitives.Maybe;
-
-namespace Lodge.Domain.Reviews;
+﻿namespace Lodge.Domain.Reviews;
 
 /// <summary>
 /// Represents the review repository interface
@@ -12,8 +10,8 @@ public interface IReviewRepository
     /// </summary>
     /// <param name="id">The review identifier.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>The maybe instance that may contain the review with the specified identifier.</returns>
-    Task<Maybe<Review?>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    /// <returns>The instance that may contain the review with the specified identifier.</returns>
+    Task<Review?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Checks if a user has already reviewed a specified apartment.

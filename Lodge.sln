@@ -19,7 +19,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lodge.Infrastructure", "Lod
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lodge.Contracts", "Lodge.Contracts\Lodge.Contracts.csproj", "{039ACF2F-88C0-463D-B2FD-A9C3087977A0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lodge.Persistence", "Lodge.Persistence\Lodge.Persistence.csproj", "{ADE41C67-4229-40CE-85FB-E4B3E7D7B9BA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lodge.Persistence", "Lodge.Persistence\Lodge.Persistence.csproj", "{ADE41C67-4229-40CE-85FB-E4B3E7D7B9BA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lodge.BackgroundTasks", "Lodge.BackgroundTasks\Lodge.BackgroundTasks.csproj", "{5CC0EA3E-04FD-4E7A-ADA9-CC64579E4D42}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -55,6 +57,10 @@ Global
 		{ADE41C67-4229-40CE-85FB-E4B3E7D7B9BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ADE41C67-4229-40CE-85FB-E4B3E7D7B9BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ADE41C67-4229-40CE-85FB-E4B3E7D7B9BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5CC0EA3E-04FD-4E7A-ADA9-CC64579E4D42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5CC0EA3E-04FD-4E7A-ADA9-CC64579E4D42}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5CC0EA3E-04FD-4E7A-ADA9-CC64579E4D42}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5CC0EA3E-04FD-4E7A-ADA9-CC64579E4D42}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -66,6 +72,7 @@ Global
 		{AB251439-D0DE-4C20-8D62-7A8A2799505C} = {DDBC697E-B6FB-4DA8-B9C4-26A4C4A40BA3}
 		{039ACF2F-88C0-463D-B2FD-A9C3087977A0} = {DDBC697E-B6FB-4DA8-B9C4-26A4C4A40BA3}
 		{ADE41C67-4229-40CE-85FB-E4B3E7D7B9BA} = {DDBC697E-B6FB-4DA8-B9C4-26A4C4A40BA3}
+		{5CC0EA3E-04FD-4E7A-ADA9-CC64579E4D42} = {DDBC697E-B6FB-4DA8-B9C4-26A4C4A40BA3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4BE4A85F-5DA6-4767-9A18-21D604B037D2}

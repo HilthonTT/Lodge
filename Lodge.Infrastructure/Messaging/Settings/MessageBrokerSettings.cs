@@ -3,7 +3,7 @@
 /// <summary>
 /// Represents the message broker settings.
 /// </summary>
-internal sealed class MessageBrokerSettings
+public sealed class MessageBrokerSettings
 {
     public const string SettingsKey = "MessageBroker";
 

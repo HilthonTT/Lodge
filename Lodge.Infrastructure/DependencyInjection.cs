@@ -1,4 +1,5 @@
 ﻿using Azure.Storage.Blobs;
+using Lodge.Application.Abstractions.Authentication;
 using Lodge.Application.Abstractions.Caching;
 using Lodge.Application.Abstractions.Cryptography;
 using Lodge.Application.Abstractions.Emails;
@@ -8,6 +9,7 @@ using Lodge.Application.Abstractions.Storage;
 using Lodge.Domain.Core.Guards;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Domain.Users;
+using Lodge.Infrastructure.Authentication;
 using Lodge.Infrastructure.Authentication.Settings;
 using Lodge.Infrastructure.Caching;
 using Lodge.Infrastructure.Cryptography;
@@ -37,6 +39,7 @@ public static class DependencyInjection
     /// <returns>The same service collection.</returns>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddHttpContextAccessor();
         services.AddTransient<IDateTimeProvider, DateTimeProvider>();
 
         AddAuthentication(services, configuration);
@@ -77,9 +80,13 @@ public static class DependencyInjection
                 };
             });
 
+        services.AddAuthorization();
+
         services.AddTransient<IPasswordHasher, PasswordHasher>();
 
         services.AddTransient<IPasswordHashChecker, PasswordHasher>();
+
+        services.AddScoped<IJwtProvider, JwtProvider>();
     }
 
     /// <summary>

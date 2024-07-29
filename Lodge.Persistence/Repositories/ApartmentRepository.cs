@@ -1,5 +1,4 @@
 ﻿using Lodge.Domain.Apartements;
-using Lodge.Domain.Core.Primitives.Maybe;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lodge.Persistence.Repositories;
@@ -11,9 +10,9 @@ namespace Lodge.Persistence.Repositories;
 internal sealed class ApartmentRepository(LodgeDbContext context) : IApartmentRepository
 {
     /// <inheritdoc />
-    public async Task<Maybe<Apartment?>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<Apartment?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await context.Apartments.FirstOrDefaultAsync(apartment => apartment.Id == id, cancellationToken);
+        return context.Apartments.FirstOrDefaultAsync(apartment => apartment.Id == id, cancellationToken);
     }
 
     /// <inheritdoc />

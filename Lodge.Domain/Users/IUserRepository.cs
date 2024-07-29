@@ -1,6 +1,4 @@
-﻿using Lodge.Domain.Core.Primitives.Maybe;
-
-namespace Lodge.Domain.Users;
+﻿namespace Lodge.Domain.Users;
 
 /// <summary>
 /// Represents the user repository interface.
@@ -12,16 +10,16 @@ public interface IUserRepository
     /// </summary>
     /// <param name="id">The user identifier.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>The maybe instance that may contain the user with the specified identifier.</returns>
-    Task<Maybe<User?>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    /// <returns>The instance that may contain the user with the specified identifier.</returns>
+    Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the user with the specified email.
     /// </summary>
     /// <param name="email">The user email.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>The maybe instance that may contain the user with specified email.</returns>
-    Task<Maybe<User?>> GetByEmailAsync(Email email, CancellationToken cancellationToken = default);
+    /// <returns>The instance that may contain the user with specified email.</returns>
+    Task<User?> GetByEmailAsync(Email email, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Checks if the specified email is unique.
@@ -31,5 +29,9 @@ public interface IUserRepository
     /// <returns>True if the specified email is unique, otherwise false.</returns>
     Task<bool> IsEmailUniqueAsync(Email email, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Inserts a user.
+    /// </summary>
+    /// <param name="user">The user to be inserted.</param>
     void Insert(User user);
 }

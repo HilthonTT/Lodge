@@ -19,7 +19,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     volumes:
-      - ./.containers/db:var/lib/postgresql/data
+      - ./.containers/db:/var/lib/postgresql/data
     ports:
       - 5432:5432
 
@@ -31,8 +31,8 @@ services:
       - ./.containers/queue/data/:/var/lib/rabbitmq
       - ./.containers/queue/log/:/var/log/rabbitmq
     environment:
-        RABBITMQ_DEFAULT_USER: guest
-        RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
 
   lodge-redis:
     image: redis:latest

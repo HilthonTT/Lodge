@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Lodge.Persistence;
 
-internal sealed class LodgeDbContext(DbContextOptions<LodgeDbContext> options)
+public sealed class LodgeDbContext(DbContextOptions<LodgeDbContext> options)
     : DbContext(options), IUnitOfWork
 {
     public DbSet<User> Users { get; set; }

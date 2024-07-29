@@ -16,11 +16,14 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
+    <PackageReference Include="Serilog.Sinks.Seq" Version="8.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Lodge.Application\Lodge.Application.csproj" />
+    <ProjectReference Include="..\Lodge.BackgroundTasks\Lodge.BackgroundTasks.csproj" />
     <ProjectReference Include="..\Lodge.Domain\Lodge.Domain.csproj" />
     <ProjectReference Include="..\Lodge.Infrastructure\Lodge.Infrastructure.csproj" />
     <ProjectReference Include="..\Lodge.Persistence\Lodge.Persistence.csproj" />

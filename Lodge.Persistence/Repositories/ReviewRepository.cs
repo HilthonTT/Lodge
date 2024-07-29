@@ -1,5 +1,4 @@
-﻿using Lodge.Domain.Core.Primitives.Maybe;
-using Lodge.Domain.Reviews;
+﻿using Lodge.Domain.Reviews;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lodge.Persistence.Repositories;
@@ -11,9 +10,9 @@ namespace Lodge.Persistence.Repositories;
 internal sealed class ReviewRepository(LodgeDbContext context) : IReviewRepository
 {
     /// <inheritdoc />
-    public async Task<Maybe<Review?>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<Review?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await context.Reviews.FirstOrDefaultAsync(review =>  review.Id == id, cancellationToken);
+        return context.Reviews.FirstOrDefaultAsync(review =>  review.Id == id, cancellationToken);
     }
 
     /// <inheritdoc />
