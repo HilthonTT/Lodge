@@ -13,7 +13,7 @@ public interface IReviewRepository
     /// <param name="id">The review identifier.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The maybe instance that may contain the review with the specified identifier.</returns>
-    Task<Maybe<Review>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Maybe<Review?>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Checks if a user has already reviewed a specified apartment.

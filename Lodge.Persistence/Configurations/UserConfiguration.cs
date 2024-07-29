@@ -38,6 +38,10 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
             emailBuilder.Property(email => email.Value)
                 .HasMaxLength(Email.MaxLength)
                 .IsRequired();
+
+            emailBuilder
+                .HasIndex(emailValue => emailValue.Value)
+                .IsUnique();
         });
 
         builder.Property<string>("_passwordHash")

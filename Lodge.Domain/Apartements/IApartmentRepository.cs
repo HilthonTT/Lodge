@@ -13,7 +13,7 @@ public interface IApartmentRepository
     /// <param name="id">The apartment identifier.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The maybe instance that may contain the apartment with the specified identifier.</returns>
-    Task<Maybe<Apartment>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Maybe<Apartment?>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Inserts the specified apartment to the database.

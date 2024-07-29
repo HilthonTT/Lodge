@@ -6,7 +6,7 @@
 /// <typeparam name="T">The value type.</typeparam>
 public sealed class Maybe<T> : IEquatable<Maybe<T>>
 {
-    private readonly T _value;
+    private readonly T? _value;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Maybe{T}"/> class.
@@ -27,7 +27,7 @@ public sealed class Maybe<T> : IEquatable<Maybe<T>>
     /// <summary>
     /// Gets the value.
     /// </summary>
-    public T Value => HasValue
+    public T? Value => HasValue
         ? _value
         : throw new InvalidOperationException("The value can not be accessed because it does not exist.");
 
@@ -45,7 +45,7 @@ public sealed class Maybe<T> : IEquatable<Maybe<T>>
 
     public static implicit operator Maybe<T>(T value) => From(value);
 
-    public static implicit operator T(Maybe<T> maybe) => maybe.Value;
+    public static implicit operator T?(Maybe<T> maybe) => maybe.HasValue ? maybe.Value : default;
 
     /// <inheritdoc />
     public bool Equals(Maybe<T>? other)

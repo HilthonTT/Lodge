@@ -1,11 +1,17 @@
 ﻿using Lodge.Application.Abstractions.Data;
+using Lodge.Domain.Apartements;
+using Lodge.Domain.Bookings;
 using Lodge.Domain.Core.Guards;
+using Lodge.Domain.Reviews;
+using Lodge.Domain.Users;
 using Lodge.Persistence.Infrastructure;
 using Lodge.Persistence.Interceptors;
+using Lodge.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 
 namespace Lodge.Persistence;
 
@@ -38,7 +44,15 @@ public static class DependencyInjection
                 sp.GetRequiredService<SoftDeleteEntitiesInterceptor>());
         });
 
+        services.AddSingleton<IDbConnectionFactory>(_ =>
+            new DbConnectionFactory(new NpgsqlDataSourceBuilder(connectionString).Build()));
+
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<LodgeDbContext>());
+
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IApartmentRepository, ApartmentRepository>();
+        services.AddScoped<IBookingRepository, BookingRepository>();
+        services.AddScoped<IReviewRepository, ReviewRepository>();
 
         return services;
     }

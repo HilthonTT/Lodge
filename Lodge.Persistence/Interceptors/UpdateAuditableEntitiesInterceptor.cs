@@ -5,8 +5,13 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Lodge.Persistence.Interceptors;
 
+/// <summary>
+/// Represents the update auditable interceptor managing the entities
+/// implementing the <see cref="IAuditableEntity"/> interface.
+/// </summary>
 internal sealed class UpdateAuditableEntitiesInterceptor : SaveChangesInterceptor
 {
+    /// <inheritdoc />
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData, 
         InterceptionResult<int> result, 
@@ -20,6 +25,10 @@ internal sealed class UpdateAuditableEntitiesInterceptor : SaveChangesIntercepto
         return base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
+    /// <summary>
+    /// Updates the entities implementing the <see cref="IAuditableEntity"/> interface.
+    /// </summary>
+    /// <param name="context">The database context.</param>
     private static void UpdateAuditableEntities(DbContext context)
     {
         DateTime utcNow = DateTime.UtcNow;

@@ -14,7 +14,7 @@ public interface IBookingRepository
     /// <param name="id">The booking identifier.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The maybe instance that may contain the booking with the specified identifier.</returns>
-    Task<Maybe<Booking>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Maybe<Booking?>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Checks if a booking is overlapping with the specified apartment and duration.
