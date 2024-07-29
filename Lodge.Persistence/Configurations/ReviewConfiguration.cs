@@ -16,24 +16,12 @@ internal sealed class ReviewConfiguration : IEntityTypeConfiguration<Review>
     {
         builder.HasKey(review => review.Id);
 
-        builder.OwnsOne(review => review.Rating, ratingBuilder =>
-        {
-            ratingBuilder.WithOwner();
+        builder.Property(review => review.Rating)
+            .HasConversion(rating => rating.Value, value => Rating.Create(value).Value);
 
-            ratingBuilder.Property(rating => rating)
-                .HasConversion(rating => rating.Value, value => Rating.Create(value).Value)
-                .IsRequired();
-        });
-
-        builder.OwnsOne(review => review.Comment, commentBuilder =>
-        {
-            commentBuilder.WithOwner();
-
-            commentBuilder.Property(comment => comment)
-                .HasConversion(comment => comment.Value, value => Comment.Create(value).Value)
-                .HasMaxLength(Comment.MaxLength)
-                .IsRequired();
-        });
+        builder.Property(review => review.Comment)
+            .HasMaxLength(Comment.MaxLength)
+            .HasConversion(comment => comment.Value, value => Comment.Create(value).Value);
 
         builder.HasOne<Apartment>()
             .WithMany()

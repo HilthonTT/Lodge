@@ -19,6 +19,16 @@ public sealed record DateRange
     }
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="DateRange"/> record.
+    /// </summary>
+    /// <remarks>
+    /// Required by EF Core.
+    /// </remarks>
+    private DateRange()
+    {
+    }
+
+    /// <summary>
     /// Gets the start date.
     /// </summary>
     public DateOnly Start { get; }
