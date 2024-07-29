@@ -1,5 +1,7 @@
 ﻿using Lodge.Application.Abstractions.Behaviors;
 using Microsoft.Extensions.DependencyInjection;
+using FluentValidation;
+using System.Reflection;
 
 namespace Lodge.Application;
 
@@ -12,11 +14,19 @@ public static class DependencyInjection
     /// <returns>The same service collection.</returns>
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
+        Assembly assembly = typeof(DependencyInjection).Assembly;
+
+        services.AddValidatorsFromAssembly(assembly, includeInternalTypes: true);
+
         services.AddMediatR(config =>
         {
-            config.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly);
+            config.RegisterServicesFromAssembly(assembly);
 
+            config.AddOpenBehavior(typeof(ExceptionHandlingPipelineBehavior<,>));
+            config.AddOpenBehavior(typeof(RequestLoggingPipelineBehavior<,>));
+            config.AddOpenBehavior(typeof(ValidationPipelineBehavior<,>));
             config.AddOpenBehavior(typeof(UnitOfWorkPipelineBehavior<,>));
+            config.AddOpenBehavior(typeof(QueryCachingPipelineBehavior<,>));
         });
 
         return services;
