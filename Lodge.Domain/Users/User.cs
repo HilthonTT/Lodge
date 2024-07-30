@@ -121,7 +121,7 @@ public sealed class User : Entity, IAuditableEntity, ISoftDeletableEntity
     }
 
     /// <summary>
-    /// Changes the users first and last name.
+    /// Changes the user's first and last name.
     /// </summary>
     /// <param name="firstName">The new first name.</param>
     /// <param name="lastName">The new last name.</param>
@@ -135,5 +135,16 @@ public sealed class User : Entity, IAuditableEntity, ISoftDeletableEntity
         LastName = lastName;
 
         RaiseDomainEvent(new UserNameChangedDomainEvent(this));
+    }
+
+    /// <summary>
+    /// Changes the user's image identifier.
+    /// </summary>
+    /// <param name="imageId">The image identifier.</param>
+    public void ChangeImage(Guid imageId)
+    {
+        Ensure.NotNullOrEmpty(imageId.ToString(), "The image id is required");
+
+        ImageId = imageId;
     }
 }

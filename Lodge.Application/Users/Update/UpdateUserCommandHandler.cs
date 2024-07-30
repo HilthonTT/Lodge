@@ -1,6 +1,7 @@
 ﻿using Lodge.Application.Abstractions.Authentication;
 using Lodge.Application.Abstractions.Data;
 using Lodge.Application.Abstractions.Messaging;
+using Lodge.Application.Abstractions.Storage;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Domain.Users;
 
@@ -11,10 +12,12 @@ namespace Lodge.Application.Users.Update;
 /// </summary>
 /// <param name="userIdentifierProvider">The user identifier provider.</param>
 /// <param name="userRepository">The user repository.</param>
+/// <param name="blobService">The blob service.</param>
 /// <param name="unitOfWork">The unit of work.</param>
 internal class UpdateUserCommandHandler(
     IUserIdentifierProvider userIdentifierProvider,
     IUserRepository userRepository,
+    IBlobService blobService,
     IUnitOfWork unitOfWork) : ICommandHandler<UpdateUserCommand>
 {
     public async Task<Result> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
@@ -42,8 +45,25 @@ internal class UpdateUserCommandHandler(
 
         user.ChangeName(firstNameResult.Value, lastNameResult.Value);
 
+        if (await ImageExistsAsync(request.ImageId, cancellationToken))
+        {
+            user.ChangeImage(request.ImageId!.Value);
+        }
+
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
+    }
+
+    private async Task<bool> ImageExistsAsync(Guid? imageId, CancellationToken cancellationToken)
+    {
+        if (!imageId.HasValue || imageId is null)
+        {
+            return false;
+        }
+
+        bool imageExists = await blobService.ExistsAsync(imageId.Value, cancellationToken);
+
+        return imageExists;
     }
 }
