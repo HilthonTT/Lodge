@@ -25,6 +25,11 @@ internal sealed class ValidationPipelineBehavior<TRequest, TResponse>(
     {
         ValidationFailure[] validationFailures = await ValidateAsync(request);
 
+        if (validationFailures.Length == 0)
+        {
+            return await next();
+        }
+
         if (typeof(TResponse).IsGenericType &&
             typeof(TResponse).GetGenericTypeDefinition() == typeof(Result<>))
         {

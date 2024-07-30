@@ -23,9 +23,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lodge.Persistence", "Lodge.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lodge.BackgroundTasks", "Lodge.BackgroundTasks\Lodge.BackgroundTasks.csproj", "{5CC0EA3E-04FD-4E7A-ADA9-CC64579E4D42}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "core", "core", "{D735B9AB-7629-4E25-B013-F8EB9567BD86}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "api", "api", "{D735B9AB-7629-4E25-B013-F8EB9567BD86}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lodge.Presentation", "Lodge.Presentation\Lodge.Presentation.csproj", "{642A0B38-F30D-4423-8DD2-01C45E1B2227}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lodge.Presentation", "Lodge.Presentation\Lodge.Presentation.csproj", "{642A0B38-F30D-4423-8DD2-01C45E1B2227}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

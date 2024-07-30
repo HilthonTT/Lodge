@@ -571,13 +571,13 @@ namespace Lodge.Persistence.Migrations
                                 .IsRequired()
                                 .HasMaxLength(256)
                                 .HasColumnType("character varying(256)")
-                                .HasColumnName("email_value");
+                                .HasColumnName("email");
 
                             b1.HasKey("UserId");
 
                             b1.HasIndex("Value")
                                 .IsUnique()
-                                .HasDatabaseName("ix_users_email_value");
+                                .HasDatabaseName("ix_users_email");
 
                             b1.ToTable("users");
 
@@ -596,7 +596,7 @@ namespace Lodge.Persistence.Migrations
                                 .IsRequired()
                                 .HasMaxLength(128)
                                 .HasColumnType("character varying(128)")
-                                .HasColumnName("first_name_value");
+                                .HasColumnName("first_name");
 
                             b1.HasKey("UserId");
 
@@ -617,7 +617,7 @@ namespace Lodge.Persistence.Migrations
                                 .IsRequired()
                                 .HasMaxLength(128)
                                 .HasColumnType("character varying(128)")
-                                .HasColumnName("last_name_value");
+                                .HasColumnName("last_name");
 
                             b1.HasKey("UserId");
 

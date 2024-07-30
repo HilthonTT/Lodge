@@ -30,6 +30,8 @@ internal sealed class UnitOfWorkPipelineBehavior<TRequest, TResponse>(IUnitOfWor
 
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
+            await transaction.CommitAsync(cancellationToken);
+
             return response;
         }
         catch (Exception)

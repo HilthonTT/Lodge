@@ -19,6 +19,7 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
             firstNameBuilder.Property(firstName => firstName.Value)
                 .HasMaxLength(FirstName.MaxLength)
+                .HasColumnName("first_name")
                 .IsRequired();
         });
 
@@ -28,6 +29,7 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
             lastNameBuilder.Property(lastName => lastName.Value)
                 .HasMaxLength(LastName.MaxLength)
+                .HasColumnName("last_name")
                 .IsRequired();
         });
 
@@ -37,6 +39,7 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
             emailBuilder.Property(email => email.Value)
                 .HasMaxLength(Email.MaxLength)
+                .HasColumnName("email")
                 .IsRequired();
 
             emailBuilder

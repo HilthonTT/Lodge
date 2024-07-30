@@ -20,7 +20,7 @@ internal sealed class MailSettings
     /// <summary>
     /// Gets or sets the SMTP password.
     /// </summary>
-    public string SmtpPassword { get; private set; } = string.Empty;
+    public string SmtpPassword { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the SMTP server.

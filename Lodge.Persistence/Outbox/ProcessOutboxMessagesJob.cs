@@ -92,9 +92,9 @@ internal sealed class ProcessOutboxMessagesJob(
                 content
             FROM outbox_messages
             WHERE processed_on_utc IS NULL
-            ORDER BY created_on_utc,
-            LIMIT = @BatchSize,
-            FOR UPDATED SKIP LOCKED
+            ORDER BY created_on_utc
+            LIMIT @BatchSize
+            FOR UPDATE SKIP LOCKED
             """;
 
         IEnumerable<OutboxMessageResponse> outboxMessages = await connection.QueryAsync<OutboxMessageResponse>(

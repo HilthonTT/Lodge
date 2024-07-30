@@ -6,6 +6,13 @@
 public interface IUserRepository
 {
     /// <summary>
+    /// Gets all the users.
+    /// </summary>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A list of users.</returns>
+    Task<List<User>> GetAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets the user with the specified user.
     /// </summary>
     /// <param name="id">The user identifier.</param>

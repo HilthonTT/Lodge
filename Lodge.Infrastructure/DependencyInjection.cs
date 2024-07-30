@@ -1,4 +1,6 @@
 ﻿using Azure.Storage.Blobs;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Lodge.Application.Abstractions.Authentication;
 using Lodge.Application.Abstractions.Caching;
 using Lodge.Application.Abstractions.Cryptography;
@@ -12,6 +14,7 @@ using Lodge.Domain.Users;
 using Lodge.Infrastructure.Authentication;
 using Lodge.Infrastructure.Authentication.Settings;
 using Lodge.Infrastructure.Caching;
+using Lodge.Infrastructure.Caching.Settings;
 using Lodge.Infrastructure.Cryptography;
 using Lodge.Infrastructure.Emails;
 using Lodge.Infrastructure.Emails.Settings;
@@ -47,6 +50,7 @@ public static class DependencyInjection
         AddMessaging(services, configuration);
         AddEmail(services, configuration);
         AddStorage(services, configuration);
+        AddBackgroundJobs(services, configuration);
 
         return services;
     }
@@ -87,6 +91,8 @@ public static class DependencyInjection
         services.AddTransient<IPasswordHashChecker, PasswordHasher>();
 
         services.AddScoped<IJwtProvider, JwtProvider>();
+
+        services.AddScoped<IUserIdentifierProvider, UserIdentifierProvider>();
     }
 
     /// <summary>
@@ -96,7 +102,7 @@ public static class DependencyInjection
     /// <param name="configuration">The configuration.</param>
     private static void AddCaching(IServiceCollection services, IConfiguration configuration)
     {
-        string? redisConnectionString = configuration.GetConnectionString("Cache");
+        string? redisConnectionString = configuration.GetConnectionString(CacheSettings.SettingsKey);
 
         Ensure.NotNullOrEmpty(redisConnectionString, nameof(redisConnectionString));
 
@@ -148,5 +154,21 @@ public static class DependencyInjection
         services.AddSingleton<IBlobService, BlobService>();
 
         services.AddSingleton(_ => new BlobServiceClient(blobConnectionString));
+    }
+    
+    /// <summary>
+    /// Registers the hangfire background job.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configuration">The configuration.</param>
+    private static void AddBackgroundJobs(IServiceCollection services, IConfiguration configuration)
+    {
+        string? connectionString = configuration.GetConnectionString("Database");
+
+        services.AddHangfire(config =>
+            config.UsePostgreSqlStorage(
+                options => options.UseNpgsqlConnection(connectionString)));
+
+        services.AddHangfireServer(options => options.SchedulePollingInterval = TimeSpan.FromSeconds(1));
     }
 }

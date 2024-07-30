@@ -7,6 +7,8 @@ namespace Lodge.Infrastructure.Caching.Settings;
 /// </summary>
 public static class CacheSettings
 {
+    public const string SettingsKey = "Cache";
+
     /// <summary>
     /// Represents the default expiration.
     /// </summary>

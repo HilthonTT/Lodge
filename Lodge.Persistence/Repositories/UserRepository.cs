@@ -10,6 +10,12 @@ namespace Lodge.Persistence.Repositories;
 internal sealed class UserRepository(LodgeDbContext context) : IUserRepository
 {
     /// <inheritdoc />
+    public Task<List<User>> GetAsync(CancellationToken cancellationToken = default)
+    {
+        return context.Users.ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
     public Task<User?> GetByEmailAsync(Email email, CancellationToken cancellationToken = default)
     {
         return context.Users.FirstOrDefaultAsync(user => user.Email.Value == email.Value, cancellationToken);

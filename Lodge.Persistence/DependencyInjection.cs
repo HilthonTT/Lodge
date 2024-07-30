@@ -57,6 +57,8 @@ public static class DependencyInjection
         services.AddScoped<IBookingRepository, BookingRepository>();
         services.AddScoped<IReviewRepository, ReviewRepository>();
 
+        services.AddScoped<IProcessOutboxMessagesJob, ProcessOutboxMessagesJob>();
+
         return services;
     }
 }

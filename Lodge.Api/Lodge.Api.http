@@ -1,6 +1,6 @@
-@Lodge.Api_HostAddress = http://localhost:5079
+@Lodge.Api_HostAddress = http://localhost:5001
 
-GET {{Lodge.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+# GET {{Lodge.Api_HostAddress}}/weatherforecast/
+# Accept: application/json
 
 ###

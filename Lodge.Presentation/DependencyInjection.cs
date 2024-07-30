@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Lodge.Presentation.Extensions;
+using Microsoft.Extensions.DependencyInjection;
+using System.Reflection;
 
 namespace Lodge.Presentation;
 
@@ -11,6 +13,8 @@ public static class DependencyInjection
     /// <returns>The same service collection.</returns>
     public static IServiceCollection AddPresentation(this IServiceCollection services)
     {
+        services.AddEndpoints(Assembly.GetExecutingAssembly());
+
         return services;
     }
 }
