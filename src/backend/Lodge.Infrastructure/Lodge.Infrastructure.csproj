@@ -22,5 +22,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Lodge.Application\Lodge.Application.csproj" />
   </ItemGroup>
+	
+   <ItemGroup>
+	 <InternalsVisibleTo Include="ArchitectureTests" />
+  </ItemGroup>
 
 </Project>

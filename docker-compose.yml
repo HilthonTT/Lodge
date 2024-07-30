@@ -6,7 +6,7 @@ services:
     container_name: lodge.api
     build:
       context: .
-      dockerfile: Lodge.Api/Dockerfile
+      dockerfile: src/backend/Lodge.Api/Dockerfile
     ports:
       - 5000:5000
       - 5001:5001 
