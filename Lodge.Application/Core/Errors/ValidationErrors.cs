@@ -51,4 +51,16 @@ internal static class ValidationErrors
         internal static readonly Error LastNameIsRequired = Error.Problem(
             "UpdateUser.LastNameIsRequired", "The last name is required");
     }
+
+    /// <summary>
+    /// Contains the login errors.
+    /// </summary>
+    internal static class Login
+    {
+        internal static readonly Error EmailIsRequired = Error.Problem(
+           "Login.EmailIsRequired", "The email is required");
+
+        internal static readonly Error PasswordIsRequired = Error.Problem(
+            "Login.PasswordIsRequired", "The password is required");
+    }
 }

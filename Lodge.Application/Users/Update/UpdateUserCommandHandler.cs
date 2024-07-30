@@ -20,6 +20,7 @@ internal class UpdateUserCommandHandler(
     IBlobService blobService,
     IUnitOfWork unitOfWork) : ICommandHandler<UpdateUserCommand>
 {
+    /// <inheritdoc />
     public async Task<Result> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
     {
         if (request.UserId != userIdentifierProvider.UserId)
@@ -55,6 +56,12 @@ internal class UpdateUserCommandHandler(
         return Result.Success();
     }
 
+    /// <summary>
+    /// Checks if the specified image identifier exists.
+    /// </summary>
+    /// <param name="imageId">The image identifier.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>True if the image exits otherwise false.</returns>
     private async Task<bool> ImageExistsAsync(Guid? imageId, CancellationToken cancellationToken)
     {
         if (!imageId.HasValue || imageId is null)
