@@ -27,6 +27,7 @@
     <ProjectReference Include="..\Lodge.Domain\Lodge.Domain.csproj" />
     <ProjectReference Include="..\Lodge.Infrastructure\Lodge.Infrastructure.csproj" />
     <ProjectReference Include="..\Lodge.Persistence\Lodge.Persistence.csproj" />
+    <ProjectReference Include="..\Lodge.Presentation\Lodge.Presentation.csproj" />
   </ItemGroup>
 
 </Project>

@@ -19,10 +19,10 @@ internal sealed class CreateUserCommandHandler(
     IUserRepository userRepository,
     IPasswordHasher passwordHasher,
     IUnitOfWork unitOfWork,
-    IJwtProvider jwtProvider) : ICommandHandler<CreateUserCommand, Result<TokenResponse>>
+    IJwtProvider jwtProvider) : ICommandHandler<CreateUserCommand, TokenResponse>
 {
     /// <inheritdoc />
-    public async Task<Result<Result<TokenResponse>>> Handle(
+    public async Task<Result<TokenResponse>> Handle(
         CreateUserCommand request, 
         CancellationToken cancellationToken)
     {
@@ -56,6 +56,6 @@ internal sealed class CreateUserCommandHandler(
 
         var response = new TokenResponse(token);
 
-        return Result.Success(response);
+        return response;
     }
 }

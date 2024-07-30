@@ -1,6 +1,5 @@
 ﻿using Lodge.Application.Abstractions.Messaging;
 using Lodge.Contracts.Authentication;
-using Lodge.Domain.Core.Primitives;
 
 namespace Lodge.Application.Users.Create;
 
@@ -15,4 +14,4 @@ public sealed record CreateUserCommand(
     string FirstName, 
     string LastName, 
     string Email,
-    string Password) : ICommand<Result<TokenResponse>>;
+    string Password) : ICommand<TokenResponse>;

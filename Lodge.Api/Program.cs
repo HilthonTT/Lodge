@@ -3,6 +3,7 @@ using Lodge.Application;
 using Lodge.BackgroundTasks;
 using Lodge.Infrastructure;
 using Lodge.Persistence;
+using Lodge.Presentation;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +14,8 @@ builder.Services
     .AddInfrastructure(builder.Configuration)
     .AddPersistence(builder.Configuration)
     .AddBackgroundTasks(builder.Configuration)
-    .AddApplication();
+    .AddApplication()
+    .AddPresentation();
 
 WebApplication app = builder.Build();
 
