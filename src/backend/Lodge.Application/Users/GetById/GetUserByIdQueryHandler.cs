@@ -20,24 +20,9 @@ internal sealed class GetUserByIdQueryHandler(IDbConnectionFactory factory)
         GetUserByIdQuery request,
         CancellationToken cancellationToken)
     {
-        const string sql =
-            """
-            SELECT
-                u.id AS Id,
-                u.email AS Email,
-                u.first_name AS FirstName,
-                u.last_name AS LastName,
-                u.image_id AS ImageId,
-                u.created_on_utc AS CreatedOnUtc
-            FROM users u
-            WHERE u.id = @UserId
-            """;
-
         using IDbConnection connection = await factory.GetOpenConnectionAsync(cancellationToken);
 
-        UserResponse? user = await connection.QueryFirstOrDefaultAsync<UserResponse>(
-            sql,
-            request);
+        UserResponse? user = await UserQueries.GetByIdAsync(connection, request.UserId);
 
         if (user is null)
         {
