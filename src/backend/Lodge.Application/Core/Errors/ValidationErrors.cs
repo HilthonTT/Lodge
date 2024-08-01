@@ -138,5 +138,8 @@ internal static class ValidationErrors
 
         internal static readonly Error ContentTypeIsRequired = Error.Problem(
            "UploadFile.ContentTypeIsRequired", "The content type is required");
+
+        internal static readonly Error InvalidContentType = Error.Problem(
+            "UploadFile.InvalidContentType", "The content type must be an image");
     }
 }
