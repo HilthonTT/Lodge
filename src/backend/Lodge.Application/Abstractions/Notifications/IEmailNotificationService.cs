@@ -26,8 +26,24 @@ public interface IEmailNotificationService
     /// <summary>
     /// Sends the notification email.
     /// </summary>
-    /// <param name="notifcationEmail">The notification email.</param>
+    /// <param name="notificationEmail">The notification email.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The completed task.</returns>
-    Task SendNotificationEmailAsync(NotifcationEmail notifcationEmail, CancellationToken cancellationToken = default);
+    Task SendNotificationEmailAsync(NotificationEmail notificationEmail, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sends the booking reserved email.
+    /// </summary>
+    /// <param name="bookingReservedEmail">The booking reserved email.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The completed task.</returns>
+    Task SendBookingReservedEmailAsync(BookingReservedEmail bookingReservedEmail, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Sends the booking confirmed email.
+    /// </summary>
+    /// <param name="bookingConfirmedEmail">The booking confirmed email.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The completed task.</returns>
+    Task SendBookingConfirmedEmailAsync(BookingConfirmedEmail bookingConfirmedEmail, CancellationToken cancellationToken = default);
 }

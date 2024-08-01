@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using FluentValidation;
 using System.Reflection;
+using Lodge.Domain.Bookings;
 
 namespace Lodge.Application;
 
@@ -28,6 +29,8 @@ public static class DependencyInjection
             config.AddOpenBehavior(typeof(UnitOfWorkPipelineBehavior<,>));
             config.AddOpenBehavior(typeof(QueryCachingPipelineBehavior<,>));
         });
+
+        services.AddTransient<PricingService>();
 
         return services;
     }

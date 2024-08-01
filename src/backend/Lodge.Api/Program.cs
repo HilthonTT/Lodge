@@ -6,8 +6,12 @@ using Lodge.Infrastructure;
 using Lodge.Persistence;
 using Lodge.Presentation;
 using Lodge.Presentation.Extensions;
+using Serilog;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, loggerConfig) =>
+    loggerConfig.ReadFrom.Configuration(context.Configuration));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -44,5 +48,7 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+app.UseSerilogRequestLogging();
 
 app.Run();

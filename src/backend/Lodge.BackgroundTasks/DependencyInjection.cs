@@ -2,7 +2,6 @@
 using Lodge.BackgroundTasks.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System.Reflection;
 
 namespace Lodge.BackgroundTasks;
 

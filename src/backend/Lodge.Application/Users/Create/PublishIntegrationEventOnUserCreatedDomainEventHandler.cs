@@ -14,7 +14,7 @@ internal sealed class PublishIntegrationEventOnUserCreatedDomainEventHandler(
     public Task Handle(UserCreatedDomainEvent notification, CancellationToken cancellationToken)
     {
         integrationEventPublisher.Publish(new UserCreatedIntegrationEvent(notification));
-
+        
         return Task.CompletedTask;
     }
 }

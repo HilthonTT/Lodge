@@ -13,7 +13,7 @@ internal sealed class EmailNotificationService(IEmailService emailService) :
 {
     /// <inheritdoc />
     public Task SendNotificationEmailAsync(
-        NotifcationEmail notifcationEmail,
+        NotificationEmail notifcationEmail,
         CancellationToken cancellationToken = default)
     {
         var mailRequest = new MailRequest(notifcationEmail.EmailTo, notifcationEmail.Subject, notifcationEmail.Body);
@@ -49,6 +49,38 @@ internal sealed class EmailNotificationService(IEmailService emailService) :
                 Environment.NewLine +
                 Environment.NewLine +
                 $"You have registered with the email {welcomeEmail.EmailTo}.");
+
+        return emailService.SendEmailAsync(mailRequest, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task SendBookingReservedEmailAsync(
+        BookingReservedEmail bookingReservedEmail,
+        CancellationToken cancellationToken = default)
+    {
+        var mailRequest = new MailRequest(
+               bookingReservedEmail.EmailTo,
+               "Booking reserved 📖",
+               $"Hello {bookingReservedEmail.Name}," +
+               Environment.NewLine +
+               Environment.NewLine +
+               "You've booked an apartment, please confirm it.");
+
+        return emailService.SendEmailAsync(mailRequest, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task SendBookingConfirmedEmailAsync(
+        BookingConfirmedEmail bookingConfirmedEmail,
+        CancellationToken cancellationToken = default)
+    {
+        var mailRequest = new MailRequest(
+               bookingConfirmedEmail.EmailTo,
+               "Booking confirmed ✅",
+               $"Hello {bookingConfirmedEmail.Name}," +
+               Environment.NewLine +
+               Environment.NewLine +
+               "Your booking has now been confirmed!");
 
         return emailService.SendEmailAsync(mailRequest, cancellationToken);
     }

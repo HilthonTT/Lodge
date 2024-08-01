@@ -12,7 +12,7 @@ namespace Lodge.BackgroundTasks.IntegrationEvents.Users.UserCreated;
 /// </summary>
 /// <param name="userRepository">The user repository.</param>
 /// <param name="emailNotificationService">The email notification service.</param>
-internal sealed class SendWelcomeEmailOnUserdCreatedIntegrationEventHandler(
+internal sealed class SendWelcomeEmailOnUserCreatedIntegrationEventHandler(
     IUserRepository userRepository,
     IEmailNotificationService emailNotificationService) : IIntegrationEventHandler<UserCreatedIntegrationEvent>
 {

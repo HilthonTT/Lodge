@@ -63,4 +63,32 @@ internal static class ValidationErrors
         internal static readonly Error PasswordIsRequired = Error.Problem(
             "Login.PasswordIsRequired", "The password is required");
     }
+
+    /// <summary>
+    /// Contains the reserve booking errors.
+    /// </summary>
+    internal static class ReserveBooking
+    {
+        internal static readonly Error UserIdIsRequired = Error.Problem(
+           "ReserveBooking.UserIdIsRequired", "The user identifier is required");
+
+        internal static readonly Error ApartmentIdIsRequired = Error.Problem(
+           "ReserveBooking.ApartmentIdIsRequired", "The apartment identifier is required");
+
+        internal static readonly Error StartDateMustBeLessThanEndDate = Error.Problem(
+            "ReserveBooking.StartDateMustBeLessThanEndDate", 
+            "The start date must be less than the end date");
+    }
+
+    /// <summary>
+    /// Contains the confirm booking errors.
+    /// </summary>
+    internal static class ConfirmBooking
+    {
+        internal static readonly Error UserIdIsRequired = Error.Problem(
+           "ConfirmBooking.UserIdIsRequired", "The user identifier is required");
+
+        internal static readonly Error BookingIdIsRequired = Error.Problem(
+           "ConfirmBooking.BookingIdIsRequired", "The booking identifier is required");
+    }
 }

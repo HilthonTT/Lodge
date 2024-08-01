@@ -7,9 +7,9 @@ namespace Lodge.Domain.Bookings;
 /// </summary>
 public static class BookingErrors
 {
-    public static readonly Error NotFound = Error.NotFound(
+    public static Error NotFound(Guid bookingId) => Error.NotFound(
         "Booking.Found",
-        "The booking with the specified identifier was not found");
+        $"The booking with Id = '{bookingId}' was not found");
 
     public static readonly Error Overlap = Error.Conflict(
         "Booking.Overlap",
