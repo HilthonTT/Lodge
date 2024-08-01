@@ -3,8 +3,11 @@
 /// <summary>
 /// Contains all of the endpoint tags.
 /// </summary>
-public static class Tags
+internal static class Tags
 {
-    public const string Users = "Users";
-    public const string Authentication = "Authentication";
+    internal const string Users = "Users";
+
+    internal const string Authentication = "Authentication";
+
+    internal const string Files = "Files";
 }

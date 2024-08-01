@@ -127,4 +127,16 @@ internal static class ValidationErrors
         internal static readonly Error BookingIdIsRequired = Error.Problem(
            "CancelBooking.BookingIdIsRequired", "The booking identifier is required");
     }
+
+    /// <summary>
+    /// Contains the upload file errors.
+    /// </summary>
+    internal static class UploadFile
+    {
+        internal static readonly Error UserIdIsRequired = Error.Problem(
+           "UploadFile.UserIdIsRequired", "The user identifier is required");
+
+        internal static readonly Error ContentTypeIsRequired = Error.Problem(
+           "UploadFile.ContentTypeIsRequired", "The content type is required");
+    }
 }
