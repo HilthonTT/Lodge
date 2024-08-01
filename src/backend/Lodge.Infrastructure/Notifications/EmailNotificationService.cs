@@ -8,8 +8,7 @@ namespace Lodge.Infrastructure.Notifications;
 /// Represents the email notification service.
 /// </summary>
 /// <param name="emailService">The email service.</param>
-internal sealed class EmailNotificationService(IEmailService emailService) :
-    IEmailNotificationService
+internal sealed class EmailNotificationService(IEmailService emailService) : IEmailNotificationService
 {
     /// <inheritdoc />
     public Task SendNotificationEmailAsync(
@@ -81,6 +80,54 @@ internal sealed class EmailNotificationService(IEmailService emailService) :
                Environment.NewLine +
                Environment.NewLine +
                "Your booking has now been confirmed!");
+
+        return emailService.SendEmailAsync(mailRequest, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task SendBookingRejectedEmailAsync(
+        BookingRejectedEmail bookingRejectedEmail,
+        CancellationToken cancellationToken = default)
+    {
+        var mailRequest = new MailRequest(
+               bookingRejectedEmail.EmailTo,
+               "Booking confirmed ❌",
+               $"Hello {bookingRejectedEmail.Name}," +
+               Environment.NewLine +
+               Environment.NewLine +
+               "Your booking has been rejected...");
+
+        return emailService.SendEmailAsync(mailRequest, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task SendBookingCompletedEmailAsync(
+        BookingCompletedEmail bookingCompletedEmail,
+        CancellationToken cancellationToken = default)
+    {
+        var mailRequest = new MailRequest(
+              bookingCompletedEmail.EmailTo,
+              "Booking completed 👍",
+              $"Hello {bookingCompletedEmail.Name}," +
+              Environment.NewLine +
+              Environment.NewLine +
+              "Your booking has been completed!");
+
+        return emailService.SendEmailAsync(mailRequest, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task SendBookingCancelledEmailAsync(
+        BookingCancelledEmail bookingCancelledEmail,
+        CancellationToken cancellationToken = default)
+    {
+        var mailRequest = new MailRequest(
+              bookingCancelledEmail.EmailTo,
+              "Booking cancelled ❌",
+              $"Hello {bookingCancelledEmail.Name}," +
+              Environment.NewLine +
+              Environment.NewLine +
+              "Your booking has been cancelled.");
 
         return emailService.SendEmailAsync(mailRequest, cancellationToken);
     }

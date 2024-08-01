@@ -91,4 +91,40 @@ internal static class ValidationErrors
         internal static readonly Error BookingIdIsRequired = Error.Problem(
            "ConfirmBooking.BookingIdIsRequired", "The booking identifier is required");
     }
+
+    /// <summary>
+    /// Contains the reject booking errors.
+    /// </summary>
+    internal static class RejectBooking
+    {
+        internal static readonly Error UserIdIsRequired = Error.Problem(
+           "RejectBooking.UserIdIsRequired", "The user identifier is required");
+
+        internal static readonly Error BookingIdIsRequired = Error.Problem(
+           "RejectBooking.BookingIdIsRequired", "The booking identifier is required");
+    }
+
+    /// <summary>
+    /// Contains the confirm booking errors.
+    /// </summary>
+    internal static class CompleteBooking
+    {
+        internal static readonly Error UserIdIsRequired = Error.Problem(
+           "CompleteBooking.UserIdIsRequired", "The user identifier is required");
+
+        internal static readonly Error BookingIdIsRequired = Error.Problem(
+           "CompleteBooking.BookingIdIsRequired", "The booking identifier is required");
+    }
+
+    /// <summary>
+    /// Contains the cancel booking errors.
+    /// </summary>
+    internal static class CancelBooking
+    {
+        internal static readonly Error UserIdIsRequired = Error.Problem(
+           "CancelBooking.UserIdIsRequired", "The user identifier is required");
+
+        internal static readonly Error BookingIdIsRequired = Error.Problem(
+           "CancelBooking.BookingIdIsRequired", "The booking identifier is required");
+    }
 }

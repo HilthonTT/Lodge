@@ -14,8 +14,7 @@ namespace Lodge.BackgroundTasks.IntegrationEvents.Users.UserPasswordChanged;
 /// <param name="emailNotificationService">The email notification service.</param>
 internal sealed class NotifyUserOnPasswordChangedIntegrationEventHandler(
     IUserRepository userRepository,
-    IEmailNotificationService emailNotificationService)
-    : IIntegrationEventHandler<UserPasswordChangedIntegrationEvent>
+    IEmailNotificationService emailNotificationService) : IIntegrationEventHandler<UserPasswordChangedIntegrationEvent>
 {
     /// <inheritdoc />
     public async Task Handle(UserPasswordChangedIntegrationEvent notification, CancellationToken cancellationToken)

@@ -1,26 +1,26 @@
 ﻿using Lodge.Application.Abstractions.Notifications;
-using Lodge.Application.Bookings.Reserve;
+using Lodge.Application.Bookings.Complete;
 using Lodge.BackgroundTasks.Abstractions.Messaging;
 using Lodge.Contracts.Emails;
 using Lodge.Domain.Bookings;
 using Lodge.Domain.Core.Exceptions;
 using Lodge.Domain.Users;
 
-namespace Lodge.BackgroundTasks.IntegrationEvents.Bookings.BookingReserved;
+namespace Lodge.BackgroundTasks.IntegrationEvents.Bookings.BookingCompleted;
 
 /// <summary>
-/// Represents the <see cref="BookingReservedIntegrationEvent"/> handler.
+/// Represents the <see cref="BookingCompletedIntegrationEvent"/> handler.
 /// </summary>
 /// <param name="bookingRepository">The booking repository.</param>
 /// <param name="userRepository">The user repository.</param>
 /// <param name="emailNotificationService">The email notification service.</param>
-internal sealed class NotifyUserOnBookingReservedIntegrationEventHandler(
+internal sealed class NotifyUserOnBookingCompletedEventHandler(
     IBookingRepository bookingRepository,
     IUserRepository userRepository,
-    IEmailNotificationService emailNotificationService): IIntegrationEventHandler<BookingReservedIntegrationEvent>
+    IEmailNotificationService emailNotificationService) : IIntegrationEventHandler<BookingCompletedIntegrationEvent>
 {
     /// <inheritdoc />
-    public async Task Handle(BookingReservedIntegrationEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(BookingCompletedIntegrationEvent notification, CancellationToken cancellationToken)
     {
         Booking? booking = await bookingRepository.GetByIdAsync(notification.BookingId, cancellationToken);
 
@@ -35,8 +35,8 @@ internal sealed class NotifyUserOnBookingReservedIntegrationEventHandler(
             throw new DomainException(UserErrors.NotFound(booking.UserId));
         }
 
-        var bookingReservedEmail = new BookingReservedEmail(user.Email, user.FullName);
+        var bookingCompletedEmail = new BookingCompletedEmail(user.Email, user.FullName);
 
-        await emailNotificationService.SendBookingReservedEmailAsync(bookingReservedEmail, cancellationToken);
+        await emailNotificationService.SendBookingCompletedEmailAsync(bookingCompletedEmail, cancellationToken);
     }
 }

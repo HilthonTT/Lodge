@@ -8,11 +8,18 @@ using Lodge.Domain.Users;
 
 namespace Lodge.BackgroundTasks.IntegrationEvents.Bookings.BookingConfirmed;
 
+/// <summary>
+/// Represents the <see cref="BookingConfirmedIntegrationEvent"/> handler.
+/// </summary>
+/// <param name="bookingRepository">The booking repository.</param>
+/// <param name="userRepository">The user repository.</param>
+/// <param name="emailNotificationService">The email notification service.</param>
 internal sealed class NotifyUserOnBookingConfirmedEventHandler(
     IBookingRepository bookingRepository,
     IUserRepository userRepository,
     IEmailNotificationService emailNotificationService) : IIntegrationEventHandler<BookingConfirmedIntegrationEvent>
 {
+    /// <inheritdoc />
     public async Task Handle(BookingConfirmedIntegrationEvent notification, CancellationToken cancellationToken)
     {
         Booking? booking = await bookingRepository.GetByIdAsync(notification.BookingId, cancellationToken);

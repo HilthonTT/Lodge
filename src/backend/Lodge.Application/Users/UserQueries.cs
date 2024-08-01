@@ -1,6 +1,5 @@
 ﻿using Dapper;
 using Lodge.Contracts.Users;
-using Lodge.Domain.Core.Primitives;
 using System.Data;
 
 namespace Lodge.Application.Users;
