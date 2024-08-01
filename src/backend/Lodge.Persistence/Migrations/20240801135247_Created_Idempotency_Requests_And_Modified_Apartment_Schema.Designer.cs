@@ -3,6 +3,7 @@ using System;
 using Lodge.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Lodge.Persistence.Migrations
 {
     [DbContext(typeof(LodgeDbContext))]
-    partial class LodgeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240801135247_Created_Idempotency_Requests_And_Modified_Apartment_Schema")]
+    partial class Created_Idempotency_Requests_And_Modified_Apartment_Schema
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

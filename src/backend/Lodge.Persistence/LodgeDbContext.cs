@@ -3,6 +3,7 @@ using Lodge.Domain.Apartements;
 using Lodge.Domain.Bookings;
 using Lodge.Domain.Reviews;
 using Lodge.Domain.Users;
+using Lodge.Persistence.Idempotency;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -18,6 +19,8 @@ public sealed class LodgeDbContext(DbContextOptions<LodgeDbContext> options)
     public DbSet<Booking> Bookings { get; set; }
 
     public DbSet<Review> Reviews { get; set; }
+
+    public DbSet<IdempotentRequest> IdempotentRequests { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

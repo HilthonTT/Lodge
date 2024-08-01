@@ -19,6 +19,8 @@ public sealed class Apartment : Entity, IAuditableEntity
     /// <param name="address">The apartment's address.</param>
     /// <param name="price">The apartment's price.</param>
     /// <param name="cleaningFee">The apartment's cleaning fee.</param>
+    /// <param name="maximumGuestCount">The maximum guest count for this apartment.</param>
+    /// <param name="maximumRoomCount">The maximum room count for this apartment.</param>
     /// <param name="imageId">The apartment's image id.</param>
     /// <param name="amenities">The apartment's amenities.</param>
     private Apartment(
@@ -28,6 +30,8 @@ public sealed class Apartment : Entity, IAuditableEntity
         Address address,
         Money price,
         Money cleaningFee,
+        int maximumRoomCount,
+        int maximumGuestCount,
         Guid imageId,
         List<Amenity> amenities)
         : base(id)
@@ -37,6 +41,8 @@ public sealed class Apartment : Entity, IAuditableEntity
         Address = address;
         Price = price;
         CleaningFee = cleaningFee;
+        MaximumRoomCount = maximumRoomCount;
+        MaximumGuestCount = maximumGuestCount;
         ImageId = imageId;
         Amenities = amenities;
     }
@@ -61,6 +67,10 @@ public sealed class Apartment : Entity, IAuditableEntity
 
     public Money CleaningFee { get; private set; }
 
+    public int MaximumRoomCount { get; private set; }
+
+    public int MaximumGuestCount { get; private set; }
+
     public Guid ImageId { get; private set; }
 
     public DateTime? LastBookedOnUtc  { get; internal set; }
@@ -79,6 +89,8 @@ public sealed class Apartment : Entity, IAuditableEntity
     /// <param name="address">The address.</param>
     /// <param name="price">The price.</param>
     /// <param name="cleaningFee">The cleaning fee.</param>
+    /// <param name="maximumGuestCount">The maximum guest count for this apartment.</param>
+    /// <param name="maximumRoomCount">The maximum room count for this apartment.</param>
     /// <param name="imageId">The apartment's image id.</param>
     /// <param name="amenities">The amenities.</param>
     /// <returns>The newly created apartment instance.</returns>
@@ -87,7 +99,9 @@ public sealed class Apartment : Entity, IAuditableEntity
         Description description, 
         Address address, 
         Money price, 
-        Money cleaningFee, 
+        Money cleaningFee,
+        int maximumRoomCount,
+        int maximumGuestCount,
         Guid imageId,
         List<Amenity> amenities)
     {
@@ -98,6 +112,8 @@ public sealed class Apartment : Entity, IAuditableEntity
             address,
             price,
             cleaningFee,
+            maximumRoomCount,
+            maximumGuestCount,
             imageId,
             amenities);
 

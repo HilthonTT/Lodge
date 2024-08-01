@@ -1,9 +1,11 @@
 ﻿using Lodge.Application.Abstractions.Data;
+using Lodge.Application.Abstractions.Idempotency;
 using Lodge.Domain.Apartements;
 using Lodge.Domain.Bookings;
 using Lodge.Domain.Core.Guards;
 using Lodge.Domain.Reviews;
 using Lodge.Domain.Users;
+using Lodge.Persistence.Idempotency;
 using Lodge.Persistence.Infrastructure;
 using Lodge.Persistence.Interceptors;
 using Lodge.Persistence.Outbox;
@@ -58,6 +60,8 @@ public static class DependencyInjection
         services.AddScoped<IReviewRepository, ReviewRepository>();
 
         services.AddScoped<IProcessOutboxMessagesJob, ProcessOutboxMessagesJob>();
+
+        services.AddScoped<IIdempotencyService, IdempotencyService>();
 
         return services;
     }
