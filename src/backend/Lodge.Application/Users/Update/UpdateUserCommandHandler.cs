@@ -14,7 +14,7 @@ namespace Lodge.Application.Users.Update;
 /// <param name="userRepository">The user repository.</param>
 /// <param name="blobService">The blob service.</param>
 /// <param name="unitOfWork">The unit of work.</param>
-internal class UpdateUserCommandHandler(
+internal sealed class UpdateUserCommandHandler(
     IUserIdentifierProvider userIdentifierProvider,
     IUserRepository userRepository,
     IBlobService blobService,
