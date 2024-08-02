@@ -8,7 +8,7 @@ using System.Data;
 namespace Lodge.Api.Extensions;
 
 /// <summary>
-/// Contains extensions for the seeding the database.
+/// Contains extensions methods for the seeding the database.
 /// </summary>
 public static class SeedDataExtensions
 {

@@ -4,7 +4,7 @@ using Lodge.Persistence.Outbox;
 namespace Lodge.Api.Extensions;
 
 /// <summary>
-/// Contains extensions for the background jobs.
+/// Contains extensions methods for the background jobs.
 /// </summary>
 public static class BackgroundJobExtensions
 {

@@ -11,6 +11,12 @@
    </ItemGroup>
 
    <ItemGroup>
+     <PackageReference Include="Asp.Versioning.Http" Version="8.1.0" />
+     <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
+     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.7.0" />
+   </ItemGroup>
+
+   <ItemGroup>
      <ProjectReference Include="..\Lodge.Application\Lodge.Application.csproj" />
    </ItemGroup>
 
