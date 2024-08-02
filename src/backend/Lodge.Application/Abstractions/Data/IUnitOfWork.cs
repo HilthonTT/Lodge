@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore.Storage;
-using System.Data;
 
 namespace Lodge.Application.Abstractions.Data;
 

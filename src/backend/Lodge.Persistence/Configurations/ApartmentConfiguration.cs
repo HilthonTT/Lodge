@@ -22,6 +22,7 @@ internal sealed class ApartmentConfiguration : IEntityTypeConfiguration<Apartmen
 
             nameBuilder.Property(name => name.Value)
                 .HasMaxLength(Name.MaxLength)
+                .HasColumnName("name")
                 .IsRequired();
         });
 
@@ -31,6 +32,7 @@ internal sealed class ApartmentConfiguration : IEntityTypeConfiguration<Apartmen
 
             descriptionBuilder.Property(description => description.Value)
                 .HasMaxLength(Description.MaxLength)
+                .HasColumnName("description")
                 .IsRequired();
         });
 

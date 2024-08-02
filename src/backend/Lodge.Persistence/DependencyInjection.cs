@@ -54,6 +54,8 @@ public static class DependencyInjection
 
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<LodgeDbContext>());
 
+        services.AddScoped<IDbContext>(sp => sp.GetRequiredService<LodgeDbContext>());
+
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IApartmentRepository, ApartmentRepository>();
         services.AddScoped<IBookingRepository, BookingRepository>();

@@ -7,6 +7,8 @@ namespace Lodge.Application.Abstractions.Data;
 /// </summary>
 public interface IDbConnectionFactory
 {
+    
+
     /// <summary>
     /// Opens a database connection.
     /// </summary>
@@ -16,4 +18,12 @@ public interface IDbConnectionFactory
     /// The task result contains the database connection interface.
     /// </returns>
     Task<IDbConnection> GetOpenConnectionAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Opens a database connection.
+    /// </summary>
+    /// <returns>
+    /// The database connection interface.
+    /// </returns>
+    IDbConnection GetOpenConnection();
 }

@@ -16,4 +16,12 @@ internal sealed class DbConnectionFactory(NpgsqlDataSource dataSource) : IDbConn
 
         return connection;
     }
+
+    /// <inheritdoc />
+    public IDbConnection GetOpenConnection()
+    {
+        NpgsqlConnection connection = dataSource.OpenConnection();
+
+        return connection;
+    }
 }

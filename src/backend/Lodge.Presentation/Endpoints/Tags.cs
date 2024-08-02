@@ -10,4 +10,6 @@ internal static class Tags
     internal const string Authentication = "Authentication";
 
     internal const string Files = "Files";
+
+    internal const string Apartments = "Apartments";
 }

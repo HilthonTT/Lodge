@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Bogus" Version="35.6.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.7">
       <PrivateAssets>all</PrivateAssets>
@@ -28,6 +29,19 @@
     <ProjectReference Include="..\Lodge.Infrastructure\Lodge.Infrastructure.csproj" />
     <ProjectReference Include="..\Lodge.Persistence\Lodge.Persistence.csproj" />
     <ProjectReference Include="..\Lodge.Presentation\Lodge.Presentation.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\images\cabin.png" />
+    <None Include="wwwroot\images\cottage.png" />
+    <None Include="wwwroot\images\family-house-2.png" />
+    <None Include="wwwroot\images\family-house.png" />
+    <None Include="wwwroot\images\house-boat.png" />
+    <None Include="wwwroot\images\igloo.jpg" />
+    <None Include="wwwroot\images\luxury-house.png" />
+    <None Include="wwwroot\images\mansion.png" />
+    <None Include="wwwroot\images\modern-house.png" />
+    <None Include="wwwroot\images\tree-house.png" />
   </ItemGroup>
 
 </Project>

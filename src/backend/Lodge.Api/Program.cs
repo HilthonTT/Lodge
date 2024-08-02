@@ -41,6 +41,9 @@ if (app.Environment.IsDevelopment())
     });
 
     app.ApplyMigrations();
+
+    // await app.SeedImages();
+    // app.SeedData();
 }
 
 app.UseHttpsRedirection();
@@ -50,5 +53,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseSerilogRequestLogging();
+
+app.UseStaticFiles();
 
 app.Run();
