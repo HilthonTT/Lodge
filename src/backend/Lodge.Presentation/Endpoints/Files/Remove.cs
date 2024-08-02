@@ -28,6 +28,7 @@ internal sealed class Remove : IEndpoint
 
             return result.Match(Results.NoContent, CustomResults.Problem);
         })
-        .WithTags(Tags.Files);
+        .WithTags(Tags.Files)
+        .RequireAuthorization();
     }
 }

@@ -18,7 +18,9 @@ internal sealed class CreateUserCommandValidator : AbstractValidator<CreateUserC
 
         RuleFor(x => x.LastName).NotEmpty().WithError(ValidationErrors.CreateUser.LastNameIsRequired);
 
-        RuleFor(x => x.Email).NotEmpty().WithError(ValidationErrors.CreateUser.EmailIsRequired);
+        RuleFor(x => x.Email)
+            .NotEmpty().WithError(ValidationErrors.CreateUser.EmailIsRequired)
+            .EmailAddress().WithError(ValidationErrors.CreateUser.EmailMustBeARealEmail);
 
         RuleFor(x => x.Password).NotEmpty().WithError(ValidationErrors.CreateUser.PasswordIsRequired);
     }

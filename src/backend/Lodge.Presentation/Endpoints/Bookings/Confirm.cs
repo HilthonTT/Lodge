@@ -1,5 +1,8 @@
 ﻿using Lodge.Application.Bookings.Confirm;
 using Lodge.Contracts.Bookings;
+using Lodge.Domain.Core.Primitives;
+using Lodge.Presentation.Extensions;
+using Lodge.Presentation.Infrastructure;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -20,12 +23,13 @@ internal sealed class Confirm : IEndpoint
             ISender sender,
             CancellationToken cancellationToken) =>
         {
-            //var command = new ConfirmBookingCommand(request.UserId, bookingId);
+            var command = new ConfirmBookingCommand(request.UserId, bookingId);
 
-            //var result = await sender.Send(request, cancellationToken);
+            Result result = await sender.Send(command, cancellationToken);
 
-            //return result.Match(Results.NoContent, CustomResults.Problem);
+            return result.Match(Results.NoContent, CustomResults.Problem);
         })
-        .WithTags(Tags.Bookings);
+        .WithTags(Tags.Bookings)
+        .RequireAuthorization();
     }
 }

@@ -36,6 +36,7 @@ internal sealed class Upload : IEndpoint
 
             return result.Match(Results.Ok, CustomResults.Problem);
         })
-        .WithTags(Tags.Files);
+        .WithTags(Tags.Files)
+        .RequireAuthorization();
     }
 }

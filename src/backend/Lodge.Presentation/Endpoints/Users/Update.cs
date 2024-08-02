@@ -19,21 +19,22 @@ internal sealed class Update : IEndpoint
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPut("users/{userId}", async (
-            Guid userId, 
+            Guid userId,
             UpdateUserRequest request,
             ISender sender,
             CancellationToken cancellationToken) =>
         {
             var command = new UpdateUserCommand(
-                userId, 
-                request.FirstName, 
-                request.LastName, 
+                userId,
+                request.FirstName,
+                request.LastName,
                 request.ImageId);
 
             Result result = await sender.Send(command, cancellationToken);
 
             return result.Match(Results.NoContent, CustomResults.Problem);
         })
-        .WithTags(Tags.Users);
+        .WithTags(Tags.Users)
+        .RequireAuthorization();
     }
 }

@@ -30,6 +30,7 @@ internal sealed class Reject : IEndpoint
 
             return result.Match(Results.NoContent, CustomResults.Problem);
         })
-        .WithTags(Tags.Bookings);
+        .WithTags(Tags.Bookings)
+        .RequireAuthorization();
     }
 }

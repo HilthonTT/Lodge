@@ -29,6 +29,7 @@ internal sealed class Cancel : IEndpoint
 
             return result.Match(Results.NoContent, CustomResults.Problem);
         })
-        .WithTags(Tags.Bookings);
+        .WithTags(Tags.Bookings)
+        .RequireAuthorization();
     }
 }

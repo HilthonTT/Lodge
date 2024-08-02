@@ -36,6 +36,7 @@ internal sealed class Reserve : IEndpoint
 
             return result.Match(Results.Ok, CustomResults.Problem);
         })
-        .WithTags(Tags.Bookings);
+        .WithTags(Tags.Bookings)
+        .RequireAuthorization();
     }
 }

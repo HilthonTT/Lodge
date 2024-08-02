@@ -23,6 +23,9 @@ internal static class ValidationErrors
 
         internal static readonly Error PasswordIsRequired = Error.Validation(
             "CreateUser.PasswordIsRequired", "The password is required");
+
+        internal static readonly Error EmailMustBeARealEmail = Error.Validation(
+            "CreateUser.EmailMustBeAnEmail", "The email must be a real email");
     }
 
     /// <summary>
@@ -62,6 +65,9 @@ internal static class ValidationErrors
 
         internal static readonly Error PasswordIsRequired = Error.Validation(
             "Login.PasswordIsRequired", "The password is required");
+
+        internal static readonly Error EmailMustBeARealEmail = Error.Validation(
+            "Login.EmailMustBeAnEmail", "The email must be a real email");
     }
 
     /// <summary>
