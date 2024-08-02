@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Asp.Versioning.Builder;
 using Hangfire;
+using HealthChecks.UI.Client;
 using Lodge.Api.Extensions;
 using Lodge.Application;
 using Lodge.BackgroundTasks;
@@ -8,6 +9,7 @@ using Lodge.Infrastructure;
 using Lodge.Persistence;
 using Lodge.Presentation;
 using Lodge.Presentation.Extensions;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -58,6 +60,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.MapHealthChecks("health", new HealthCheckOptions
+{
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+});
 
 app.UseAuthentication();
 

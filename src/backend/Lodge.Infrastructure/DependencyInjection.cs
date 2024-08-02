@@ -34,6 +34,8 @@ namespace Lodge.Infrastructure;
 
 public static class DependencyInjection
 {
+    private const string DatabaseConnectionString = "Database";
+
     /// <summary>
     /// Registers the necessary services with the DI framework.
     /// </summary>
@@ -51,6 +53,7 @@ public static class DependencyInjection
         AddEmail(services, configuration);
         AddStorage(services, configuration);
         AddBackgroundJobs(services, configuration);
+        AddHealthChecks(services, configuration);
 
         return services;
     }
@@ -163,12 +166,41 @@ public static class DependencyInjection
     /// <param name="configuration">The configuration.</param>
     private static void AddBackgroundJobs(IServiceCollection services, IConfiguration configuration)
     {
-        string? connectionString = configuration.GetConnectionString("Database");
+        string? connectionString = configuration.GetConnectionString(DatabaseConnectionString);
+
+        Ensure.NotNullOrEmpty(connectionString, nameof(connectionString));
 
         services.AddHangfire(config =>
             config.UsePostgreSqlStorage(
                 options => options.UseNpgsqlConnection(connectionString)));
 
         services.AddHangfireServer(options => options.SchedulePollingInterval = TimeSpan.FromSeconds(1));
+    }
+
+    /// <summary>
+    /// Registers the health checks.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configuration">The configuration.</param>
+    private static void AddHealthChecks(IServiceCollection services, IConfiguration configuration)
+    {
+        string? dbConnectionString = configuration.GetConnectionString(DatabaseConnectionString);
+        string? redisConnectionString = configuration.GetConnectionString(CacheSettings.SettingsKey);
+        string? blobConnectionString = configuration.GetConnectionString(BlobServiceSettings.SettingsKey);
+
+        Ensure.NotNullOrEmpty(dbConnectionString, nameof(dbConnectionString));
+        Ensure.NotNullOrEmpty(redisConnectionString, nameof(redisConnectionString));
+        Ensure.NotNullOrEmpty(blobConnectionString, nameof(blobConnectionString));
+
+        services
+            .AddHealthChecks()
+            .AddNpgSql(dbConnectionString)
+            .AddRedis(redisConnectionString)
+            .AddAzureBlobStorage(blobConnectionString)
+            .AddHangfire(options =>
+            {
+                options.MinimumAvailableServers = 1;
+                options.MaximumJobsFailed = 1;
+            });
     }
 }
