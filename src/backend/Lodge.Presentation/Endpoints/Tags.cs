@@ -12,4 +12,6 @@ internal static class Tags
     internal const string Files = "Files";
 
     internal const string Apartments = "Apartments";
+
+    internal const string Bookings = "Bookings";
 }

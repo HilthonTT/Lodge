@@ -7,11 +7,11 @@ namespace Lodge.Domain.Apartements;
 /// </summary>
 public static class NameErrors
 {
-    public static readonly Error Empty = Error.Problem(
+    public static readonly Error Empty = Error.Validation(
         "Name.Empty",
         "The name cannot be empty");
 
-    public static readonly Error TooLong = Error.Problem(
+    public static readonly Error TooLong = Error.Validation(
         "Name.TooLong",
         "The name exceeds the 256 characters limit");
 }

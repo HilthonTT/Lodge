@@ -7,12 +7,12 @@ namespace Lodge.Domain.Users;
 /// </summary>
 public static class EmailErrors
 {
-    public static readonly Error Empty = Error.Problem(
+    public static readonly Error Empty = Error.Validation(
         "Email.Empty", "Email is empty");
 
-    public static readonly Error InvalidFormat = Error.Problem(
+    public static readonly Error InvalidFormat = Error.Validation(
         "Email.InvalidFormat", "Email format is invalid");
 
-    public static readonly Error TooLong = Error.Problem(
+    public static readonly Error TooLong = Error.Validation(
         "Email.TooLong", "Email exceeds the 256 characters limit");
 }

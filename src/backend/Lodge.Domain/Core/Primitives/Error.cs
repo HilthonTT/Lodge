@@ -90,4 +90,13 @@ public record Error
     /// <returns>An instance of <see cref="Error"/> with type <see cref="ErrorType.Permission"/>.</returns>
     public static Error Permission(string code, string description) =>
         new(code, description, ErrorType.Permission);
+
+    /// <summary>
+    /// Creates an <see cref="Error"/> with <see cref="ErrorType.Validation"/>.
+    /// </summary>
+    /// <param name="code">The error code.</param>
+    /// <param name="description">The error description.</param>
+    /// <returns>An instance of <see cref="Error"/> with type <see cref="ErrorType.Validation"/>.</returns>
+    public static Error Validation(string code, string description) =>
+        new(code, description, ErrorType.Validation);
 }

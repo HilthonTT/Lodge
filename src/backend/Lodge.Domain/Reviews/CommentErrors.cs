@@ -7,11 +7,11 @@ namespace Lodge.Domain.Reviews;
 /// </summary>
 public static class CommentErrors
 {
-    public static readonly Error Empty = Error.Problem(
+    public static readonly Error Empty = Error.Validation(
         "Comment.Empty",
         "The comment cannot be empty");
 
-    public static readonly Error TooLong = Error.Problem(
+    public static readonly Error TooLong = Error.Validation(
         "Comment.TooLong",
         "The comment exceeds the 500 characters limit");
 }

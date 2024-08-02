@@ -28,7 +28,7 @@ public static class DependencyInjection
             options.SubstituteApiVersionInUrl = true;
         });
 
-        services.ConfigureOptions<ConfigureSwaggeGenOptions>();
+        services.ConfigureOptions<ConfigureSwaggerGenOptions>();
 
         return services;
     }

@@ -7,9 +7,9 @@ namespace Lodge.Domain.Users;
 /// </summary>
 public static class FirstNameErrors
 {
-    public static readonly Error Empty = Error.Problem(
+    public static readonly Error Empty = Error.Validation(
         "FirstName.Empty", "First name is empty");
 
-    public static readonly Error TooLong = Error.Problem(
+    public static readonly Error TooLong = Error.Validation(
         "FirstName.TooLong", "First name exceeds the 128 characters limit");
 }
