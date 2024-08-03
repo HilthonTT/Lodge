@@ -76,4 +76,6 @@ app.UseSerilogRequestLogging();
 
 app.UseStaticFiles();
 
+app.UseExceptionHandler();
+
 app.Run();

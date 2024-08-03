@@ -1,5 +1,6 @@
 ﻿using Asp.Versioning;
 using Lodge.Presentation.Extensions;
+using Lodge.Presentation.Infrastructure;
 using Lodge.Presentation.OpenApi;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
@@ -29,6 +30,9 @@ public static class DependencyInjection
         });
 
         services.ConfigureOptions<ConfigureSwaggerGenOptions>();
+
+        services.AddExceptionHandler<GlobalExceptionHandler>();
+        services.AddProblemDetails();
 
         return services;
     }
