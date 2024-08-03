@@ -82,7 +82,7 @@ internal static class ValidationErrors
            "ReserveBooking.ApartmentIdIsRequired", "The apartment identifier is required");
 
         internal static readonly Error StartDateMustBeLessThanEndDate = Error.Validation(
-            "ReserveBooking.StartDateMustBeLessThanEndDate", 
+            "ReserveBooking.StartDateMustBeLessThanEndDate",
             "The start date must be less than the end date");
     }
 
@@ -147,5 +147,66 @@ internal static class ValidationErrors
 
         internal static readonly Error InvalidContentType = Error.Validation(
             "UploadFile.InvalidContentType", "The content type must be an image");
+    }
+
+    /// <summary>
+    /// Contains the create review errors.
+    /// </summary>
+    internal static class CreateReview
+    {
+        internal static readonly Error UserIdIsRequired = Error.Validation(
+           "CreateReview.UserIdIsRequired", "The user identifier is required");
+
+        internal static readonly Error BookingIdIsRequired = Error.Validation(
+            "CreateReview.UserIdIsRequired", "The booking identifier is required");
+
+        internal static readonly Error RatingMustBeBelowFive = Error.Validation(
+            "CreateReview.RatingMustBeBelowFive",
+            "Your rating must not be above 5");
+
+        internal static readonly Error RatingMustBeGreaterOrEqualToZero = Error.Validation(
+            "CreateReview.RatingMustBeGreaterOrEqualToZero",
+            "Your rating must be greater than or equal to 0");
+
+        internal static readonly Error CommentIsRequired = Error.Validation(
+            "CreateReview.CommentIsRequired", "The comment is required");
+
+        internal static Error CommentMustNotBeAbove(int limit) => Error.Validation(
+            "CreateReview.CommentMustNotBeAbove", $"The comment must not be above {limit} characters");
+    }
+
+    /// <summary>
+    /// Contains the update review errors.
+    /// </summary>
+    internal static class UpdateReview
+    {
+        internal static readonly Error ReviewIdIsRequired = Error.Validation(
+           "UpdateReview.ReviewIdIsRequired", "The review identifier is required");
+
+        internal static readonly Error UserIdIsRequired = Error.Validation(
+           "UpdateReview.UserIdIsRequired", "The user identifier is required");
+
+        internal static readonly Error RatingMustBeBelowFive = Error.Validation(
+            "UpdateReview.RatingMustBeBelowFive",
+            "Your rating must not be above 5");
+
+        internal static readonly Error RatingMustBeGreaterOrEqualToZero = Error.Validation(
+            "UpdateReview.RatingMustBeGreaterOrEqualToZero",
+            "Your rating must be greater than or equal to 0");
+
+        internal static readonly Error CommentIsRequired = Error.Validation(
+            "UpdateReview.CommentIsRequired", "The comment is required");
+
+        internal static Error CommentMustNotBeAbove(int limit) => Error.Validation(
+            "UpdateReview.CommentMustNotBeAbove", $"The comment must not be above {limit} characters");
+    }
+
+    /// <summary>
+    /// Contains the remove review errors.
+    /// </summary>
+    internal static class RemoveReview
+    {
+        internal static readonly Error ReviewIdIsRequired = Error.Validation(
+           "RemoveReview.ReviewIdIsRequired", "The review identifier is required");
     }
 }
