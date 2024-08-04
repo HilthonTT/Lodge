@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { Work_Sans } from "next/font/google";
 
 import { AuthProvider } from "@/context/auth-context";
+import { ToastProvider } from "@/providers/toast-provider";
+import { QueryProvider } from "@/providers/query-provider";
 
 const font = Work_Sans({
   subsets: ["latin"],
@@ -22,7 +24,6 @@ export const metadata: Metadata = {
     url: "https://www.lodge.com",
     type: "website",
   },
-  viewport: "width=device-width, initial-scale=1",
 };
 
 export default function RootLayout({
@@ -33,7 +34,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={font.className}>
-        <AuthProvider>{children}</AuthProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <ToastProvider />
+            {children}
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );

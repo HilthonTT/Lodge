@@ -4,3 +4,8 @@ type UserAuth = {
   name: string;
   imageId?: string;
 };
+
+type LoginRequest = {
+  email: string;
+  password: string;
+};

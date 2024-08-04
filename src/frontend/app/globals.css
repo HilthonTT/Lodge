@@ -67,3 +67,11 @@
     @apply bg-background text-foreground;
   }
 }
+
+.form-label {
+  @apply block text-[16px] font-semibold text-gray-700;
+}
+
+.form-input {
+  @apply w-full px-3 py-2 mt-1 text-gray-900 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition;
+}
