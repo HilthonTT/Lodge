@@ -19,4 +19,8 @@
     <ProjectReference Include="..\Lodge.Domain\Lodge.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+	<InternalsVisibleTo Include="Application.UnitTests" />
+   </ItemGroup>
+
 </Project>
