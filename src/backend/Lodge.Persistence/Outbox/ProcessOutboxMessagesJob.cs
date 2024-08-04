@@ -121,7 +121,7 @@ internal sealed class ProcessOutboxMessagesJob(
     {
         const string sql =
             """
-            UPDATE users.outbox_messages
+            UPDATE outbox_messages
             SET processed_on_utc = @ProcessedOnUtc,
                 error = @Error
             WHERE id = @Id

@@ -27,6 +27,8 @@ builder.Services
     .AddApplication()
     .AddPresentation();
 
+builder.Services.AddFrontendCors(builder.Configuration);
+
 WebApplication app = builder.Build();
 
 ApiVersionSet apiVersionSet = app.NewApiVersionSet()
@@ -39,6 +41,8 @@ RouteGroupBuilder versionedGroup = app
     .WithApiVersionSet(apiVersionSet);
 
 app.MapEndpoints(versionedGroup);
+
+app.UseCors("AllowSpecificOrigin");
 
 app.UseBackgroundJobs();
 
