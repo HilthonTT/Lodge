@@ -1,4 +1,5 @@
 ﻿using Lodge.Application.Reviews.GetByApartmentId;
+using Lodge.Contracts.Common;
 using Lodge.Contracts.Reviews;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Presentation.Extensions;
@@ -6,6 +7,7 @@ using Lodge.Presentation.Infrastructure;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 
 namespace Lodge.Presentation.Endpoints.Apartments;
@@ -20,12 +22,14 @@ internal sealed class GetReviewsByApartmentId : IEndpoint
     {
         app.MapGet("apartments/{apartmentId}/reviews", async (
             Guid apartmentId,
+            [FromQuery] int page,
+            [FromQuery] int pageSize,
             ISender sender,
             CancellationToken cancellationToken) =>
         {
-            var query = new GetReviewsByApartmentIdQuery(apartmentId);
+            var query = new GetReviewsByApartmentIdQuery(apartmentId, page, pageSize);
 
-            Result<List<ReviewResponse>> result = await sender.Send(query, cancellationToken);
+            Result<PagedList<ReviewResponse>> result = await sender.Send(query, cancellationToken);
 
             return result.Match(Results.Ok, CustomResults.Problem);
         })

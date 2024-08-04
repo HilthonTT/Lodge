@@ -4,6 +4,7 @@ using Lodge.Application.Abstractions.Messaging;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Domain.Reviews;
 using Lodge.Domain.Users;
+using MediatR;
 
 namespace Lodge.Application.Reviews.Update;
 
@@ -16,7 +17,8 @@ namespace Lodge.Application.Reviews.Update;
 internal sealed class UpdateReviewCommandHandler(
     IUserIdentifierProvider userIdentifierProvider,
     IReviewRepository reviewRepository,
-    IUnitOfWork unitOfWork) : ICommandHandler<UpdateReviewCommand>
+    IUnitOfWork unitOfWork,
+    IPublisher publisher) : ICommandHandler<UpdateReviewCommand>
 {
     /// <inheritdoc />
     public async Task<Result> Handle(UpdateReviewCommand request, CancellationToken cancellationToken)
@@ -49,6 +51,8 @@ internal sealed class UpdateReviewCommandHandler(
         review.Update(ratingResult.Value, commentResult.Value);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await publisher.Publish(new ReviewUpdatedEvent(review.Id), cancellationToken);
 
         return Result.Success();
     }

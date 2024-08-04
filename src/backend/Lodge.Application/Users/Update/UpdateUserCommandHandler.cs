@@ -4,6 +4,7 @@ using Lodge.Application.Abstractions.Messaging;
 using Lodge.Application.Abstractions.Storage;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Domain.Users;
+using MediatR;
 
 namespace Lodge.Application.Users.Update;
 
@@ -14,11 +15,13 @@ namespace Lodge.Application.Users.Update;
 /// <param name="userRepository">The user repository.</param>
 /// <param name="blobService">The blob service.</param>
 /// <param name="unitOfWork">The unit of work.</param>
+/// <param name="publisher">The publisher.</param>
 internal sealed class UpdateUserCommandHandler(
     IUserIdentifierProvider userIdentifierProvider,
     IUserRepository userRepository,
     IBlobService blobService,
-    IUnitOfWork unitOfWork) : ICommandHandler<UpdateUserCommand>
+    IUnitOfWork unitOfWork,
+    IPublisher publisher) : ICommandHandler<UpdateUserCommand>
 {
     /// <inheritdoc />
     public async Task<Result> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
@@ -52,6 +55,8 @@ internal sealed class UpdateUserCommandHandler(
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await publisher.Publish(new UserUpdatedEvent(user.Id), cancellationToken);
 
         return Result.Success();
     }

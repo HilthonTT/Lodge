@@ -6,6 +6,7 @@ using Lodge.Domain.Apartements;
 using Lodge.Domain.Bookings;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Domain.Users;
+using MediatR;
 
 namespace Lodge.Application.Bookings.Reserve;
 
@@ -24,7 +25,8 @@ internal sealed class ReserveBookingCommandHandler(
     IBookingRepository bookingRepository,
     IUnitOfWork unitOfWork,
     PricingService pricingService,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<ReserveBookingCommand, Guid>
+    IDateTimeProvider dateTimeProvider,
+    IPublisher publisher) : ICommandHandler<ReserveBookingCommand, Guid>
 {
     /// <inheritdoc />
     public async Task<Result<Guid>> Handle(ReserveBookingCommand request, CancellationToken cancellationToken)
@@ -57,6 +59,8 @@ internal sealed class ReserveBookingCommandHandler(
                 pricingService);
 
             await unitOfWork.SaveChangesAsync(cancellationToken);
+
+            await publisher.Publish(new BookingReservedEvent(booking.Id), cancellationToken);
 
             return booking.Id;
         }

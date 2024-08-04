@@ -4,6 +4,7 @@ using Lodge.Application.Abstractions.Messaging;
 using Lodge.Domain.Bookings;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Domain.Users;
+using MediatR;
 
 namespace Lodge.Application.Bookings.Complete;
 
@@ -14,11 +15,13 @@ namespace Lodge.Application.Bookings.Complete;
 /// <param name="bookingRepository">The booking repository.</param>
 /// <param name="dateTimeProvider">The date time provider.</param>
 /// <param name="unitOfWork">The unit of work.</param>
+/// <param name="publisher">The publisher.</param>
 internal sealed class CompleteBookingCommandHandler(
     IUserIdentifierProvider userIdentifierProvider,
     IBookingRepository bookingRepository,
     IDateTimeProvider dateTimeProvider,
-    IUnitOfWork unitOfWork) : ICommandHandler<CompleteBookingCommand>
+    IUnitOfWork unitOfWork,
+    IPublisher publisher) : ICommandHandler<CompleteBookingCommand>
 {
     /// <inheritdoc />
     public async Task<Result> Handle(CompleteBookingCommand request, CancellationToken cancellationToken)
@@ -46,6 +49,8 @@ internal sealed class CompleteBookingCommandHandler(
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await publisher.Publish(new BookingCompletedEvent(booking.Id), cancellationToken);
 
         return Result.Success();
     }
