@@ -4,7 +4,8 @@
       "commandName": "DockerCompose",
       "commandVersion": "1.0",
       "serviceActions": {
-        "lodge.api": "StartDebugging"
+        "lodge.api": "StartDebugging",
+        "yarp.balancer": "StartDebugging"
       }
     }
   }
