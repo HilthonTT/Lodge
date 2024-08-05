@@ -86,7 +86,10 @@ export const AuthProvider = ({ children }: Props) => {
       router.push("/login");
     }
 
-    checkAuthUser();
+    const isLoggedIn = checkAuthUser();
+    if (!isLoggedIn) {
+      router.push("/login");
+    }
   }, [router]);
 
   const value = {

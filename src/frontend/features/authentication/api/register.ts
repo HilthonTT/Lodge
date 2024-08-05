@@ -1,12 +1,12 @@
 import { API_VERSION, BASE_API_URL } from "@/constants";
 import { storeToken } from "@/lib/auth";
-import { Methods } from "@/enums";
+import { Method } from "@/enums";
 
 export const register = async (request: RegisterRequest) => {
   const response = await fetch(
     `${BASE_API_URL}/api/${API_VERSION}/authentication/register`,
     {
-      method: Methods.POST,
+      method: Method.POST,
       headers: {
         "Content-Type": "application/json",
       },

@@ -12,9 +12,9 @@ type Props = {
 const AuthLayout = ({ children }: Props) => {
   const { isAuthenticated } = useUserContext();
 
-  //   if (isAuthenticated) {
-  //     redirect("/");
-  //   }
+  if (isAuthenticated) {
+    return redirect("/");
+  }
 
   return (
     <div className="flex bg-gray-100 overflow-y-hidden">
