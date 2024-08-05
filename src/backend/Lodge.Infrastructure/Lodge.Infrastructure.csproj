@@ -30,6 +30,6 @@
 	
    <ItemGroup>
 	 <InternalsVisibleTo Include="ArchitectureTests" />
-  </ItemGroup>
+   </ItemGroup>
 
 </Project>

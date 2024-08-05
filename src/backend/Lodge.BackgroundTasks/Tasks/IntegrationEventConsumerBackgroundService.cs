@@ -15,7 +15,7 @@ namespace Lodge.BackgroundTasks.Tasks;
 /// <summary>
 /// Represents the integration event consumer background service.
 /// </summary>
-internal sealed class IntegrationEventConsumerBackgroundService: IHostedService, IDisposable
+internal sealed class IntegrationEventConsumerBackgroundService : IHostedService, IDisposable
 {
     private static readonly JsonSerializerSettings SerializerSettings = new()
     {

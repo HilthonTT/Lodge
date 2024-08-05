@@ -10,4 +10,8 @@
     <ProjectReference Include="..\Lodge.Infrastructure\Lodge.Infrastructure.csproj" />
   </ItemGroup>
 
+	<ItemGroup>
+		<InternalsVisibleTo Include="Application.IntegrationTests" />
+	</ItemGroup>
+
 </Project>
