@@ -20,6 +20,8 @@ public sealed record Name
 
     public string Value { get; }
 
+    public static explicit operator string(Name name) => name.Value;
+
     /// <summary>
     /// Creates a new <see cref="Name"/> instance based on the specified value.
     /// </summary>

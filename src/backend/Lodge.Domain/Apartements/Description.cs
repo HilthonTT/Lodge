@@ -23,6 +23,8 @@ public sealed record Description
     /// </summary>
     public string Value { get; }
 
+    public static explicit operator string(Description description) => description.Value;
+
     /// <summary>
     /// Creates a new <see cref="Description"/> instance based on the specified value.
     /// </summary>

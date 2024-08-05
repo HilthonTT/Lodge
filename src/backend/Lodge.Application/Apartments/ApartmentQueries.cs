@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using Lodge.Contracts.Apartments;
 using Lodge.Domain.Bookings;
+using MediatR;
 using System.Data;
 
 namespace Lodge.Application.Apartments;
