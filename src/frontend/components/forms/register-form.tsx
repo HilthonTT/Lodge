@@ -7,8 +7,8 @@ import { useForm } from "react-hook-form";
 import { Loader2, TentTree } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { useLogin } from "@/features/authentication/mutations/use-login";
-import { LoginValidation } from "@/features/authentication/validation";
+import { useRegister } from "@/features/authentication/mutations/use-register";
+import { RegisterValidation } from "@/features/authentication/validation";
 
 import {
   Form,
@@ -22,29 +22,31 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 
-export const LoginForm = () => {
+export const RegisterForm = () => {
   const router = useRouter();
 
   const { toast } = useToast();
-  const { mutateAsync: login, isPending } = useLogin();
+  const { mutateAsync: register, isPending } = useRegister();
 
-  const form = useForm<z.infer<typeof LoginValidation>>({
-    resolver: zodResolver(LoginValidation),
+  const form = useForm<z.infer<typeof RegisterValidation>>({
+    resolver: zodResolver(RegisterValidation),
     defaultValues: {
       email: "",
       password: "",
+      firstName: "",
+      lastName: "",
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof LoginValidation>) => {
-    const token = await login(values);
+  const onSubmit = async (values: z.infer<typeof RegisterValidation>) => {
+    const token = await register(values);
 
     if (!token) {
-      toast({ title: "Something went wrong" });
+      toast({ title: "Something went wrong, please try again." });
       return;
     }
 
-    toast({ title: "Successfully logged in!" });
+    toast({ title: "Successfully registered!" });
 
     router.push("/");
   };
@@ -55,7 +57,7 @@ export const LoginForm = () => {
         <div className="flex flex-col items-center justify-center">
           <TentTree className="size-16 text-center text-indigo-500" />
           <h1 className="text-2xl font-bold text-center text-gray-900 capitalize">
-            Login to your account
+            Registration
           </h1>
         </div>
 
@@ -63,6 +65,49 @@ export const LoginForm = () => {
           <form
             onSubmit={form.handleSubmit(onSubmit)}
             className="space-y-5 flex flex-col mt-4">
+            <div className="flex items-center justify-between">
+              <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="form-label" htmlFor="first-name">
+                      First name
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        className="form-input"
+                        type="text"
+                        disabled={isPending}
+                        placeholder="John"
+                        {...field}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="form-label" htmlFor="first-name">
+                      Last name
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        className="form-input"
+                        type="text"
+                        disabled={isPending}
+                        placeholder="Doe"
+                        {...field}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
               name="email"
@@ -76,8 +121,8 @@ export const LoginForm = () => {
                       className="form-input"
                       type="email"
                       autoComplete="username"
-                      placeholder="johndoe@email.com"
                       disabled={isPending}
+                      placeholder="johndoe@email.com"
                       {...field}
                     />
                   </FormControl>
@@ -98,8 +143,8 @@ export const LoginForm = () => {
                       className="form-input"
                       type="password"
                       autoComplete="current-password"
-                      placeholder="Choose a strong password"
                       disabled={isPending}
+                      placeholder="Choose a strong password"
                       {...field}
                     />
                   </FormControl>
@@ -109,13 +154,13 @@ export const LoginForm = () => {
             />
             <div>
               <Link
-                href="/register"
+                href="/login"
                 className="text-indigo-500 text-sm hover:underline">
-                Don&apos;t have an account?
+                Already have an account?
               </Link>
             </div>
             <Button type="submit" disabled={isPending}>
-              {isPending ? <Loader2 className="animate-spin" /> : "Login"}
+              {isPending ? <Loader2 className="animate-spin" /> : "Register"}
             </Button>
           </form>
         </Form>

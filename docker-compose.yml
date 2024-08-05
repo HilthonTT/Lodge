@@ -37,8 +37,8 @@ services:
       context: .
       dockerfile: src/backend/Yarp.Balancer/Dockerfile
     ports:
-      - 3000:3000
-      - 3001:3001 
+      - 8000:8000
+      - 8001:8001 
 
   lodge-database:
     image: postgres:latest

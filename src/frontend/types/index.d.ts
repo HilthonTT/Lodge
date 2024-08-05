@@ -9,3 +9,10 @@ type LoginRequest = {
   email: string;
   password: string;
 };
+
+type RegisterRequest = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+};

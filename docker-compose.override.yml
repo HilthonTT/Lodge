@@ -40,11 +40,11 @@ services:
   yarp.balancer:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_HTTP_PORTS=3000
-      - ASPNETCORE_HTTPS_PORTS=3001
+      - ASPNETCORE_HTTP_PORTS=8000
+      - ASPNETCORE_HTTPS_PORTS=8001
     ports:
-      - "3000"
-      - "3001"
+      - "8000"
+      - "8001"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
