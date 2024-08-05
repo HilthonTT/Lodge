@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/navigation/navbar";
+import { Amenities } from "@/components/navigation/amenities";
 
 type Props = {
   children: React.ReactNode;
@@ -8,7 +9,8 @@ const MainLayout = ({ children }: Props) => {
   return (
     <div className="relative">
       <Navbar />
-      <div className="size-full pt-20">{children}</div>
+      <Amenities />
+      <div className="size-full pt-64">{children}</div>
     </div>
   );
 };
