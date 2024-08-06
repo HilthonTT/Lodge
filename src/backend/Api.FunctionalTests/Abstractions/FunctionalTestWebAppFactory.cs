@@ -14,9 +14,9 @@ using Npgsql;
 using Testcontainers.PostgreSql;
 using Testcontainers.Redis;
 
-namespace Application.IntegrationTests.Abstractions;
+namespace Api.FunctionalTests.Abstractions;
 
-public class IntegrationTestWebFactory : WebApplicationFactory<Program>, IAsyncLifetime
+public class FunctionalTestWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder()
         .WithImage("postgres:latest")

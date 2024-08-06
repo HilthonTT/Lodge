@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Lodge.Application.Core.Errors;
 using Lodge.Application.Core.Extensions;
+using Lodge.Domain.Users;
 
 namespace Lodge.Application.Users.Create;
 
@@ -22,6 +23,7 @@ internal sealed class CreateUserCommandValidator : AbstractValidator<CreateUserC
             .NotEmpty().WithError(ValidationErrors.CreateUser.EmailIsRequired)
             .EmailAddress().WithError(ValidationErrors.CreateUser.EmailMustBeARealEmail);
 
-        RuleFor(x => x.Password).NotEmpty().WithError(ValidationErrors.CreateUser.PasswordIsRequired);
+        RuleFor(x => x.Password)
+            .NotEmpty().WithError(ValidationErrors.CreateUser.PasswordIsRequired);
     }
 }
