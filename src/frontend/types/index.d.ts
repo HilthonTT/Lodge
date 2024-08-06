@@ -16,3 +16,31 @@ type RegisterRequest = {
   email: string;
   password: string;
 };
+
+type PagedList<T> = {
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  items: T[];
+};
+
+type Address = {
+  country: string;
+  state: string;
+  city: string;
+  street: string;
+};
+
+type Apartment = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  currency: string;
+  imageId: string;
+  address: Address;
+};
+
+type ApartmentPagedList = PagedList<Apartment>;

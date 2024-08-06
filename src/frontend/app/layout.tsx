@@ -1,14 +1,14 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Work_Sans } from "next/font/google";
+import { Nunito } from "next/font/google";
 
 import { AuthProvider } from "@/context/auth-context";
 import { ToastProvider } from "@/providers/toast-provider";
 import { QueryProvider } from "@/providers/query-provider";
 
-const font = Work_Sans({
+const font = Nunito({
   subsets: ["latin"],
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  weight: ["200", "300", "400", "500", "600", "700", "800", "900"],
 });
 
 export const metadata: Metadata = {
