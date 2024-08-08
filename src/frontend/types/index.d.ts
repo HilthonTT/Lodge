@@ -48,3 +48,11 @@ type ApartmentPagedList = PagedList<Apartment>;
 type TokenResponse = {
   token: string;
 };
+
+type Country = {
+  flag: string;
+  label: string;
+  latlng: number[];
+  region: string;
+  value: string;
+};

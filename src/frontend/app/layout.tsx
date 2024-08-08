@@ -5,6 +5,7 @@ import { Nunito } from "next/font/google";
 import { AuthProvider } from "@/context/auth-context";
 import { ToastProvider } from "@/providers/toast-provider";
 import { QueryProvider } from "@/providers/query-provider";
+import { ModalProvider } from "@/providers/modal-provider";
 
 const font = Nunito({
   subsets: ["latin"],
@@ -37,6 +38,7 @@ export default function RootLayout({
         <QueryProvider>
           <AuthProvider>
             <ToastProvider />
+            <ModalProvider />
             {children}
           </AuthProvider>
         </QueryProvider>
