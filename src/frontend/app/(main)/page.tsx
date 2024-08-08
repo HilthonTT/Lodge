@@ -8,8 +8,8 @@ import { CustomPagination } from "@/components/custom-pagination";
 
 type Props = {
   searchParams: {
-    amenity: string;
-    page: number;
+    amenity?: string;
+    page?: number;
   };
 };
 
@@ -23,7 +23,6 @@ const HomePage = ({ searchParams }: Props) => {
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {searchParams.page}
         {apartments?.items.map((apartment) => (
           <ApartmentCard key={apartment.id} apartment={apartment} />
         ))}

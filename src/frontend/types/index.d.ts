@@ -44,3 +44,7 @@ type Apartment = {
 };
 
 type ApartmentPagedList = PagedList<Apartment>;
+
+type TokenResponse = {
+  token: string;
+};

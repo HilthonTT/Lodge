@@ -39,16 +39,20 @@ export const RegisterForm = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof RegisterValidation>) => {
-    const token = await register(values);
+    try {
+      const token = await register(values);
 
-    if (!token) {
-      toast({ title: "Something went wrong, please try again." });
-      return;
+      if (!token) {
+        toast({ title: "❌ Something went wrong, please try again." });
+        return;
+      }
+
+      toast({ title: "✅ Successfully registered!" });
+
+      router.push("/");
+    } catch (error) {
+      toast({ title: "❌ Something went wrong, please try again." });
     }
-
-    toast({ title: "Successfully registered!" });
-
-    router.push("/");
   };
 
   return (

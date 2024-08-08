@@ -1,26 +1,13 @@
-import { API_VERSION, BASE_API_URL } from "@/constants";
 import { storeToken } from "@/lib/auth";
-import { Method } from "@/enums";
+import { requestPostAxios } from "@/lib/axios";
 
 export const register = async (request: RegisterRequest) => {
-  const response = await fetch(
-    `${BASE_API_URL}/api/${API_VERSION}/authentication/register`,
-    {
-      method: Method.POST,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(request),
-    }
-  );
+  const response = (await requestPostAxios(
+    "authentication/register",
+    request
+  )) as TokenResponse;
 
-  if (!response.ok) {
-    throw new Error("Something went wrong while logging in.");
-  }
+  storeToken(response.token);
 
-  const token = await response.text();
-
-  storeToken(token);
-
-  return token;
+  return response.token;
 };

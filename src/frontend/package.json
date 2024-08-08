@@ -19,6 +19,7 @@
     "@types/js-cookie": "^3.0.6",
     "@types/jwt-decode": "^3.1.0",
     "@types/react-scroll": "^1.8.10",
+    "axios": "^1.7.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "framer-motion": "^11.3.21",

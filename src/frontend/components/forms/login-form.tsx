@@ -37,16 +37,20 @@ export const LoginForm = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof LoginValidation>) => {
-    const token = await login(values);
+    try {
+      const token = await login(values);
 
-    if (!token) {
-      toast({ title: "Something went wrong" });
-      return;
+      if (!token) {
+        toast({ title: "❌ Invalid credentials" });
+        return;
+      }
+
+      toast({ title: "✅ Successfully logged in!" });
+
+      router.push("/");
+    } catch (error) {
+      toast({ title: "❌ Invalid credentials" });
     }
-
-    toast({ title: "Successfully logged in!" });
-
-    router.push("/");
   };
 
   return (
