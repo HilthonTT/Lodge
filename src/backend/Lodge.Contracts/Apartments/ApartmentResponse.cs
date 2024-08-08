@@ -13,7 +13,7 @@ public sealed class ApartmentResponse
     /// <param name="description">The description.</param>
     /// <param name="price">The price.</param>
     /// <param name="currency">The currency.</param>
-    /// <param name="imageId">The image identifier.</param>
+    /// <param name="imageUrl">The image url.</param>
     /// <param name="address">The address.</param>
     public ApartmentResponse(
         Guid id,
@@ -21,7 +21,7 @@ public sealed class ApartmentResponse
         string description,
         decimal price,
         string currency,
-        Guid imageId,
+        string imageUrl,
         AddressResponse address)
     {
         Id = id;
@@ -29,7 +29,7 @@ public sealed class ApartmentResponse
         Description = description;
         Price = price;
         Currency = currency;
-        ImageId = imageId;
+        ImageUrl = imageUrl;
         Address = address;
     }
 
@@ -63,9 +63,9 @@ public sealed class ApartmentResponse
     public string Currency { get; }
 
     /// <summary>
-    /// Gets the image identifier.
+    /// Gets the image url.
     /// </summary>
-    public Guid ImageId { get; }
+    public string ImageUrl { get; }
 
     /// <summary>
     /// Gets and sets the address.

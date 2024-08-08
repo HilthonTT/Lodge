@@ -7,10 +7,10 @@ type Props = {
 
 const MainLayout = ({ children }: Props) => {
   return (
-    <div className="relative">
+    <>
       <Navbar />
-      <Container className="size-full pb-20 pt-5">{children}</Container>
-    </div>
+      <Container className="flex-1 pb-20 pt-5">{children}</Container>
+    </>
   );
 };
 

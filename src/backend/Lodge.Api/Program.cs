@@ -59,8 +59,7 @@ if (app.Environment.IsDevelopment())
 
     app.ApplyMigrations();
 
-    // await app.SeedImages();
-    // app.SeedData();
+    app.SeedData();
 }
 
 app.UseHttpsRedirection();

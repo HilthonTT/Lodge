@@ -52,7 +52,7 @@ internal sealed class SearchApartmentQueryHandler(IDbContext context)
                 (string)a.Description,
                 a.Price.Amount,
                 a.Price.Currency.Code,
-                a.ImageId,
+                a.ImageUrl,
                 new AddressResponse(a.Address.Country, a.Address.State, a.Address.City, a.Address.Street)))
             .ToListAsync(cancellationToken);
 

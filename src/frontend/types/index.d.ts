@@ -39,7 +39,7 @@ type Apartment = {
   description: string;
   price: number;
   currency: string;
-  imageId: string;
+  imageUrl: string;
   address: Address;
 };
 

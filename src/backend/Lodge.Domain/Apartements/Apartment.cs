@@ -21,7 +21,7 @@ public sealed class Apartment : Entity, IAuditableEntity
     /// <param name="cleaningFee">The apartment's cleaning fee.</param>
     /// <param name="maximumGuestCount">The maximum guest count for this apartment.</param>
     /// <param name="maximumRoomCount">The maximum room count for this apartment.</param>
-    /// <param name="imageId">The apartment's image id.</param>
+    /// <param name="imageUrl">The image url.</param>
     /// <param name="amenities">The apartment's amenities.</param>
     private Apartment(
         Guid id,
@@ -32,7 +32,7 @@ public sealed class Apartment : Entity, IAuditableEntity
         Money cleaningFee,
         int maximumRoomCount,
         int maximumGuestCount,
-        Guid imageId,
+        string imageUrl,
         List<Amenity> amenities)
         : base(id)
     {
@@ -43,7 +43,7 @@ public sealed class Apartment : Entity, IAuditableEntity
         CleaningFee = cleaningFee;
         MaximumRoomCount = maximumRoomCount;
         MaximumGuestCount = maximumGuestCount;
-        ImageId = imageId;
+        ImageUrl = imageUrl;
         Amenities = amenities;
     }
 
@@ -71,7 +71,7 @@ public sealed class Apartment : Entity, IAuditableEntity
 
     public int MaximumGuestCount { get; private set; }
 
-    public Guid ImageId { get; private set; }
+    public string ImageUrl { get; private set; }
 
     public DateTime? LastBookedOnUtc  { get; internal set; }
 
@@ -102,7 +102,7 @@ public sealed class Apartment : Entity, IAuditableEntity
         Money cleaningFee,
         int maximumRoomCount,
         int maximumGuestCount,
-        Guid imageId,
+        string imageUrl,
         List<Amenity> amenities)
     {
         var apartment = new Apartment(
@@ -114,7 +114,7 @@ public sealed class Apartment : Entity, IAuditableEntity
             cleaningFee,
             maximumRoomCount,
             maximumGuestCount,
-            imageId,
+            imageUrl,
             amenities);
 
         apartment.RaiseDomainEvent(new ApartmentCreatedDomainEvent(apartment.Id));
