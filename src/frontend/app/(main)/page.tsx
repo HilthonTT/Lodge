@@ -1,10 +1,7 @@
-"use client";
-
 import { ApartmentCard } from "@/features/apartments/components/apartment-card";
-import { useGetApartments } from "@/features/apartments/queries/use-get-apartments";
 
-import { Loader } from "@/components/loader";
 import { CustomPagination } from "@/components/custom-pagination";
+import { getApartments } from "@/actions/apartments/get-apartments";
 
 type Props = {
   searchParams: {
@@ -13,12 +10,8 @@ type Props = {
   };
 };
 
-const HomePage = ({ searchParams }: Props) => {
-  const { data: apartments, isPending } = useGetApartments(searchParams.page);
-
-  if (isPending) {
-    return <Loader />;
-  }
+const HomePage = async ({ searchParams }: Props) => {
+  const apartments = await getApartments(searchParams.page || 1, 36);
 
   return (
     <>
