@@ -17,8 +17,11 @@ export const CountApartmentModal = () => {
 
   const { isOpen, onClose } = useCountApartment();
 
-  const [guestCount, setGuestCount] = useState(1);
-  const [roomCount, setRoomCount] = useState(1);
+  const guestCountAsString = searchParams.get("guestCount");
+  const roomCountAsString = searchParams.get("roomCount");
+
+  const [guestCount, setGuestCount] = useState(Number(guestCountAsString) || 1);
+  const [roomCount, setRoomCount] = useState(Number(roomCountAsString) || 1);
 
   const canDecreaseGuestCount = guestCount > 1;
   const canDecreaseRoomCount = roomCount > 1;
@@ -32,7 +35,7 @@ export const CountApartmentModal = () => {
   };
 
   const decreaseRoomCount = () => {
-    if (!canDecreaseGuestCount) {
+    if (!canDecreaseRoomCount) {
       return;
     }
 
@@ -52,7 +55,7 @@ export const CountApartmentModal = () => {
 
     const url = qs.stringifyUrl(
       {
-        url: "/",
+        url: "/search",
         query: {
           ...allParams,
           guestCount,

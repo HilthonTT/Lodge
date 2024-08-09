@@ -22,40 +22,48 @@ internal sealed class SearchApartmentQueryHandler(IDbContext context)
         SearchApartmentQuery request, 
         CancellationToken cancellationToken)
     {
-        IQueryable<Apartment> apartmentsQuery = context
-            .Set<Apartment>()
-            .AsNoTracking();
+        IQueryable<Apartment> apartmentsQuery = context.Set<Apartment>().AsNoTracking();
 
+        // Filter by Search Term
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
         {
             apartmentsQuery = apartmentsQuery
-                .Where(a => 
-                    (a.Name.Value).Contains(request.SearchTerm) ||
-                    (a.Description.Value).Contains(request.SearchTerm));
+                .Where(a => a.Address.Country.Contains(request.SearchTerm));
         }
 
+        // Filter by Guest Count
+        if (request.GuestCount.HasValue && request.GuestCount.GetValueOrDefault() >= 1)
+        {
+            apartmentsQuery = apartmentsQuery
+                .Where(a => a.MaximumGuestCount >= request.GuestCount.GetValueOrDefault());
+        }
+
+        // Filter by Room Count
+        if (request.RoomCount.HasValue && request.RoomCount.GetValueOrDefault() >= 1)
+        {
+            apartmentsQuery = apartmentsQuery
+                .Where(a => a.MaximumRoomCount >= request.RoomCount.GetValueOrDefault());
+        }
+
+        // Sorting
         Expression<Func<Apartment, object>> keySelector = GetSortProperty(request);
+        apartmentsQuery = request.SortOrder?.ToLower() == "desc"
+            ? apartmentsQuery.OrderByDescending(keySelector)
+            : apartmentsQuery.OrderBy(keySelector);
 
-        if (request.SortOrder?.ToLower() == "desc")
-        {
-            apartmentsQuery = apartmentsQuery.OrderByDescending(keySelector);
-        }
-        else
-        {
-            apartmentsQuery = apartmentsQuery.OrderBy(keySelector);
-        }
-
+        // Fetch and Project to Response
         List<ApartmentResponse> apartmentResponsesQuery = await apartmentsQuery
             .Select(a => new ApartmentResponse(
                 a.Id,
-                (string)a.Name,
-                (string)a.Description,
+                a.Name.Value,
+                a.Description.Value,
                 a.Price.Amount,
                 a.Price.Currency.Code,
                 a.ImageUrl,
                 new AddressResponse(a.Address.Country, a.Address.State, a.Address.City, a.Address.Street)))
             .ToListAsync(cancellationToken);
 
+        // Paginate Results
         var apartments = PagedList<ApartmentResponse>.Create(apartmentResponsesQuery, request.Page, request.PageSize);
 
         return apartments;
@@ -69,11 +77,11 @@ internal sealed class SearchApartmentQueryHandler(IDbContext context)
     private static Expression<Func<Apartment, object>> GetSortProperty(SearchApartmentQuery request) =>
         request.SortColumn?.ToLower() switch
         {
-            "name" => apartment => apartment.Name,
-            "description" => apartment => apartment.Description,
+            "name" => apartment => apartment.Name.Value,
+            "description" => apartment => apartment.Description.Value,
             "country" => apartment => apartment.Address.Country,
             "price_amount" => apartment => apartment.Price.Amount,
-            "currency" => apartment => apartment.Price.Currency,
+            "currency" => apartment => apartment.Price.Currency.Code,
             _ => apartment => apartment.Id,
         };
 }

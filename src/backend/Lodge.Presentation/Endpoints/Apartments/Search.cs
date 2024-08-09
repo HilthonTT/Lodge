@@ -26,12 +26,23 @@ internal sealed class Search : IEndpoint
             [FromQuery] string? sortOrder,
             [FromQuery] int page,
             [FromQuery] int pageSize,
-            [FromQuery] DateOnly startDate,
-            [FromQuery] DateOnly endDate,
+            [FromQuery] int? guestCount,
+            [FromQuery] int? roomCount,
+            [FromQuery] DateOnly? startDate,
+            [FromQuery] DateOnly? endDate,
             ISender sender,
             CancellationToken cancellationToken) =>
         {
-            var query = new SearchApartmentQuery(searchTerm, sortColumn, sortOrder, page, pageSize, startDate, endDate);
+            var query = new SearchApartmentQuery(
+                searchTerm, 
+                sortColumn, 
+                sortOrder, 
+                page, 
+                pageSize, 
+                startDate, 
+                endDate,
+                guestCount,
+                roomCount);
 
             Result<PagedList<ApartmentResponse>> result = await sender.Send(query, cancellationToken);
 

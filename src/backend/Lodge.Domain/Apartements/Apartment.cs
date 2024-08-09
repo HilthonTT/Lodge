@@ -91,7 +91,7 @@ public sealed class Apartment : Entity, IAuditableEntity
     /// <param name="cleaningFee">The cleaning fee.</param>
     /// <param name="maximumGuestCount">The maximum guest count for this apartment.</param>
     /// <param name="maximumRoomCount">The maximum room count for this apartment.</param>
-    /// <param name="imageId">The apartment's image id.</param>
+    /// <param name="imageUrl">The apartment's image url.</param>
     /// <param name="amenities">The amenities.</param>
     /// <returns>The newly created apartment instance.</returns>
     public static Apartment Create(

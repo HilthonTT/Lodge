@@ -4,7 +4,7 @@ import qs from "query-string";
 import { useState } from "react";
 import { Range, RangeKeyDict } from "react-date-range";
 import { useRouter, useSearchParams } from "next/navigation";
-import { formatISO } from "date-fns";
+import { format } from "date-fns";
 
 import { useDateApartment } from "@/features/apartments/hooks/use-date-apartment";
 
@@ -38,11 +38,11 @@ export const DateApartmentModal = () => {
 
     const url = qs.stringifyUrl(
       {
-        url: "/",
+        url: "/search",
         query: {
           ...allParams,
-          startDate: formatISO(dateRange.startDate || new Date()),
-          endDate: formatISO(dateRange.endDate || new Date()),
+          startDate: format(dateRange.startDate || new Date(), "yyyy-MM-dd"),
+          endDate: format(dateRange.endDate || new Date(), "yyyy-MM-dd"),
         },
       },
       {

@@ -14,12 +14,16 @@ namespace Lodge.Application.Apartments.Search;
 /// <param name="PageSize">The page size.</param>
 /// <param name="StartDate">The start date.</param>
 /// <param name="EndDate">The end date.</param>
+/// <param name="GuestCount">The guest count.</param>
+/// <param name="RoomCount">The room count.</param>
 public sealed record SearchApartmentQuery(
     string? SearchTerm,
     string? SortColumn,
     string? SortOrder,
     int Page,
     int PageSize,
-    DateOnly StartDate, 
-    DateOnly EndDate) 
+    DateOnly? StartDate, 
+    DateOnly? EndDate,
+    int? GuestCount,
+    int? RoomCount) 
     : IQuery<PagedList<ApartmentResponse>>;

@@ -17,6 +17,7 @@ import {
 import { calculatePages } from "@/lib/utils";
 
 type Props = {
+  link: string;
   totalCount: number;
   pageSize: number;
   hasPreviousPage: boolean;
@@ -24,6 +25,7 @@ type Props = {
 };
 
 export const CustomPagination = ({
+  link,
   totalCount,
   pageSize,
   hasNextPage,
@@ -35,12 +37,12 @@ export const CustomPagination = ({
   const [currentPage, setCurrentPage] = useState(1);
 
   const handlePageChange = (page: number) => {
-    const amenity = searchParams.get("amenity");
+    const allParams = Object.fromEntries(searchParams.entries());
 
     const url = qs.stringifyUrl({
-      url: "/",
+      url: link,
       query: {
-        amenity,
+        ...allParams,
         page,
       },
     });

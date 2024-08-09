@@ -19,8 +19,12 @@ export const getApartments = async (page: number, pageSize: number) => {
 
     const response = await axios.get(url);
 
-    return response.data as ApartmentPagedList;
+    return {
+      isSuccess: true,
+      data: response.data as ApartmentPagedList,
+    };
   } catch (error) {
     console.log("[GET_APARTMENTS]", error);
+    return { isSuccess: false };
   }
 };

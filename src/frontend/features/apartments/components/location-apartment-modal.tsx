@@ -58,7 +58,7 @@ export const LocationApartmentModal = () => {
 
     const url = qs.stringifyUrl(
       {
-        url: "/",
+        url: "/search",
         query: {
           ...allParams,
           country: location?.label,
