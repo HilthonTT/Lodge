@@ -54,15 +54,13 @@ export const LocationApartmentModal = () => {
   };
 
   const onSaveChanges = () => {
-    const amenity = searchParams.get("amenity");
-    const page = searchParams.get("page");
+    const allParams = Object.fromEntries(searchParams.entries());
 
     const url = qs.stringifyUrl(
       {
         url: "/",
         query: {
-          amenity,
-          page,
+          ...allParams,
           country: location?.label,
         },
       },

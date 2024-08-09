@@ -56,3 +56,8 @@ type Country = {
   region: string;
   value: string;
 };
+
+type DateRange = {
+  startDate: Date;
+  endDate: Date;
+};

@@ -3,9 +3,11 @@
 import { SearchIcon } from "lucide-react";
 
 import { useLocationApartment } from "@/features/apartments/hooks/use-location-apartment";
+import { useDateApartment } from "@/features/apartments/hooks/use-date-apartment";
 
 export const Search = () => {
   const { onOpen: openLocation } = useLocationApartment();
+  const { onOpen: openDate } = useDateApartment();
 
   return (
     <div className="flex items-center justify-center size-full">
@@ -14,7 +16,9 @@ export const Search = () => {
           <div onClick={openLocation} className="search-section rounded-l-full">
             <p>Anywhere</p>
           </div>
-          <div className="search-section border-l border-neutral-200 hover:bg-neutral-100 transition">
+          <div
+            onClick={openDate}
+            className="search-section border-l border-neutral-200 hover:bg-neutral-100 transition">
             <p>Any week</p>
           </div>
           <div className="relative search-section !pr-16 border-l border-neutral-200 rounded-r-full">
