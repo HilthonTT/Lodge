@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { LocationApartmentModal } from "@/features/apartments/components/location-apartment-modal";
 import { DateApartmentModal } from "@/features/apartments/components/date-apartment-modal";
+import { CountApartmentModal } from "@/features/apartments/components/count-apartment-modal";
 
 export const ModalProvider = () => {
   const [isMounted, setIsMounted] = useState(false);
@@ -20,6 +21,7 @@ export const ModalProvider = () => {
     <>
       <LocationApartmentModal />
       <DateApartmentModal />
+      <CountApartmentModal />
     </>
   );
 };
