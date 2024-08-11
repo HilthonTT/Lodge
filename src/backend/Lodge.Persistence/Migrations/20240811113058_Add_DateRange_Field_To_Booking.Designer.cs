@@ -3,6 +3,7 @@ using System;
 using Lodge.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Lodge.Persistence.Migrations
 {
     [DbContext(typeof(LodgeDbContext))]
-    partial class LodgeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240811113058_Add_DateRange_Field_To_Booking")]
+    partial class Add_DateRange_Field_To_Booking
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

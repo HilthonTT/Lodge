@@ -16,7 +16,7 @@ public sealed class PricingService
     /// <returns>A <see cref="PricingDetails"/> object containing the price breakdown for the booking.</returns>
     public PricingDetails CalculatePrice(Apartment apartment, DateRange period)
     {
-        var currency = apartment.Price.Currency;
+        Currency currency = apartment.Price.Currency;
 
         var priceForPeriod = new Money(apartment.Price.Amount * period.LengthInDays, currency);
 
@@ -45,7 +45,7 @@ public sealed class PricingService
             amenitiesUpCharge = new Money(priceForPeriod.Amount * percentageUpCharge, currency);
         }
 
-        var totalPrice = Money.Zero();
+        var totalPrice = Money.Zero(currency);
         totalPrice += priceForPeriod;
 
         if (!apartment.CleaningFee.IsZero())

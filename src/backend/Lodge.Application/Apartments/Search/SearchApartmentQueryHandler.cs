@@ -61,7 +61,13 @@ internal sealed class SearchApartmentQueryHandler(IDbContext context)
                 Price = a.Price.Amount,
                 Currency = a.Price.Currency.Code,
                 ImageUrl = a.ImageUrl,
-                Address = new AddressResponse(a.Address.Country, a.Address.State, a.Address.City, a.Address.Street)
+                Address = new AddressResponse 
+                { 
+                    Country = a.Address.Country,
+                    State = a.Address.State,
+                    City = a.Address.City,
+                    Street = a.Address.Street 
+                }
             })
             .ToListAsync(cancellationToken);
 

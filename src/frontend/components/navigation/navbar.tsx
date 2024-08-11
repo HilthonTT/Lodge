@@ -12,7 +12,7 @@ export const Navbar = () => {
   const pathname = usePathname();
 
   return (
-    <div className="fixd w-full bg-white z-10 shadow-sm">
+    <div className="w-full bg-white z-10 shadow-sm">
       <div className="py-4 border-b">
         <Container>
           <div className="flex flex-row items-center justify-between gap-3 md:gap-8">

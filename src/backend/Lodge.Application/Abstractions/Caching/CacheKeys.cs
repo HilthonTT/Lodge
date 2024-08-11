@@ -10,8 +10,7 @@ internal static class CacheKeys
     /// </summary>
     internal static class Apartments
     {
-        internal static string Search(DateOnly startOnly, DateOnly endDate) =>
-            $"apartments-search-{startOnly.ToShortDateString()}-{endDate.ToShortDateString()}";
+        internal static string GetPrice(Guid apartmentId) => $"apartment-{apartmentId}-price";
 
         internal static string GetById(Guid apartmentId) => $"apartment-{apartmentId}";
     }

@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Lodge.Contracts.Apartments;
+using Lodge.Contracts.Bookings;
 using Lodge.Domain.Bookings;
 using System.Data;
 
@@ -33,6 +34,8 @@ public static class ApartmentQueries
                 a.price_amount AS Price,
                 a.price_currency AS Currency,
                 a.image_url AS ImageUrl,
+                a.maximum_room_count AS MaximumRoomCount,
+                a.maximum_guest_count AS MaximumGuestCount,
                 a.address_country AS Country,
                 a.address_state AS State,
                 a.address_zip_code AS ZipCode,
@@ -83,6 +86,8 @@ public static class ApartmentQueries
                 a.price_amount AS Price,
                 a.price_currency AS Currency,
                 a.image_url AS ImageUrl,
+                a.maximum_room_count AS MaximumRoomCount,
+                a.maximum_guest_count AS MaximumGuestCount,
                 a.address_country AS Country,
                 a.address_state AS State,
                 a.address_zip_code AS ZipCode,
@@ -92,10 +97,59 @@ public static class ApartmentQueries
             WHERE a.id = @Id
             """;
 
-        ApartmentResponse? apartment = await connection.QueryFirstOrDefaultAsync<ApartmentResponse>(
-            sql,
-            new { Id = apartmentId });
+        IEnumerable<ApartmentResponse> apartments = await connection
+             .QueryAsync<ApartmentResponse, AddressResponse, ApartmentResponse>(
+                 sql,
+                 (apartment, address) =>
+                 {
+                     apartment.Address = address;
 
-        return apartment;
+                     return apartment;
+                 },
+                 new
+                 {
+                     Id = apartmentId,
+                 },
+                 splitOn: "Country");
+
+        return apartments.FirstOrDefault();
+    }
+
+    /// <summary>
+    /// Gets the booked dates of an apartment.
+    /// </summary>
+    /// <param name="connection">The database connection.</param>
+    /// <param name="apartmentId">The apartment identifier.</param>
+    /// <returns>A list of <see cref="DateTime"/>.</returns>
+    public static async Task<List<DateTime>> GetBookedDatesAsync(IDbConnection connection, Guid apartmentId)
+    {
+        const string sql =
+            """
+            SELECT
+                b.duration_start AS StartDate,
+                b.duration_end AS EndDate
+            FROM
+                bookings AS b
+            WHERE
+                b.apartment_id = @ApartmentId AND
+                b.status = ANY(@ActiveBookingStatuses)
+            """;
+
+        IEnumerable<BookingDuration> bookings = await connection.QueryAsync<BookingDuration>(
+            sql,
+            new { ApartmentId = apartmentId, ActiveBookingStatuses });
+
+        var bookedDates = new List<DateTime>();
+
+        foreach (var booking in bookings)
+        {
+            var dateRange = Enumerable
+                .Range(0, (booking.EndDate - booking.StartDate).Days + 1)
+                .Select(offset => booking.StartDate.AddDays(offset));
+
+            bookedDates.AddRange(dateRange);
+        }
+
+        return bookedDates;
     }
 }

@@ -40,6 +40,8 @@ type Apartment = {
   price: number;
   currency: string;
   imageUrl: string;
+  maximumRoomCount: number;
+  maximumGuestCount: number;
   address: Address;
 };
 
@@ -60,4 +62,12 @@ type Country = {
 type DateRange = {
   startDate: Date;
   endDate: Date;
+};
+
+type PriceDetails = {
+  currency: string;
+  pricePerPeriod: number;
+  cleaningFee: number;
+  amenitiesUpCharge: number;
+  totalPrice: number;
 };

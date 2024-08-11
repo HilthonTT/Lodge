@@ -1,4 +1,4 @@
-import countries from "world-countries";
+import { add, format } from "date-fns";
 import {
   FaWifi,
   FaSnowflake,
@@ -21,11 +21,24 @@ import { GiCastle, GiTreehouse, GiCaveEntrance, GiBarn } from "react-icons/gi";
 import { MdOutlineAgriculture, MdCabin } from "react-icons/md";
 import { LuPalmtree, LuFlower2 } from "react-icons/lu";
 import { IoBoatOutline } from "react-icons/io5";
+import { Range } from "react-date-range";
 
 export const BASE_API_URL = process.env.NEXT_PUBLIC_API_BASE_URL!;
 export const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION!;
 
 export const MAX_PAGE_SIZE = 36;
+
+export const INITIAL_DATE = format(new Date(), "yyyy-MM-dd");
+export const DATE_10_DAYS_LATER = format(
+  add(new Date(), { days: 1 }),
+  "yyyy-MM-dd"
+);
+
+export const INITIAL_DATE_RANGE: Range = {
+  startDate: new Date(),
+  endDate: new Date(),
+  key: "selection",
+};
 
 export const AMENITIES = [
   {

@@ -36,6 +36,16 @@ public sealed class ApartmentResponse
     public string ImageUrl { get; init; } = string.Empty;
 
     /// <summary>
+    /// Gets the maximum room count.
+    /// </summary>
+    public int MaximumRoomCount { get; set; }
+
+    /// <summary>
+    /// Gets the maximum guest count
+    /// </summary>
+    public int MaximumGuestCount { get; set; }
+
+    /// <summary>
     /// Gets and sets the address.
     /// </summary>
     public AddressResponse Address { get; set; }
