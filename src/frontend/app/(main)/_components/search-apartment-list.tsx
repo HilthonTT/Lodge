@@ -1,6 +1,7 @@
 import { ApartmentCard } from "@/features/apartments/components/apartment-card";
 
 import { Earth } from "@/components/earth";
+import { MAX_PAGE_SIZE } from "@/constants";
 import { CustomPagination } from "@/components/custom-pagination";
 import { searchApartments } from "@/actions/apartments/search-apartments";
 
@@ -22,7 +23,7 @@ export const SearchApartmentList = async ({
 }: Props) => {
   const { data: apartments, isSuccess } = await searchApartments({
     page: page || 1,
-    pageSize: 36,
+    pageSize: MAX_PAGE_SIZE,
     searchTerm: country,
     guestCount,
     roomCount,

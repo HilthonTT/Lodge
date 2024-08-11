@@ -1,5 +1,6 @@
 import { ApartmentCard } from "@/features/apartments/components/apartment-card";
 
+import { MAX_PAGE_SIZE } from "@/constants";
 import { Earth } from "@/components/earth";
 import { getApartments } from "@/actions/apartments/get-apartments";
 import { CustomPagination } from "@/components/custom-pagination";
@@ -9,7 +10,10 @@ type Props = {
 };
 
 export const ApartmentList = async ({ page }: Props) => {
-  const { data: apartments, isSuccess } = await getApartments(page || 1, 36);
+  const { data: apartments, isSuccess } = await getApartments(
+    page || 1,
+    MAX_PAGE_SIZE
+  );
 
   if (!isSuccess) {
     return (

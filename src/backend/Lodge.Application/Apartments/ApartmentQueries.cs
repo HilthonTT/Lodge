@@ -1,7 +1,6 @@
 ﻿using Dapper;
 using Lodge.Contracts.Apartments;
 using Lodge.Domain.Bookings;
-using MediatR;
 using System.Data;
 
 namespace Lodge.Application.Apartments;
@@ -71,9 +70,9 @@ public static class ApartmentQueries
     /// Gets the apartment by its identifier.
     /// </summary>
     /// <param name="connection">The database connection.</param>
-    /// <param name="userId">The apartment identifier.</param>
+    /// <param name="apartmentId">The apartment identifier.</param>
     /// <returns>An instance of <see cref="ApartmentResponse"/> if found, otherwise null.</returns>
-    public static async Task<ApartmentResponse?> GetByIdAsync(IDbConnection connection, Guid userId)
+    public static async Task<ApartmentResponse?> GetByIdAsync(IDbConnection connection, Guid apartmentId)
     {
         const string sql =
             """
@@ -83,7 +82,7 @@ public static class ApartmentQueries
                 a.description AS Description,
                 a.price_amount AS Price,
                 a.price_currency AS Currency,
-                a.image_url AS ImageId,
+                a.image_url AS ImageUrl,
                 a.address_country AS Country,
                 a.address_state AS State,
                 a.address_zip_code AS ZipCode,
@@ -95,7 +94,7 @@ public static class ApartmentQueries
 
         ApartmentResponse? apartment = await connection.QueryFirstOrDefaultAsync<ApartmentResponse>(
             sql,
-            new { Id = userId });
+            new { Id = apartmentId });
 
         return apartment;
     }

@@ -53,14 +53,16 @@ internal sealed class SearchApartmentQueryHandler(IDbContext context)
 
         // Fetch and Project to Response
         List<ApartmentResponse> apartmentResponsesQuery = await apartmentsQuery
-            .Select(a => new ApartmentResponse(
-                a.Id,
-                a.Name.Value,
-                a.Description.Value,
-                a.Price.Amount,
-                a.Price.Currency.Code,
-                a.ImageUrl,
-                new AddressResponse(a.Address.Country, a.Address.State, a.Address.City, a.Address.Street)))
+            .Select(a => new ApartmentResponse
+            {
+                Id = a.Id,
+                Name = a.Name.Value,
+                Description = a.Description.Value,
+                Price = a.Price.Amount,
+                Currency = a.Price.Currency.Code,
+                ImageUrl = a.ImageUrl,
+                Address = new AddressResponse(a.Address.Country, a.Address.State, a.Address.City, a.Address.Street)
+            })
             .ToListAsync(cancellationToken);
 
         // Paginate Results

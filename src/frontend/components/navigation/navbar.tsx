@@ -1,6 +1,7 @@
 "use client";
 
-import { useUserContext } from "@/context/auth-context";
+import { usePathname } from "next/navigation";
+
 import { Container } from "@/components/container";
 import { Logo } from "@/components/navigation/logo";
 import { Search } from "@/components/navigation/search";
@@ -8,7 +9,7 @@ import { UserMenu } from "@/components/navigation/user-menu";
 import { Amenities } from "@/components/navigation/amenities";
 
 export const Navbar = () => {
-  const { user } = useUserContext();
+  const pathname = usePathname();
 
   return (
     <div className="fixd w-full bg-white z-10 shadow-sm">
@@ -21,7 +22,7 @@ export const Navbar = () => {
           </div>
         </Container>
       </div>
-      <Amenities />
+      {pathname === "/" && <Amenities />}
     </div>
   );
 };

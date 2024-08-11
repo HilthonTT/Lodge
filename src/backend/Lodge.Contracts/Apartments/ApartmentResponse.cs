@@ -6,66 +6,34 @@
 public sealed class ApartmentResponse
 {
     /// <summary>
-    /// Initializes a new instance of <see cref="ApartmentResponse"/> class.
-    /// </summary>
-    /// <param name="id">The identifier.</param>
-    /// <param name="name">The name.</param>
-    /// <param name="description">The description.</param>
-    /// <param name="price">The price.</param>
-    /// <param name="currency">The currency.</param>
-    /// <param name="imageUrl">The image url.</param>
-    /// <param name="address">The address.</param>
-    public ApartmentResponse(
-        Guid id,
-        string name,
-        string description,
-        decimal price,
-        string currency,
-        string imageUrl,
-        AddressResponse address)
-    {
-        Id = id;
-        Name = name;
-        Description = description;
-        Price = price;
-        Currency = currency;
-        ImageUrl = imageUrl;
-        Address = address;
-    }
-
-    public ApartmentResponse()
-    {
-    }
-
-    /// <summary>
     /// Gets the identifier.
     /// </summary>
-    public Guid Id { get; }
+    public Guid Id { get; init; }
 
     /// <summary>
     /// Gets the name.
     /// </summary>
-    public string Name { get; }
+    public string Name { get; init; } = string.Empty;
 
     /// <summary>
     /// Gets the description.
     /// </summary>
-    public string Description { get; }
+    public string Description { get; init; } = string.Empty;
 
     /// <summary>
     /// Gets the price.
     /// </summary>
-    public decimal Price { get; }
+    public decimal Price { get; init; }
 
     /// <summary>
     /// Gets the currency.
     /// </summary>
-    public string Currency { get; }
+    public string Currency { get; init; } = string.Empty;
 
     /// <summary>
     /// Gets the image url.
     /// </summary>
-    public string ImageUrl { get; }
+    public string ImageUrl { get; init; } = string.Empty;
 
     /// <summary>
     /// Gets and sets the address.

@@ -25,6 +25,8 @@ import { IoBoatOutline } from "react-icons/io5";
 export const BASE_API_URL = process.env.NEXT_PUBLIC_API_BASE_URL!;
 export const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION!;
 
+export const MAX_PAGE_SIZE = 36;
+
 export const AMENITIES = [
   {
     index: 1,

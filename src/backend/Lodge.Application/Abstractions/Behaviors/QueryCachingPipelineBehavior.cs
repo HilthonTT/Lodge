@@ -44,9 +44,9 @@ internal sealed class QueryCachingPipelineBehavior<TRequest, TResponse>(
         if (result.IsSuccess)
         {
             await cacheService.SetAsync(
-                request.CacheKey, 
-                result, 
-                request.Expiration, 
+                request.CacheKey,
+                result,
+                request.Expiration,
                 cancellationToken);
         }
 

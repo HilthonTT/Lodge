@@ -32,7 +32,7 @@ public class Result
     /// <summary>
     /// Gets a value indicating whether the result is a success result.
     /// </summary>
-    public bool IsSuccess { get; }
+    public bool IsSuccess { get; init; }
 
     /// <summary>
     /// Gets a value indicating whether the result is a failure result.
@@ -42,7 +42,7 @@ public class Result
     /// <summary>
     /// Gets the error.
     /// </summary>
-    public Error Error { get; }
+    public Error Error { get; init; }
 
     /// <summary>
     /// Returns a success <see cref="Result"/>.
@@ -105,18 +105,15 @@ public class Result
 /// Represents the result of some operation, with status information and possibly a value and an error.
 /// </summary>
 /// <typeparam name="TValue">The result value type.</typeparam>
-public class Result<TValue> : Result
+/// <remarks>
+/// Initializes a new instance of the <see cref="Result{TValueType}"/> class with the specified parameters.
+/// </remarks>
+/// <param name="value">The result value.</param>
+/// <param name="isSuccess">The flag indicating if the result is successful.</param>
+/// <param name="error">The error.</param>
+public class Result<TValue>(TValue? value, bool isSuccess, Error error) : Result(isSuccess, error)
 {
-    private readonly TValue? _value;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Result{TValueType}"/> class with the specified parameters.
-    /// </summary>
-    /// <param name="value">The result value.</param>
-    /// <param name="isSuccess">The flag indicating if the result is successful.</param>
-    /// <param name="error">The error.</param>
-    public Result(TValue? value, bool isSuccess, Error error)
-        : base(isSuccess, error) => _value = value;
+    private readonly TValue? _value = value;
 
     /// <summary>
     /// Gets the result value if the result is successful, otherwise throws an exception.

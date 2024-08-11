@@ -78,6 +78,7 @@ internal sealed class CacheService(IDistributedCache cache) : ICacheService
     private static byte[] Serialize<T>(T value)
     {
         var buffer = new ArrayBufferWriter<byte>();
+
         using var writer = new Utf8JsonWriter(buffer);
         JsonSerializer.Serialize(writer, value);
 
