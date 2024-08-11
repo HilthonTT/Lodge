@@ -1,4 +1,4 @@
-﻿using Lodge.Domain.Core.Guards;
+﻿using Lodge.Domain.Core.Primitives;
 
 namespace Lodge.Domain.Bookings;
 
@@ -50,10 +50,13 @@ public sealed record DateRange
     /// <param name="start">The start date.</param>
     /// <param name="end">The end date.</param>
     /// <returns>The newly date range.</returns>
-    public static DateRange Create(DateOnly start, DateOnly end)
+    public static Result<DateRange> Create(DateOnly start, DateOnly end)
     {
-        Ensure.StartDatePrecedesEndDate(start, end, "The End date precedes start date");
+        if (start >= end)
+        {
+            return Result.Failure<DateRange>(DateRangeErrors.StartDatePrecedesEndDate);
+        }
 
-        return new(start, end);
+        return new DateRange(start, end);
     }
 }

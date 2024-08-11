@@ -10,6 +10,7 @@ namespace Lodge.Application.Apartments.CalculatePrice;
 /// Represents the <see cref="CalculateApartmentPriceQuery"/> handler.
 /// </summary>
 /// <param name="apartmentRepository">The apartment repository.</param>
+/// <param name="pricingService">The pricing service.</param>
 internal sealed class CalculateApartmentPriceQueryHandler(
     IApartmentRepository apartmentRepository,
     PricingService pricingService) : IQueryHandler<CalculateApartmentPriceQuery, PriceDetailsResponse>
@@ -25,9 +26,13 @@ internal sealed class CalculateApartmentPriceQueryHandler(
             return Result.Failure<PriceDetailsResponse>(ApartmentErrors.NotFound(request.ApartmentId));
         }
 
-        var dateRange = DateRange.Create(request.StartDate, request.EndDate);
+        Result<DateRange> dateRangeResult = DateRange.Create(request.StartDate, request.EndDate);
+        if (dateRangeResult.IsFailure)
+        {
+            return Result.Failure<PriceDetailsResponse>(dateRangeResult.Error);
+        }
 
-        var pricingDetails = pricingService.CalculatePrice(apartment, dateRange);
+        var pricingDetails = pricingService.CalculatePrice(apartment, dateRangeResult.Value);
 
         return new PriceDetailsResponse
         {

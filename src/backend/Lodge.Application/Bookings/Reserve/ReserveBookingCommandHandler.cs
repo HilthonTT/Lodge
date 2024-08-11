@@ -42,9 +42,13 @@ internal sealed class ReserveBookingCommandHandler(
             return Result.Failure<Guid>(ApartmentErrors.NotFound(request.ApartmentId));
         }
 
-        var duration = DateRange.Create(request.StartDate, request.EndDate);
+        Result<DateRange> durationResult = DateRange.Create(request.StartDate, request.EndDate);
+        if (durationResult.IsFailure)
+        {
+            return Result.Failure<Guid>(durationResult.Error);
+        }
 
-        if (await bookingRepository.IsOverlappingAsync(apartment, duration, cancellationToken))
+        if (await bookingRepository.IsOverlappingAsync(apartment, durationResult.Value, cancellationToken))
         {
             return Result.Failure<Guid>(BookingErrors.Overlap);
         }
@@ -53,10 +57,12 @@ internal sealed class ReserveBookingCommandHandler(
         {
             var booking = Booking.Reserve(
                 apartment, 
-                userIdentifierProvider.UserId, 
-                duration, 
+                userIdentifierProvider.UserId,
+                durationResult.Value, 
                 dateTimeProvider.UtcNow, 
                 pricingService);
+
+            bookingRepository.Insert(booking);
 
             await unitOfWork.SaveChangesAsync(cancellationToken);
 

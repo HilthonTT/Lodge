@@ -36,7 +36,7 @@ internal sealed class BookingRepository(LodgeDbContext context) : IBookingReposi
     }
 
     /// <inheritdoc />
-    public void Add(Booking booking)
+    public void Insert(Booking booking)
     {
         context.Bookings.Add(booking);
     }

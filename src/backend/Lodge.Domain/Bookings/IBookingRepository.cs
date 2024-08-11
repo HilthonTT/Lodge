@@ -28,8 +28,8 @@ public interface IBookingRepository
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Adds the specified booking to the database.
+    /// Inserts the specified booking to the database.
     /// </summary>
-    /// <param name="booking">The booking to be added to the database.</param>
-    void Add(Booking booking);
+    /// <param name="booking">The booking to be inserted to the database.</param>
+    void Insert(Booking booking);
 }

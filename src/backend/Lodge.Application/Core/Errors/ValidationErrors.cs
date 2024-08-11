@@ -209,4 +209,14 @@ internal static class ValidationErrors
         internal static readonly Error ReviewIdIsRequired = Error.Validation(
            "RemoveReview.ReviewIdIsRequired", "The review identifier is required");
     }
+
+    /// <summary>
+    /// Contains the calcute price errors
+    /// </summary>
+    internal static class CalculatePrice
+    {
+        internal static readonly Error StartDateMustBeLessThanEndDate = Error.Validation(
+            "CalculatePrice.StartDateMustBeLessThanEndDate",
+            "The start date must be less than the end date");
+    }
 }
