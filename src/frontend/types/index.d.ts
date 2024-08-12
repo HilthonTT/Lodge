@@ -3,6 +3,7 @@ type UserAuth = {
   email: string;
   name: string;
   imageId?: string;
+  jwtToken: string;
 };
 
 type LoginRequest = {
@@ -15,6 +16,14 @@ type RegisterRequest = {
   lastName: string;
   email: string;
   password: string;
+};
+
+type ReserveBookingRequest = {
+  jwtToken: string;
+  apartmentId: string;
+  userId: string;
+  startDate: string;
+  endDate: string;
 };
 
 type PagedList<T> = {

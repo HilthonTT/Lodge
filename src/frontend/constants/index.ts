@@ -26,6 +26,9 @@ import { Range } from "react-date-range";
 export const BASE_API_URL = process.env.NEXT_PUBLIC_API_BASE_URL!;
 export const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION!;
 
+// 1 hour
+export const TOKEN_EXPIRATION_TIME = 1 / 24;
+
 export const MAX_PAGE_SIZE = 36;
 
 export const INITIAL_DATE = format(new Date(), "yyyy-MM-dd");
@@ -33,6 +36,8 @@ export const DATE_10_DAYS_LATER = format(
   add(new Date(), { days: 1 }),
   "yyyy-MM-dd"
 );
+
+export const DATE_FORMAT = "MMM d, yyyy";
 
 export const INITIAL_DATE_RANGE: Range = {
   startDate: new Date(),

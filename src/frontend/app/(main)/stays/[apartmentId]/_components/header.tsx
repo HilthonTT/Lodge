@@ -13,7 +13,9 @@ export const Header = ({ apartmentId }: Props) => {
         <div className="lg:hidden">
           <GoBackButton apartmentId={apartmentId} />
         </div>
-        <h1 className="text-2xl lg:text-3xl font-semibold">Confirm and pay</h1>
+        <h1 className="text-2xl lg:text-3xl font-semibold">
+          Confirm and pay later
+        </h1>
       </div>
 
       <div className="rounded-xl border border-neutral-300 w-full lg:w-[658px] p-4">

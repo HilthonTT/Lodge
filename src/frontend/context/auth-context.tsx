@@ -17,6 +17,7 @@ export const INITIAL_USER: UserAuth = {
   email: "",
   name: "",
   imageId: "",
+  jwtToken: "",
 };
 
 const INITIAL_STATE = {
@@ -66,6 +67,7 @@ export const AuthProvider = ({ children }: Props) => {
         email,
         imageId,
         name,
+        jwtToken: token,
       });
 
       setIsAuthenticated(true);

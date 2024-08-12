@@ -1,6 +1,15 @@
+"use client";
+
+import { useRouter } from "next/navigation";
 import { format, parseISO } from "date-fns";
 
+import { useReserveBooking } from "@/features/bookings/mutations/use-reserve-booking";
+
+import { DATE_FORMAT } from "@/constants";
+import { useUserContext } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
+import { Loader } from "@/components/loader";
+import { useToast } from "@/components/ui/use-toast";
 
 type Props = {
   apartment: Apartment;
@@ -9,18 +18,40 @@ type Props = {
 };
 
 export const Info = ({ apartment, startDate, endDate }: Props) => {
-  // Parse the ISO date strings into Date objects
+  const router = useRouter();
+
+  const { toast } = useToast();
+  const { user } = useUserContext();
+
+  const { mutateAsync: reserveBooking, isPending } = useReserveBooking();
+
   const start = parseISO(startDate);
   const end = parseISO(endDate);
 
-  // Format the dates
-  const yearMonthDayFormat = "MMM d, yyyy";
+  const formattedStart = format(start, DATE_FORMAT);
+  const formattedEnd = format(end, DATE_FORMAT);
 
-  const formattedStart = format(start, yearMonthDayFormat);
-  const formattedEnd = format(end, yearMonthDayFormat);
-
-  // Concatenate start and end dates with a dash in between
   const formattedDateRange = `${formattedStart} - ${formattedEnd}`;
+
+  const onReserve = async () => {
+    const request: ReserveBookingRequest = {
+      jwtToken: user.jwtToken,
+      apartmentId: apartment.id,
+      userId: user.id,
+      startDate,
+      endDate,
+    };
+
+    const bookingId = await reserveBooking(request);
+
+    if (bookingId) {
+      router.push("/bookings");
+      toast({
+        title:
+          "You've booked this apartment, please confirm it in the dashboard",
+      });
+    }
+  };
 
   return (
     <div className="flex flex-col gap-y-4 mt-8">
@@ -41,7 +72,9 @@ export const Info = ({ apartment, startDate, endDate }: Props) => {
           {apartment.maximumRoomCount} rooms
         </div>
       </div>
-      <Button>Order now</Button>
+      <Button onClick={onReserve} disabled={isPending}>
+        {isPending ? <Loader /> : "Reserve now"}
+      </Button>
     </div>
   );
 };

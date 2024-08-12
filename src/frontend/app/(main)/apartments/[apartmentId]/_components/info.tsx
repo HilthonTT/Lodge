@@ -23,6 +23,7 @@ import { useCountries } from "@/hooks/use-countries";
 import { Button } from "@/components/ui/button";
 
 import { InfoCard } from "./info-card";
+import { useToast } from "@/components/ui/use-toast";
 
 type Props = {
   apartment: Apartment;
@@ -53,12 +54,19 @@ export const Info = ({ apartment, bookedDates, priceDetails }: Props) => {
     getInitialDateRange(searchParams)
   );
 
+  const { toast } = useToast();
   const { getByValue } = useCountries();
 
   const country = getByValue(apartment.address.country);
 
   const onChange = (item: RangeKeyDict) => {
     const newDateRange = item.selection as Range;
+
+    if (newDateRange.startDate === newDateRange.endDate) {
+      toast({ title: "You cannot reserve for the same day." });
+      return;
+    }
+
     setDateRange(newDateRange);
 
     const allParams = Object.fromEntries(searchParams.entries());
@@ -78,6 +86,11 @@ export const Info = ({ apartment, bookedDates, priceDetails }: Props) => {
   };
 
   const onReserve = () => {
+    if (dateRange.startDate === dateRange.endDate) {
+      toast({ title: "You cannot reserve for the same day." });
+      return;
+    }
+
     const url = qs.stringifyUrl(
       {
         url: `/stays/${apartment.id}`,

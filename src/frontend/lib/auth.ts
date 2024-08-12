@@ -1,6 +1,8 @@
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 
+import { TOKEN_EXPIRATION_TIME } from "@/constants";
+
 export interface JwtPayload {
   sub: string;
   exp: number;
@@ -11,7 +13,8 @@ export interface JwtPayload {
 }
 
 export const storeToken = (token: string) => {
-  Cookies.set("token", token, { expires: 1 }); // Store token for 1 day
+  // Store token for 1 hour
+  Cookies.set("token", token, { expires: TOKEN_EXPIRATION_TIME });
 };
 
 export const fetchToken = () => {

@@ -3,6 +3,7 @@
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 
+import { addDays } from "date-fns";
 import { DateRange, RangeKeyDict, Range } from "react-date-range";
 
 type Props = {
@@ -12,11 +13,13 @@ type Props = {
 };
 
 export const Calendar = ({ value, disabledDates, onChange }: Props) => {
+  const tomorrow = addDays(new Date(), 1);
+
   return (
     <DateRange
       rangeColors={["#6366F1"]}
       ranges={[value]}
-      minDate={new Date()}
+      minDate={tomorrow}
       onChange={onChange}
       direction="vertical"
       showDateDisplay={false}
