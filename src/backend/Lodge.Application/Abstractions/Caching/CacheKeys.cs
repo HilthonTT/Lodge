@@ -36,6 +36,8 @@ internal static class CacheKeys
     /// </summary>
     internal static class Bookings
     {
+        internal static string GetByUserId(Guid userId) => $"bookings-user-{userId}";
+
         internal static string GetById(Guid bookingId) => $"booking-{bookingId}";
     }
 }

@@ -19,6 +19,7 @@ namespace Lodge.Application.Bookings.Reserve;
 /// <param name="unitOfWork">The unit of work.</param>
 /// <param name="pricingService">The pricing service.</param>
 /// <param name="dateTimeProvider">The date time provider.</param>
+/// <param name="publisher">The publisher.</param>
 internal sealed class ReserveBookingCommandHandler(
     IUserIdentifierProvider userIdentifierProvider,
     IApartmentRepository apartmentRepository,
@@ -66,7 +67,9 @@ internal sealed class ReserveBookingCommandHandler(
 
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
-            await publisher.Publish(new BookingReservedEvent(booking.Id), cancellationToken);
+            await publisher.Publish(
+                new BookingReservedEvent(booking.Id, userIdentifierProvider.UserId),
+                cancellationToken);
 
             return booking.Id;
         }

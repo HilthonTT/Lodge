@@ -22,41 +22,48 @@ internal sealed class BookingCacheInvalidationHandler(ICacheService cacheService
     /// <inheritdoc />
     public Task Handle(BookingCancelledEvent notification, CancellationToken cancellationToken)
     {
-        return HandleInternalAsync(notification.BookingId, cancellationToken);
+        return HandleInternalAsync(notification.BookingId, notification.UserId, cancellationToken);
     }
 
     /// <inheritdoc />
     public Task Handle(BookingCompletedEvent notification, CancellationToken cancellationToken)
     {
-        return HandleInternalAsync(notification.BookingId, cancellationToken);
+        return HandleInternalAsync(notification.BookingId, notification.UserId, cancellationToken);
     }
 
     /// <inheritdoc />
     public Task Handle(BookingConfirmedEvent notification, CancellationToken cancellationToken)
     {
-        return HandleInternalAsync(notification.BookingId, cancellationToken);
+        return HandleInternalAsync(notification.BookingId, notification.UserId, cancellationToken);
     }
 
     /// <inheritdoc />
     public Task Handle(BookingRejectedEvent notification, CancellationToken cancellationToken)
     {
-        return HandleInternalAsync(notification.BookingId, cancellationToken);
+        return HandleInternalAsync(notification.BookingId, notification.UserId, cancellationToken);
     }
 
     /// <inheritdoc />
     public Task Handle(BookingReservedEvent notification, CancellationToken cancellationToken)
     {
-        return HandleInternalAsync(notification.BookingId, cancellationToken);
+        return HandleInternalAsync(notification.BookingId, notification.UserId, cancellationToken);
     }
 
     /// <summary>
     /// Handles the cache invalidation.
     /// </summary>
     /// <param name="bookingId">The booking identifier.</param>
+    /// <param name="userId">The user identifier.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The completed task.</returns>
-    private Task HandleInternalAsync(Guid bookingId, CancellationToken cancellationToken)
+    private Task HandleInternalAsync(Guid bookingId, Guid userId, CancellationToken cancellationToken)
     {
-        return cacheService.RemoveAsync(CacheKeys.Bookings.GetById(bookingId), cancellationToken);
+        var tasks = new List<Task>
+        {
+            cacheService.RemoveAsync(CacheKeys.Bookings.GetById(bookingId), cancellationToken),
+            cacheService.RemoveAsync(CacheKeys.Bookings.GetByUserId(userId), cancellationToken)
+        };
+
+        return Task.WhenAll(tasks);
     }
 }

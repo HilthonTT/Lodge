@@ -50,7 +50,9 @@ internal sealed class ConfirmBookingCommandHandler(
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await publisher.Publish(new BookingConfirmedEvent(booking.Id), cancellationToken);
+        await publisher.Publish(
+            new BookingConfirmedEvent(booking.Id, userIdentifierProvider.UserId),
+            cancellationToken);
 
         return Result.Success();
     }
