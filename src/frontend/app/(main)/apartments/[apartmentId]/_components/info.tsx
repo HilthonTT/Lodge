@@ -2,7 +2,11 @@
 
 import qs from "query-string";
 import dynamic from "next/dynamic";
-import { useRouter, useSearchParams } from "next/navigation";
+import {
+  ReadonlyURLSearchParams,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 import { useState } from "react";
 import { TentTree } from "lucide-react";
 import { MdOutlineBedroomChild } from "react-icons/md";
@@ -13,7 +17,6 @@ import { Range, RangeKeyDict } from "react-date-range";
 import { add, format } from "date-fns";
 
 import { formatPrice } from "@/lib/utils";
-import { INITIAL_DATE_RANGE } from "@/constants";
 import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/calendar";
 import { useCountries } from "@/hooks/use-countries";
@@ -31,11 +34,24 @@ const Map = dynamic(() => import("@/components/map"), {
   ssr: false,
 });
 
+const getInitialDateRange = (searchParams: ReadonlyURLSearchParams) => {
+  const startDate = searchParams.get("startDate");
+  const endDate = searchParams.get("endDate");
+
+  return {
+    startDate: startDate ? new Date(startDate) : new Date(),
+    endDate: endDate ? new Date(endDate) : new Date(),
+    key: "selection", // 'key' is required for react-date-range to track the selection
+  };
+};
+
 export const Info = ({ apartment, bookedDates, priceDetails }: Props) => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [dateRange, setDateRange] = useState<Range>(INITIAL_DATE_RANGE);
+  const [dateRange, setDateRange] = useState<Range>(
+    getInitialDateRange(searchParams)
+  );
 
   const { getByValue } = useCountries();
 
@@ -57,6 +73,27 @@ export const Info = ({ apartment, bookedDates, priceDetails }: Props) => {
         ),
       },
     });
+
+    router.push(url, { scroll: false });
+  };
+
+  const onReserve = () => {
+    const url = qs.stringifyUrl(
+      {
+        url: `/stays/${apartment.id}`,
+        query: {
+          startDate: format(dateRange.startDate || new Date(), "yyyy-MM-dd"),
+          endDate: format(
+            dateRange.endDate || add(new Date(), { days: 1 }),
+            "yyyy-MM-dd"
+          ),
+        },
+      },
+      {
+        skipEmptyString: true,
+        skipNull: true,
+      }
+    );
 
     router.push(url);
   };
@@ -165,7 +202,9 @@ export const Info = ({ apartment, bookedDates, priceDetails }: Props) => {
             </div>
           </div>
 
-          <Button className="p-4">Reserve now</Button>
+          <Button className="p-4" onClick={onReserve}>
+            Reserve now
+          </Button>
         </div>
       </div>
     </div>

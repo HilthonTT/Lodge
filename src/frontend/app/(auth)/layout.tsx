@@ -1,9 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import { redirect } from "next/navigation";
 
 import { useUserContext } from "@/context/auth-context";
-import { DirectionAwareHover } from "@/components/ui/direction-aware-hover";
 
 type Props = {
   children: React.ReactNode;
@@ -21,11 +21,12 @@ const AuthLayout = ({ children }: Props) => {
       <section className="flex flex-col flex-1 w-full">{children}</section>
 
       <div className="relative w-1/2 h-auto hidden xl:block">
-        <DirectionAwareHover
-          className="size-full rounded-none"
-          imageUrl="/assets/images/side-img.jpg">
-          <p className="font-bold text-xl">Welcome back!</p>
-        </DirectionAwareHover>
+        <Image
+          src="/assets/images/side-img.jpg"
+          alt="logo"
+          className="object-cover bg-no-repeat"
+          fill
+        />
       </div>
     </div>
   );

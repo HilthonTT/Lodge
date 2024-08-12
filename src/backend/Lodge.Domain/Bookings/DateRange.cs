@@ -52,7 +52,7 @@ public sealed record DateRange
     /// <returns>The newly date range.</returns>
     public static Result<DateRange> Create(DateOnly start, DateOnly end)
     {
-        if (start >= end)
+        if (start > end)
         {
             return Result.Failure<DateRange>(DateRangeErrors.StartDatePrecedesEndDate);
         }

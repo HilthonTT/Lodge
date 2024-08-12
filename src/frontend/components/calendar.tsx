@@ -14,10 +14,9 @@ type Props = {
 export const Calendar = ({ value, disabledDates, onChange }: Props) => {
   return (
     <DateRange
-      editableDateInputs
       rangeColors={["#6366F1"]}
       ranges={[value]}
-      date={new Date()}
+      minDate={new Date()}
       onChange={onChange}
       direction="vertical"
       showDateDisplay={false}

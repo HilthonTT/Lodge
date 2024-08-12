@@ -15,7 +15,7 @@ internal sealed class CalculateApartmentPriceQueryValidator : AbstractValidator<
     public CalculateApartmentPriceQueryValidator()
     {
         RuleFor(x => x.StartDate)
-            .LessThan(c => c.EndDate)
+            .LessThanOrEqualTo(c => c.EndDate)
             .WithError(ValidationErrors.CalculatePrice.StartDateMustBeLessThanEndDate);
     }
 }
