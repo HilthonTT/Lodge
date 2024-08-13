@@ -29,8 +29,6 @@ internal sealed class QueryCachingPipelineBehavior<TRequest, TResponse>(
             request.CacheKey,
             cancellationToken);
 
-        await cacheService.RemoveAsync(request.CacheKey, cancellationToken);
-
         string requestName = typeof(TRequest).Name;
         if (cachedResult is not null)
         {

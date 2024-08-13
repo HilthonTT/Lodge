@@ -2,6 +2,7 @@
 using Lodge.Application.Abstractions.Messaging;
 using Lodge.Contracts.Apartments;
 using Lodge.Contracts.Common;
+using Lodge.Domain.Apartements;
 using Lodge.Domain.Core.Primitives;
 using System.Data;
 
@@ -10,7 +11,7 @@ namespace Lodge.Application.Apartments.Get;
 /// <summary>
 /// Represents the <see cref="GetApartmentsQuery"/> handler.
 /// </summary>
-internal sealed class GetApartmentsQueryHandler(IDbConnectionFactory factory) 
+internal sealed class GetApartmentsQueryHandler(IDbConnectionFactory factory, IApartmentRepository apartmentRepository) 
     : IQueryHandler<GetApartmentsQuery, PagedList<ApartmentResponse>>
 {
     /// <inheritdoc />

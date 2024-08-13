@@ -80,3 +80,21 @@ type PriceDetails = {
   amenitiesUpCharge: number;
   totalPrice: number;
 };
+
+type Booking = {
+  id: string;
+  apartmentId: string;
+  userId: string;
+  status: number;
+  priceAmount: number;
+  priceCurrency: string;
+  amenitiesUpChargeAmount: string;
+  AmenitiesUpChargeCurrency: string;
+  totalPriceAmount: string;
+  totalPriceCurrency: string;
+  apartmentName: string;
+  apartmentImageUrl: string;
+  durationStart: string;
+  durationEnd: string;
+  createdOnUtc: Date;
+};

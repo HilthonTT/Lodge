@@ -10,6 +10,12 @@ namespace Lodge.Persistence.Repositories;
 internal sealed class ApartmentRepository(LodgeDbContext context) : IApartmentRepository
 {
     /// <inheritdoc />
+    public Task<List<Apartment>> GetAsync(CancellationToken cancellationToken = default)
+    {
+        return context.Apartments.ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
     public Task<Apartment?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return context.Apartments.FirstOrDefaultAsync(apartment => apartment.Id == id, cancellationToken);

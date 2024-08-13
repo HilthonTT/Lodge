@@ -42,13 +42,6 @@ public static class ApartmentQueries
                 a.address_city AS City,
                 a.address_street AS Street
             FROM apartments AS a
-            WHERE NOT EXISTS
-            (
-                SELECT 1
-                FROM bookings AS b
-                WHERE
-                    b.status = ANY(@ActiveBookingStatuses)
-            )
             """;
 
         IEnumerable<ApartmentResponse> apartments = await connection
@@ -59,10 +52,6 @@ public static class ApartmentQueries
                     apartment.Address = address;
 
                     return apartment;
-                },
-                new
-                {
-                    ActiveBookingStatuses,
                 },
                 splitOn: "Country");
 
@@ -141,9 +130,9 @@ public static class ApartmentQueries
 
         var bookedDates = new List<DateTime>();
 
-        foreach (var booking in bookings)
+        foreach (BookingDuration booking in bookings)
         {
-            var dateRange = Enumerable
+            IEnumerable<DateTime> dateRange = Enumerable
                 .Range(0, (booking.EndDate - booking.StartDate).Days + 1)
                 .Select(offset => booking.StartDate.AddDays(offset));
 

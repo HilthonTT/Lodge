@@ -1,15 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { format, parseISO } from "date-fns";
 
 import { useReserveBooking } from "@/features/bookings/mutations/use-reserve-booking";
 
-import { DATE_FORMAT } from "@/constants";
 import { useUserContext } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { Loader } from "@/components/loader";
 import { useToast } from "@/components/ui/use-toast";
+import { formatDate } from "@/lib/utils";
 
 type Props = {
   apartment: Apartment;
@@ -25,13 +24,7 @@ export const Info = ({ apartment, startDate, endDate }: Props) => {
 
   const { mutateAsync: reserveBooking, isPending } = useReserveBooking();
 
-  const start = parseISO(startDate);
-  const end = parseISO(endDate);
-
-  const formattedStart = format(start, DATE_FORMAT);
-  const formattedEnd = format(end, DATE_FORMAT);
-
-  const formattedDateRange = `${formattedStart} - ${formattedEnd}`;
+  const formattedDateRange = formatDate(startDate, endDate);
 
   const onReserve = async () => {
     const request: ReserveBookingRequest = {

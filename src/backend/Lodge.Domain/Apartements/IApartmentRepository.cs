@@ -6,6 +6,13 @@
 public interface IApartmentRepository
 {
     /// <summary>
+    /// Gets all the apartments.
+    /// </summary>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A list of <see cref="Apartment"/>.</returns>
+    Task<List<Apartment>> GetAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets the apartment with the specified identifier.
     /// </summary>
     /// <param name="id">The apartment identifier.</param>

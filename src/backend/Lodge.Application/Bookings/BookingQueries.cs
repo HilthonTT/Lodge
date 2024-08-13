@@ -34,8 +34,11 @@ public static class BookingQueries
                 b.total_price_currency AS TotalPriceCurrency,
                 b.duration_start AS DurationStart,
                 b.duration_end AS DurationEnd,
-                b.created_on_utc AS CreatedOnUtc
+                b.created_on_utc AS CreatedOnUtc,
+                a.name AS ApartmentName,
+                a.image_url AS ApartmentImageUrl
             FROM bookings AS b
+            INNER JOIN apartments AS a ON b.apartment_id = a.id
             WHERE b.id = @BookingId
             """;
 
@@ -55,7 +58,7 @@ public static class BookingQueries
     public static async Task<List<BookingResponse>> GetByUserIdAsync(IDbConnection connection, Guid userId)
     {
         const string sql =
-           """
+            """
             SELECT
                 b.id AS Id,
                 b.apartment_id AS ApartmentId,
@@ -71,8 +74,11 @@ public static class BookingQueries
                 b.total_price_currency AS TotalPriceCurrency,
                 b.duration_start AS DurationStart,
                 b.duration_end AS DurationEnd,
-                b.created_on_utc AS CreatedOnUtc
+                b.created_on_utc AS CreatedOnUtc,
+                a.name AS ApartmentName,
+                a.image_url AS ApartmentImageUrl
             FROM bookings AS b
+            INNER JOIN apartments AS a ON b.apartment_id = a.id
             WHERE b.user_id = @UserId
             """;
 

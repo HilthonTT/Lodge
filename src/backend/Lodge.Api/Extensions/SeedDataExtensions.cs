@@ -114,23 +114,4 @@ public static class SeedDataExtensions
 
         connection.Execute(sql, apartments);
     }
-
-    /// <summary>
-    /// Gets the file content type.
-    /// </summary>
-    /// <param name="path">The file path.</param>
-    /// <returns>The content type.</returns>
-    private static string GetContentType(string path)
-    {
-        string extension = Path.GetExtension(path).ToLowerInvariant();
-
-        return extension switch
-        {
-            ".jpg" => "image/jpeg",
-            ".jpeg" => "image/jpeg",
-            ".png" => "image/png",
-            ".gif" => "image/gif",
-            _ => "application/octet-stream",
-        };
-    }
 }

@@ -49,36 +49,30 @@ export const AuthProvider = ({ children }: Props) => {
 
   const [user, setUser] = useState<UserAuth>(INITIAL_USER);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+
+  const [isLoading, setIsLoading] = useState(true);
 
   const checkAuthUser = (): boolean => {
-    try {
-      setIsLoading(true);
-
-      const token = fetchToken();
-      if (!token) {
-        return false;
-      }
-
-      const { userId, email, imageId, name } = extractJwtPayload(token);
-
-      setUser({
-        id: userId,
-        email,
-        imageId,
-        name,
-        jwtToken: token,
-      });
-
-      setIsAuthenticated(true);
-
-      return true;
-    } catch (error) {
-      console.error(error);
+    const token = fetchToken();
+    if (!token) {
       return false;
-    } finally {
-      setIsLoading(false);
     }
+
+    const { userId, email, imageId, name } = extractJwtPayload(token);
+
+    setUser({
+      id: userId,
+      email,
+      imageId,
+      name,
+      jwtToken: token,
+    });
+
+    setIsAuthenticated(true);
+
+    setIsLoading(false);
+
+    return true;
   };
 
   useEffect(() => {
