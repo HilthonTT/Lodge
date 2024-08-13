@@ -3,6 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 using FluentValidation;
 using System.Reflection;
 using Lodge.Domain.Bookings;
+using Stripe;
+using Microsoft.Extensions.Configuration;
 
 namespace Lodge.Application;
 
@@ -12,8 +14,9 @@ public static class DependencyInjection
     /// Registers the necessary with the DI framework.
     /// </summary>
     /// <param name="services">The service collection.</param>
+    /// <param name="configuration">The configuration.</param>
     /// <returns>The same service collection.</returns>
-    public static IServiceCollection AddApplication(this IServiceCollection services)
+    public static IServiceCollection AddApplication(this IServiceCollection services, IConfiguration configuration)
     {
         Assembly assembly = typeof(DependencyInjection).Assembly;
 
@@ -32,6 +35,8 @@ public static class DependencyInjection
         });
 
         services.AddTransient<PricingService>();
+
+        StripeConfiguration.ApiKey = configuration["Stripe:SecretKey"];
 
         return services;
     }

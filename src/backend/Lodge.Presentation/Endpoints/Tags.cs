@@ -16,4 +16,6 @@ internal static class Tags
     internal const string Bookings = "Bookings";
 
     internal const string Reviews = "Reviews";
+
+    internal const string Stripe = "Stripe";
 }

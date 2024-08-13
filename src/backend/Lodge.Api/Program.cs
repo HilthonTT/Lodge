@@ -24,7 +24,7 @@ builder.Services
     .AddInfrastructure(builder.Configuration)
     .AddPersistence(builder.Configuration)
     .AddBackgroundTasks(builder.Configuration)
-    .AddApplication()
+    .AddApplication(builder.Configuration)
     .AddPresentation();
 
 builder.Services.AddFrontendCors(builder.Configuration);

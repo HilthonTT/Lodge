@@ -8,5 +8,5 @@ namespace Lodge.Application.Core.Errors;
 internal static class IdempotencyErrors
 {
     internal static readonly Error AlreadyProcessed = Error.Conflict(
-        "Request.AlreadyProcessed", "Your reuqest has already been processed");
+        "Request.AlreadyProcessed", "Your request has already been processed");
 }
