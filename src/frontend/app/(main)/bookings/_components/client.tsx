@@ -104,7 +104,7 @@ export const Client = ({ user }: Props) => {
           icon={FiList}
         />
       </div>
-      <DataTable columns={columns} data={data || []}></DataTable>
+      <DataTable columns={columns} data={data || []} columnId="apartmentName" />
     </div>
   );
 };

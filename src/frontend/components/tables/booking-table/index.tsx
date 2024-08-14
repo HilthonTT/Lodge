@@ -6,7 +6,16 @@ import {
   getCoreRowModel,
   useReactTable,
   getPaginationRowModel,
+  SortingState,
+  getSortedRowModel,
+  ColumnFiltersState,
+  getFilteredRowModel,
 } from "@tanstack/react-table";
+import {
+  FaRegArrowAltCircleLeft,
+  FaRegArrowAltCircleRight,
+} from "react-icons/fa";
+import { useState } from "react";
 
 import {
   Table,
@@ -18,25 +27,49 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 
 type DataTableProps<TData, TValue> = {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  columnId: string;
 };
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  columnId,
 }: DataTableProps<TData, TValue>) {
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    onSortingChange: setSorting,
+    getSortedRowModel: getSortedRowModel(),
+    onColumnFiltersChange: setColumnFilters,
+    getFilteredRowModel: getFilteredRowModel(),
+    state: {
+      sorting,
+      columnFilters,
+    },
   });
 
   return (
     <div>
+      <div className="flex items-center py-4">
+        <Input
+          placeholder="Filter..."
+          value={(table.getColumn(columnId)?.getFilterValue() as string) ?? ""}
+          onChange={(event) =>
+            table.getColumn(columnId)?.setFilterValue(event.target.value)
+          }
+          className="max-w-sm"
+        />
+      </div>
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -91,14 +124,16 @@ export function DataTable<TData, TValue>({
           size="sm"
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}>
-          Previous
+          <FaRegArrowAltCircleLeft className="shrink-0 size-5" />
+          <span className="sr-only">Previous</span>
         </Button>
         <Button
           variant="outline"
           size="sm"
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}>
-          Next
+          <FaRegArrowAltCircleRight className="shrink-0 size-5" />
+          <span className="sr-only">Next</span>
         </Button>
       </div>
     </div>

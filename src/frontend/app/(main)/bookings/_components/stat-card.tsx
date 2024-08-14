@@ -70,6 +70,7 @@ export const StatCard = ({
             {description}
           </CardDescription>
         </div>
+
         <div
           className={cn(
             "shrink-0",
