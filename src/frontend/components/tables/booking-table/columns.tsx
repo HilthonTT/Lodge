@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ColumnDef } from "@tanstack/react-table";
 import { FaCog } from "react-icons/fa";
 import { IoCheckmarkCircle } from "react-icons/io5";
+import { X } from "lucide-react";
 
 import { useConfirmBooking } from "@/features/bookings/mutations/use-confirm-booking";
 
@@ -16,6 +17,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { useUserContext } from "@/context/auth-context";
 import { Loader } from "@/components/loader";
+import { BookingStatus } from "@/enums";
+import { useCancelBooking } from "@/features/bookings/mutations/use-cancel-booking";
 
 const BookingStatusMap: Record<number, string> = {
   1: "Reserved",
@@ -84,6 +87,9 @@ export const columns: ColumnDef<Booking>[] = [
       const { mutateAsync: confirmBooking, isPending: isConfirming } =
         useConfirmBooking(user.id);
 
+      const { mutateAsync: cancelBooking, isPending: isCancelling } =
+        useCancelBooking(user.id);
+
       const booking = row.original;
 
       const onConfirm = async () => {
@@ -98,6 +104,14 @@ export const columns: ColumnDef<Booking>[] = [
         }
       };
 
+      const onCancel = async () => {
+        await cancelBooking({
+          jwtToken: user.jwtToken,
+          userId: user.id,
+          bookingId: booking.id,
+        });
+      };
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger
@@ -109,13 +123,29 @@ export const columns: ColumnDef<Booking>[] = [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="space-y-2">
-            {!isConfirming && (
-              <DropdownMenuItem onClick={onConfirm} className="gap-2">
-                <IoCheckmarkCircle className="text-emerald-500" />
-                <span>Confirm</span>
+            {booking.status === BookingStatus.Reserved && (
+              <>
+                {!isConfirming && (
+                  <DropdownMenuItem
+                    onClick={onConfirm}
+                    disabled={isConfirming}
+                    className="gap-2">
+                    <IoCheckmarkCircle className="text-emerald-500" />
+                    <span>Confirm</span>
+                  </DropdownMenuItem>
+                )}
+                {isConfirming && <Loader />}
+              </>
+            )}
+            {booking.status === BookingStatus.Confirmed && (
+              <DropdownMenuItem
+                onClick={onCancel}
+                disabled={isCancelling}
+                className="gap-2">
+                <X className="text-rose-500" />
+                <span>Cancel</span>
               </DropdownMenuItem>
             )}
-            {isConfirming && <Loader />}
           </DropdownMenuContent>
         </DropdownMenu>
       );

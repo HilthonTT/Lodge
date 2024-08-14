@@ -32,6 +32,12 @@ type ConfirmBookingRequest = {
   bookingId: string;
 };
 
+type CancelBookingRequest = {
+  jwtToken: string;
+  userId: string;
+  bookingId: string;
+};
+
 type PagedList<T> = {
   page: number;
   pageSize: number;

@@ -6,6 +6,14 @@ export enum Method {
   DELETE = "delete",
 }
 
+export enum BookingStatus {
+  Reserved = 1,
+  Confirmed = 2,
+  Rejected = 3,
+  Cancelled = 4,
+  Completed = 5,
+}
+
 export enum Amenity {
   WiFi = 1,
   AirConditioning = 2,

@@ -16,6 +16,7 @@ import {
   DataTableSkeleton,
 } from "@/components/tables/booking-table";
 import { columns } from "@/components/tables/booking-table/columns";
+import { BookingStatus } from "@/enums";
 
 import { StatCard, StatCardSkeleton } from "./stat-card";
 
@@ -40,19 +41,24 @@ export const Client = ({ user }: Props) => {
   }
 
   const reservedBookingsCount =
-    data?.filter((booking) => booking.status === 1).length || 0;
+    data?.filter((booking) => booking.status === BookingStatus.Rejected)
+      .length || 0;
 
   const cancelledBookingsCount =
-    data?.filter((booking) => booking.status === 4).length || 0;
+    data?.filter((booking) => booking.status === BookingStatus.Cancelled)
+      .length || 0;
 
   const rejectedBookingsCount =
-    data?.filter((booking) => booking.status === 3).length || 0;
+    data?.filter((booking) => booking.status === BookingStatus.Rejected)
+      .length || 0;
 
   const confirmedBookingsCount =
-    data?.filter((booking) => booking.status === 2).length || 0;
+    data?.filter((booking) => booking.status === BookingStatus.Confirmed)
+      .length || 0;
 
   const completedBookingsCount =
-    data?.filter((booking) => booking.status === 5).length || 0;
+    data?.filter((booking) => booking.status === BookingStatus.Completed)
+      .length || 0;
 
   return (
     <div className="flex flex-col">
