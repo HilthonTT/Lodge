@@ -2,17 +2,17 @@
 using Lodge.Application.Core.Errors;
 using Lodge.Application.Core.Extensions;
 
-namespace Lodge.Application.Bookings.Confirm;
+namespace Lodge.Application.Stripe.Checkout;
 
 /// <summary>
-/// Represents the <see cref="ConfirmBookingCommand"/> validator.
+/// Represents the <see cref="StripeCheckoutCommand"/> validator.
 /// </summary>
-internal sealed class ConfirmBookingCommandValidator : AbstractValidator<ConfirmBookingCommand>
+internal sealed class StripeCheckoutCommandValidator : AbstractValidator<StripeCheckoutCommand>
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="ConfirmBookingCommandValidator"/> class.
+    /// Initializes a new instance of <see cref="StripeCheckoutCommandValidator"/> class.
     /// </summary>
-    public ConfirmBookingCommandValidator()
+    public StripeCheckoutCommandValidator()
     {
         RuleFor(x => x.UserId)
             .NotEmpty()

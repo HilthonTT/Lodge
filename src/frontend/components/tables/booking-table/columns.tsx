@@ -2,6 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { ColumnDef } from "@tanstack/react-table";
 import { FaCog } from "react-icons/fa";
+import { IoCheckmarkCircle } from "react-icons/io5";
+
+import { useConfirmBooking } from "@/features/bookings/mutations/use-confirm-booking";
 
 import { formatDate } from "@/lib/utils";
 import {
@@ -11,6 +14,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { useUserContext } from "@/context/auth-context";
+import { Loader } from "@/components/loader";
 
 const BookingStatusMap: Record<number, string> = {
   1: "Reserved",
@@ -74,19 +79,43 @@ export const columns: ColumnDef<Booking>[] = [
     id: "actions",
 
     cell: ({ row }) => {
+      const { user, isLoading, isAuthenticated } = useUserContext();
+
+      const { mutateAsync: confirmBooking, isPending: isConfirming } =
+        useConfirmBooking(user.id);
+
       const booking = row.original;
+
+      const onConfirm = async () => {
+        const url = await confirmBooking({
+          jwtToken: user.jwtToken,
+          userId: user.id,
+          bookingId: booking.id,
+        });
+
+        if (url) {
+          window.location.href = url;
+        }
+      };
 
       return (
         <DropdownMenu>
-          <DropdownMenuTrigger className="ml-auto w-full">
+          <DropdownMenuTrigger
+            disabled={isLoading || !isAuthenticated}
+            className="ml-auto w-full">
             <Button variant="ghost">
               <FaCog />
               <span className="sr-only">Modify booking</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="space-y-2">
-            <DropdownMenuItem>Confirm</DropdownMenuItem>
-            <DropdownMenuItem>Cancel</DropdownMenuItem>
+            {!isConfirming && (
+              <DropdownMenuItem onClick={onConfirm} className="gap-2">
+                <IoCheckmarkCircle className="text-emerald-500" />
+                <span>Confirm</span>
+              </DropdownMenuItem>
+            )}
+            {isConfirming && <Loader />}
           </DropdownMenuContent>
         </DropdownMenu>
       );

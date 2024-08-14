@@ -22,7 +22,7 @@ export const Info = ({ apartment, startDate, endDate }: Props) => {
   const { toast } = useToast();
   const { user } = useUserContext();
 
-  const { mutateAsync: reserveBooking, isPending } = useReserveBooking();
+  const { mutateAsync: reserveBooking, isPending } = useReserveBooking(user.id);
 
   const formattedDateRange = formatDate(startDate, endDate);
 

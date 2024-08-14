@@ -1,9 +1,13 @@
-﻿using Lodge.Application.Abstractions.Messaging;
+﻿using Lodge.Application.Abstractions.Data;
+using Lodge.Application.Abstractions.Messaging;
 using Lodge.Application.Bookings.Confirm;
 using Lodge.Application.Core.Errors;
+using Lodge.Domain.Bookings;
+using Lodge.Domain.Core.Guards;
 using Lodge.Domain.Core.Primitives;
 using MediatR;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Stripe;
 using CheckoutSession = Stripe.Checkout.Session;
 
@@ -12,11 +16,19 @@ namespace Lodge.Application.Stripe.Webhook;
 /// <summary>
 /// Represents the <see cref="StripeWebhookCommand"/> handler.
 /// </summary>
-/// <param name="httpContextAccessor">The http context accessor</param>
-/// <param name="sender">The sender.</param>
+/// <param name="httpContextAccessor">The http context accessor.</param>
+/// <param name="bookingRepository">The booking repository.</param>
+/// <param name="dateTimeProvider">The date time provider.</param>
+/// <param name="configuration">The configuration.</param>
+/// <param name="unitOfWork">The unit of work.</param>
+/// <param name="publisher">The publisher.</param>
 internal sealed class StripeWebhookCommandHandler(
     IHttpContextAccessor httpContextAccessor,
-    ISender sender) : ICommandHandler<StripeWebhookCommand>
+    IBookingRepository bookingRepository,
+    IDateTimeProvider dateTimeProvider,
+    IConfiguration configuration,
+    IUnitOfWork unitOfWork,
+    IPublisher publisher) : ICommandHandler<StripeWebhookCommand>
 {
     /// <inheritdoc />
     public async Task<Result> Handle(StripeWebhookCommand request, CancellationToken cancellationToken)
@@ -39,7 +51,10 @@ internal sealed class StripeWebhookCommandHandler(
             return Result.Failure(StripeErrors.SignatureMissing);
         }
 
-        Event stripeEvent = EventUtility.ConstructEvent(json, stripeSignature, "WEBHOOK_SECRET");
+        string? webhookSecret = configuration["Stripe:WebhookSecret"];
+        Ensure.NotNullOrEmpty(webhookSecret, nameof(webhookSecret));
+
+        Event stripeEvent = EventUtility.ConstructEvent(json, stripeSignature, webhookSecret);
         if (stripeEvent.Data.Object is not CheckoutSession checkoutSession)
         {
             return Result.Failure(StripeErrors.NoSessionFound);
@@ -80,10 +95,24 @@ internal sealed class StripeWebhookCommandHandler(
     /// <returns>An instance of <see cref="Result"/>.</returns>
     private async Task<Result> ConfirmBookingAsync(Guid userId, Guid bookingId, CancellationToken cancellationToken)
     {
-        var command = new ConfirmBookingCommand(userId, bookingId);
+        Booking? booking = await bookingRepository.GetByIdAsync(bookingId, cancellationToken);
+        if (booking is null)
+        {
+            return Result.Failure(BookingErrors.NotFound(bookingId));
+        }
 
-        Result result = await sender.Send(command, cancellationToken);
+        Result result = booking.Confirm(dateTimeProvider.UtcNow);
+        if (result.IsFailure)
+        {
+            return Result.Failure(result.Error);
+        }
 
-        return result;
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await publisher.Publish(
+            new BookingConfirmedEvent(booking.Id, userId),
+            cancellationToken);
+
+        return Result.Success();
     }
 }

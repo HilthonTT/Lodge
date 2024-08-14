@@ -81,7 +81,8 @@ internal sealed class StripeCheckoutCommandHandler(
             {
                 { "userId", user.Id.ToString() },
                 { "bookingId", booking.Id.ToString() }
-            }
+            },
+            Mode = "payment"
         };
 
         var sessionService = new SessionService();

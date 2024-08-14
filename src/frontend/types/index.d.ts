@@ -26,6 +26,12 @@ type ReserveBookingRequest = {
   endDate: string;
 };
 
+type ConfirmBookingRequest = {
+  jwtToken: string;
+  userId: string;
+  bookingId: string;
+};
+
 type PagedList<T> = {
   page: number;
   pageSize: number;
