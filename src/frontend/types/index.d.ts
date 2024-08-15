@@ -38,6 +38,20 @@ type CancelBookingRequest = {
   bookingId: string;
 };
 
+type UpdateUserRequest = {
+  jwtToken: string;
+  userId: string;
+  firstName: string;
+  lastName: string;
+  imageId?: string;
+};
+
+type ChangePasswordRequest = {
+  jwtToken: string;
+  userId: string;
+  password: string;
+};
+
 type PagedList<T> = {
   page: number;
   pageSize: number;
