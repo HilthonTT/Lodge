@@ -1,6 +1,6 @@
 <div align="center">
 
-  <div>
+<div>
     <img src="https://img.shields.io/badge/Next.js-%23000000.svg?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js" />
     <img src="https://img.shields.io/badge/-Tailwind_CSS-black?style=for-the-badge&logoColor=white&logo=tailwindcss&color=06B6D4" alt="tailwindcss" />
     <img src="https://img.shields.io/badge/-Typescript-black?style=for-the-badge&logoColor=white&logo=typescript&color=3178C6" alt="typescript" />
@@ -9,7 +9,11 @@
     <img src="https://img.shields.io/badge/C%23-%23239120.svg?style=for-the-badge&logo=c-sharp&logoColor=white" alt="C#" />
     <img src="https://img.shields.io/badge/Serilog-%230D5D90.svg?style=for-the-badge&logo=serilog&logoColor=white" alt="Serilog" />
     <img src="https://img.shields.io/badge/Docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
-  </div>
+    <img src="https://img.shields.io/badge/Stripe-%23646CFF.svg?style=for-the-badge&logo=stripe&logoColor=white" alt="Stripe" />
+    <img src="https://img.shields.io/badge/ASP.NET_Core-%235C2D91.svg?style=for-the-badge&logo=dotnet&logoColor=white" alt="ASP.NET Core" />
+    <img src="https://img.shields.io/badge/RabbitMQ-%23FF6600.svg?style=for-the-badge&logo=rabbitmq&logoColor=white" alt="RabbitMQ" />
+</div>
+
 
   <h3 align="center">Airbnb Clone</h3>
   
