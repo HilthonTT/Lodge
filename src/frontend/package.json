@@ -38,7 +38,7 @@
     "jwt-decode": "^4.0.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.424.0",
-    "next": "15.5.21",
+    "next": "15.5.24",
     "query-string": "^9.1.0",
     "react": "^18.3.1",
     "react-countup": "^6.5.3",
