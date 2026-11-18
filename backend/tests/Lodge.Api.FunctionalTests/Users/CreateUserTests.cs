@@ -1,22 +1,22 @@
-﻿using Api.FunctionalTests.Abstractions;
+using Lodge.Api.FunctionalTests.Abstractions;
 using Lodge.Contracts.Authentication;
 using System.Net.Http.Json;
-using FluentAssertions;
-using Api.FunctionalTests.Contracts;
-using Api.FunctionalTests.Extensions;
+using Lodge.Api.FunctionalTests.Contracts;
+using Lodge.Api.FunctionalTests.Extensions;
 using System.Net;
 using Lodge.Application.Core.Errors;
 
-namespace Api.FunctionalTests.Users;
+namespace Lodge.Api.FunctionalTests.Users;
 
 public class CreateUserTests : BaseFunctionalTest
 {
     private const string RequestUri = "api/v1/authentication/register";
 
-    private static readonly RegisterRequest Request = new(
+    // Unique per test: all functional tests share one database.
+    private readonly RegisterRequest Request = new(
         "FirstName",
         "LastName",
-        "email@email.com",
+        $"{Guid.NewGuid():N}@email.com",
         "AbC-123");
 
     public CreateUserTests(FunctionalTestWebAppFactory factory) 

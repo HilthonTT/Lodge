@@ -1,7 +1,8 @@
-﻿using Lodge.Application.Abstractions.Authentication;
+using Lodge.Application.Abstractions.Authentication;
 using Lodge.Application.Abstractions.Messaging;
 using Lodge.Application.Abstractions.Storage;
 using Lodge.Domain.Core.Primitives;
+using Lodge.Domain.Users;
 
 namespace Lodge.Application.Files.Upload;
 
@@ -17,8 +18,13 @@ internal sealed class UploadFileCommandHandler(
     /// <inheritdoc />
     public async Task<Result<Guid>> Handle(UploadFileCommand request, CancellationToken cancellationToken)
     {
+        if (request.UserId != userIdentifierProvider.UserId)
+        {
+            return Result.Failure<Guid>(UserErrors.InvalidPermissions);
+        }
+
         Guid fileId = await blobService.UploadAsync(
-            userIdentifierProvider.UserId,
+            request.UserId,
             request.Stream,
             request.ContentType,
             cancellationToken);

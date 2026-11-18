@@ -1,8 +1,7 @@
-﻿using FluentAssertions;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Domain.Users;
 
-namespace Domain.UnitTests.Users;
+namespace Lodge.Domain.UnitTests.Users;
 
 public class EmailTests
 {
@@ -43,5 +42,16 @@ public class EmailTests
         result.IsFailure.Should().BeTrue();
 
         result.Error.Should().Be(EmailErrors.TooLong);
+    }
+
+    [Fact]
+    public void Email_Should_BeNormalized_ToTrimmedLowerCase()
+    {
+        // Act
+        Result<Email> result = Email.Create("  Demo@Lodge.DEV ");
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Value.Should().Be("demo@lodge.dev");
     }
 }

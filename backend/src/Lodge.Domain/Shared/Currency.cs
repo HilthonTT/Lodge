@@ -19,6 +19,6 @@ public sealed record Currency
 
     public static Currency FromCode(string code) =>
         All.FirstOrDefault(c => c.Code == code) ??
-               throw new ApplicationException("The currency code is invalid");
+               throw new ArgumentException($"The currency code '{code}' is not supported.", nameof(code));
     
 }

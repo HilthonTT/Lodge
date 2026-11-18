@@ -87,25 +87,10 @@ internal static class ValidationErrors
     }
 
     /// <summary>
-    /// Contains the confirm booking errors.
-    /// </summary>
-    internal static class ConfirmBooking
-    {
-        internal static readonly Error UserIdIsRequired = Error.Validation(
-           "ConfirmBooking.UserIdIsRequired", "The user identifier is required");
-
-        internal static readonly Error BookingIdIsRequired = Error.Validation(
-           "ConfirmBooking.BookingIdIsRequired", "The booking identifier is required");
-    }
-
-    /// <summary>
     /// Contains the reject booking errors.
     /// </summary>
     internal static class RejectBooking
     {
-        internal static readonly Error UserIdIsRequired = Error.Validation(
-           "RejectBooking.UserIdIsRequired", "The user identifier is required");
-
         internal static readonly Error BookingIdIsRequired = Error.Validation(
            "RejectBooking.BookingIdIsRequired", "The booking identifier is required");
     }
@@ -115,9 +100,6 @@ internal static class ValidationErrors
     /// </summary>
     internal static class CompleteBooking
     {
-        internal static readonly Error UserIdIsRequired = Error.Validation(
-           "CompleteBooking.UserIdIsRequired", "The user identifier is required");
-
         internal static readonly Error BookingIdIsRequired = Error.Validation(
            "CompleteBooking.BookingIdIsRequired", "The booking identifier is required");
     }
@@ -147,6 +129,12 @@ internal static class ValidationErrors
 
         internal static readonly Error InvalidContentType = Error.Validation(
             "UploadFile.InvalidContentType", "The content type must be an image");
+
+        internal static readonly Error FileIsRequired = Error.Validation(
+            "UploadFile.FileIsRequired", "The file is required");
+
+        internal static Error FileTooLarge(long maxBytes) => Error.Validation(
+            "UploadFile.FileTooLarge", $"The file must not be larger than {maxBytes / 1024 / 1024} MB");
     }
 
     /// <summary>
@@ -158,15 +146,14 @@ internal static class ValidationErrors
            "CreateReview.UserIdIsRequired", "The user identifier is required");
 
         internal static readonly Error BookingIdIsRequired = Error.Validation(
-            "CreateReview.UserIdIsRequired", "The booking identifier is required");
+            "CreateReview.BookingIdIsRequired", "The booking identifier is required");
 
-        internal static readonly Error RatingMustBeBelowFive = Error.Validation(
-            "CreateReview.RatingMustBeBelowFive",
-            "Your rating must not be above 5");
+        
+        internal static readonly Error RatingMustBeBetweenOneAndFive = Error.Validation(
+            "CreateReview.RatingMustBeBetweenOneAndFive",
+            "The rating must be between 1 and 5");
 
-        internal static readonly Error RatingMustBeGreaterOrEqualToZero = Error.Validation(
-            "CreateReview.RatingMustBeGreaterOrEqualToZero",
-            "Your rating must be greater than or equal to 0");
+        
 
         internal static readonly Error CommentIsRequired = Error.Validation(
             "CreateReview.CommentIsRequired", "The comment is required");
@@ -186,13 +173,12 @@ internal static class ValidationErrors
         internal static readonly Error UserIdIsRequired = Error.Validation(
            "UpdateReview.UserIdIsRequired", "The user identifier is required");
 
-        internal static readonly Error RatingMustBeBelowFive = Error.Validation(
-            "UpdateReview.RatingMustBeBelowFive",
-            "Your rating must not be above 5");
+        
+        internal static readonly Error RatingMustBeBetweenOneAndFive = Error.Validation(
+            "UpdateReview.RatingMustBeBetweenOneAndFive",
+            "The rating must be between 1 and 5");
 
-        internal static readonly Error RatingMustBeGreaterOrEqualToZero = Error.Validation(
-            "UpdateReview.RatingMustBeGreaterOrEqualToZero",
-            "Your rating must be greater than or equal to 0");
+        
 
         internal static readonly Error CommentIsRequired = Error.Validation(
             "UpdateReview.CommentIsRequired", "The comment is required");
@@ -218,5 +204,42 @@ internal static class ValidationErrors
         internal static readonly Error StartDateMustBeLessThanEndDate = Error.Validation(
             "CalculatePrice.StartDateMustBeLessThanEndDate",
             "The start date must be less than the end date");
+    }
+
+    internal static class StripeCheckout
+    {
+        internal static readonly Error UserIdIsRequired = Error.Validation(
+           "StripeCheckout.UserIdIsRequired", "The user identifier is required");
+
+        internal static readonly Error BookingIdIsRequired = Error.Validation(
+           "StripeCheckout.BookingIdIsRequired", "The booking identifier is required");
+    }
+
+    internal static class GetBookings
+    {
+        internal static readonly Error InvalidStatus = Error.Validation(
+            "GetBookings.InvalidStatus", "The status must be between 1 and 5");
+    }
+
+    internal static class Paging
+    {
+        internal const int MaxPageSize = 100;
+
+        internal static readonly Error PageMustBePositive = Error.Validation(
+            "Paging.PageMustBePositive", "The page must be greater than or equal to 1");
+
+        internal static readonly Error PageSizeOutOfRange = Error.Validation(
+            "Paging.PageSizeOutOfRange", $"The page size must be between 1 and {MaxPageSize}");
+    }
+
+    internal static class SearchApartments
+    {
+        internal static readonly Error StartDateMustBeLessThanEndDate = Error.Validation(
+            "SearchApartments.StartDateMustBeLessThanEndDate",
+            "The start date must be less than the end date");
+
+        internal static readonly Error BothDatesRequired = Error.Validation(
+            "SearchApartments.BothDatesRequired",
+            "Both the start date and the end date must be provided");
     }
 }

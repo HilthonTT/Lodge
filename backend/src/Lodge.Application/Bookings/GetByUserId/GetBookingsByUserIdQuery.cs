@@ -1,15 +1,10 @@
-﻿using Lodge.Application.Abstractions.Caching;
+﻿using Lodge.Application.Abstractions.Messaging;
 using Lodge.Contracts.Bookings;
 
 namespace Lodge.Application.Bookings.GetByUserId;
 
 /// <summary>
-/// Represents the query for fetching the bookings by its user identifier.
+/// Gets the bookings of the current user. Not cached: the result is user-specific and the
+/// ownership check must run on every request.
 /// </summary>
-/// <param name="UserId">The user identifier.</param>
-public sealed record GetBookingsByUserIdQuery(Guid UserId) : ICachedQuery<List<BookingResponse>>
-{
-    public string CacheKey => CacheKeys.Bookings.GetByUserId(UserId);
-
-    public TimeSpan? Expiration => TimeSpan.FromMinutes(20);
-}
+public sealed record GetBookingsByUserIdQuery(Guid UserId) : IQuery<List<BookingResponse>>;

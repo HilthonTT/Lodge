@@ -1,11 +1,11 @@
 ﻿using Lodge.Application.Abstractions.Authentication;
+using Lodge.Application.Abstractions.Caching;
 using Lodge.Application.Abstractions.Data;
 using Lodge.Application.Abstractions.Messaging;
 using Lodge.Domain.Bookings;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Domain.Reviews;
 using Lodge.Domain.Users;
-using MediatR;
 
 namespace Lodge.Application.Reviews.Create;
 
@@ -16,13 +16,13 @@ namespace Lodge.Application.Reviews.Create;
 /// <param name="reviewRepository">The review repository.</param>
 /// <param name="bookingRepository">The booking repository.</param>
 /// <param name="unitOfWork">The unit of work.</param>
-/// <param name="publisher">The publisher.</param>
+/// <param name="cacheInvalidator">The cache invalidator.</param>
 internal sealed class CreateReviewCommandHandler(
     IUserIdentifierProvider userIdentifierProvider,
     IReviewRepository reviewRepository,
     IBookingRepository bookingRepository,
     IUnitOfWork unitOfWork,
-    IPublisher publisher) : ICommandHandler<CreateReviewCommand, Guid>
+    ICacheInvalidator cacheInvalidator) : ICommandHandler<CreateReviewCommand, Guid>
 {
     /// <inheritdoc />
     public async Task<Result<Guid>> Handle(CreateReviewCommand request, CancellationToken cancellationToken)
@@ -69,7 +69,8 @@ internal sealed class CreateReviewCommandHandler(
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await publisher.Publish(new ReviewCreatedEvent(review.Id), cancellationToken);
+        // The apartment's average rating and review count are part of the cached apartment.
+        cacheInvalidator.InvalidateOnCommit(CacheKeys.Apartments.GetById(booking.ApartmentId));
 
         return review.Id;
     }

@@ -1,69 +1,73 @@
 ﻿using Lodge.Application.Abstractions.Data;
 using Lodge.Application.Abstractions.Idempotency;
-using Lodge.Domain.Apartements;
+using Lodge.Domain.Apartments;
 using Lodge.Domain.Bookings;
-using Lodge.Domain.Core.Guards;
 using Lodge.Domain.Reviews;
 using Lodge.Domain.Users;
 using Lodge.Persistence.Idempotency;
-using Lodge.Persistence.Infrastructure;
 using Lodge.Persistence.Interceptors;
 using Lodge.Persistence.Outbox;
 using Lodge.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 
 namespace Lodge.Persistence;
 
+/// <summary>
+/// Registers EF Core, Dapper and the repositories. The connection string (<c>ConnectionStrings:Database</c>)
+/// is resolved lazily so hosts and tests can override it.
+/// </summary>
 public static class DependencyInjection
 {
-    /// <summary>
-    /// Registers the necessary services with the DI framework.
-    /// </summary>
-    /// <param name="services">The service collection.</param>
-    /// <param name="configuration">The configuration.</param>
-    /// <returns>The same service collection.</returns>
-    public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
+    public const string ConnectionStringName = "Database";
+
+    public static IServiceCollection AddPersistence(this IServiceCollection services)
     {
         services.AddSingleton<UpdateAuditableEntitiesInterceptor>();
         services.AddSingleton<SoftDeleteEntitiesInterceptor>();
         services.AddSingleton<InsertOutboxMessagesInterceptor>();
 
-        string? connectionString = configuration.GetConnectionString(ConnectionString.SettingsKey);
-
-        Ensure.NotNullOrEmpty(connectionString, nameof(connectionString));
-
-        services.AddDbContext<LodgeDbContext>((sp, options) =>
+        // One data source (connection pool) shared by EF Core, Dapper and the health check.
+        services.AddSingleton(sp =>
         {
-            options.UseNpgsql(connectionString, npgsqlOptions =>
+            string? connectionString = sp.GetRequiredService<IConfiguration>().GetConnectionString(ConnectionStringName);
+
+            if (string.IsNullOrWhiteSpace(connectionString))
             {
-                npgsqlOptions.MigrationsHistoryTable(HistoryRepository.DefaultTableName);
-            })
+                throw new InvalidOperationException(
+                    $"The connection string 'ConnectionStrings:{ConnectionStringName}' is not configured.");
+            }
+
+            return new NpgsqlDataSourceBuilder(connectionString).Build();
+        });
+
+        services.AddDbContext<LodgeDbContext>((sp, options) => options
+            .UseNpgsql(sp.GetRequiredService<NpgsqlDataSource>())
             .UseSnakeCaseNamingConvention()
             .AddInterceptors(
                 sp.GetRequiredService<UpdateAuditableEntitiesInterceptor>(),
                 sp.GetRequiredService<SoftDeleteEntitiesInterceptor>(),
-                sp.GetRequiredService<InsertOutboxMessagesInterceptor>());
-        });
+                sp.GetRequiredService<InsertOutboxMessagesInterceptor>()));
 
-        services.AddSingleton<IDbConnectionFactory>(_ =>
-            new DbConnectionFactory(new NpgsqlDataSourceBuilder(connectionString).Build()));
-
+        services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<LodgeDbContext>());
-
         services.AddScoped<IDbContext>(sp => sp.GetRequiredService<LodgeDbContext>());
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IApartmentRepository, ApartmentRepository>();
         services.AddScoped<IBookingRepository, BookingRepository>();
         services.AddScoped<IReviewRepository, ReviewRepository>();
+        services.AddScoped<IIdempotencyService, IdempotencyService>();
 
+        services.AddOptions<OutboxOptions>()
+            .BindConfiguration(OutboxOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
         services.AddScoped<IProcessOutboxMessagesJob, ProcessOutboxMessagesJob>();
 
-        services.AddScoped<IIdempotencyService, IdempotencyService>();
+        services.AddHealthChecks().AddNpgSql(name: "postgres");
 
         return services;
     }

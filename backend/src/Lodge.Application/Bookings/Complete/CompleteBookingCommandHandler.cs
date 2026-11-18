@@ -1,59 +1,22 @@
-﻿using Lodge.Application.Abstractions.Authentication;
-using Lodge.Application.Abstractions.Data;
-using Lodge.Application.Abstractions.Messaging;
+﻿using Lodge.Application.Abstractions.Messaging;
 using Lodge.Domain.Bookings;
 using Lodge.Domain.Core.Primitives;
-using Lodge.Domain.Users;
-using MediatR;
 
 namespace Lodge.Application.Bookings.Complete;
 
-/// <summary>
-/// Represents the <see cref="CompleteBookingCommand"/> handler.
-/// </summary>
-/// <param name="userIdentifierProvider">The user identifier.</param>
-/// <param name="bookingRepository">The booking repository.</param>
-/// <param name="dateTimeProvider">The date time provider.</param>
-/// <param name="unitOfWork">The unit of work.</param>
-/// <param name="publisher">The publisher.</param>
 internal sealed class CompleteBookingCommandHandler(
-    IUserIdentifierProvider userIdentifierProvider,
     IBookingRepository bookingRepository,
-    IDateTimeProvider dateTimeProvider,
-    IUnitOfWork unitOfWork,
-    IPublisher publisher) : ICommandHandler<CompleteBookingCommand>
+    IDateTimeProvider dateTimeProvider) : ICommandHandler<CompleteBookingCommand>
 {
-    /// <inheritdoc />
     public async Task<Result> Handle(CompleteBookingCommand request, CancellationToken cancellationToken)
     {
-        if (request.UserId != userIdentifierProvider.UserId)
-        {
-            return Result.Failure(UserErrors.InvalidPermissions);
-        }
-
         Booking? booking = await bookingRepository.GetByIdAsync(request.BookingId, cancellationToken);
+
         if (booking is null)
         {
             return Result.Failure(BookingErrors.NotFound(request.BookingId));
         }
 
-        if (booking.UserId != userIdentifierProvider.UserId)
-        {
-            return Result.Failure(UserErrors.InvalidPermissions);
-        }
-
-        Result result = booking.Complete(dateTimeProvider.UtcNow);
-        if (result.IsFailure)
-        {
-            return Result.Failure(result.Error);
-        }
-
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        await publisher.Publish(
-            new BookingCompletedEvent(booking.Id, userIdentifierProvider.UserId), 
-            cancellationToken);
-
-        return Result.Success();
+        return booking.Complete(dateTimeProvider.UtcNow);
     }
 }

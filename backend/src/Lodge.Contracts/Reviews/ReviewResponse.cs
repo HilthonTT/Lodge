@@ -10,6 +10,7 @@
 /// <param name="Comment">The comment.</param>
 /// <param name="CreatedOnUtc">The created on date and time in UTC format.</param>
 /// <param name="ModifiedOnUtc">The modified on date and time in UTC format.</param>
+/// <param name="AuthorName">The author's first name and last initial, e.g. <c>"Jamie L."</c>.</param>
 public sealed record ReviewResponse(
     Guid Id,
     Guid ApartmentId,
@@ -17,4 +18,5 @@ public sealed record ReviewResponse(
     int Rating,
     string Comment,
     DateTime CreatedOnUtc,
-    DateTime? ModifiedOnUtc);
+    DateTime? ModifiedOnUtc,
+    string AuthorName);

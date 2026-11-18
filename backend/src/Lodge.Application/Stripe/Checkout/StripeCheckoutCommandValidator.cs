@@ -16,10 +16,10 @@ internal sealed class StripeCheckoutCommandValidator : AbstractValidator<StripeC
     {
         RuleFor(x => x.UserId)
             .NotEmpty()
-            .WithError(ValidationErrors.ConfirmBooking.UserIdIsRequired);
+            .WithError(ValidationErrors.StripeCheckout.UserIdIsRequired);
 
         RuleFor(x => x.BookingId)
             .NotEmpty()
-            .WithError(ValidationErrors.ConfirmBooking.BookingIdIsRequired);
+            .WithError(ValidationErrors.StripeCheckout.BookingIdIsRequired);
     }
 }

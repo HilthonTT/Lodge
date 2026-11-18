@@ -1,7 +1,5 @@
 using Asp.Versioning;
 using Asp.Versioning.Builder;
-using Hangfire;
-using HealthChecks.UI.Client;
 using Lodge.Api.Extensions;
 using Lodge.Application;
 using Lodge.BackgroundTasks;
@@ -9,27 +7,47 @@ using Lodge.Infrastructure;
 using Lodge.Persistence;
 using Lodge.Presentation;
 using Lodge.Presentation.Extensions;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-builder.Host.UseSerilog((context, loggerConfig) =>
-    loggerConfig.ReadFrom.Configuration(context.Configuration));
-
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSerilog((services, loggerConfiguration) => loggerConfiguration
+    .ReadFrom.Configuration(builder.Configuration)
+    .ReadFrom.Services(services));
 
 builder.Services
-    .AddInfrastructure(builder.Configuration)
-    .AddPersistence(builder.Configuration)
-    .AddBackgroundTasks(builder.Configuration)
-    .AddApplication(builder.Configuration)
-    .AddPresentation();
-
-builder.Services.AddFrontendCors(builder.Configuration);
+    .AddApplication()
+    .AddInfrastructure()
+    .AddPersistence()
+    .AddBackgroundTasks()
+    .AddPresentation()
+    .AddDatabaseStartup()
+    .AddFrontendCors(builder.Configuration);
 
 WebApplication app = builder.Build();
+
+app.UseExceptionHandler();
+app.UseStatusCodePages();
+
+// Static assets (apartment images) are served before request logging to keep the logs readable.
+app.UseApartmentImages();
+
+app.UseRequestContextLogging();
+app.UseSerilogRequestLogging();
+
+app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
+
+await app.InitializeDatabaseAsync();
+
+app.UseBackgroundJobs();
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapApiDocumentation();
+    app.MapHangfireDashboard();
+}
 
 ApiVersionSet apiVersionSet = app.NewApiVersionSet()
     .HasApiVersion(new ApiVersion(1))
@@ -42,45 +60,11 @@ RouteGroupBuilder versionedGroup = app
 
 app.MapEndpoints(versionedGroup);
 
-app.UseCors("AllowSpecificOrigin");
+app.MapLodgeHealthChecks();
 
-app.UseBackgroundJobs();
+await app.RunAsync();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-
-    app.UseHangfireDashboard(options: new DashboardOptions
-    {
-        Authorization = [],
-        DarkModeEnabled = false
-    });
-
-    app.ApplyMigrations();
-
-    // app.SeedData();
-}
-
-app.UseHttpsRedirection();
-
-app.MapHealthChecks("health", new HealthCheckOptions
-{
-    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
-});
-
-app.UseAuthentication();
-
-app.UseAuthorization();
-
-app.UseRequestContextLogging();
-
-app.UseSerilogRequestLogging();
-
-app.UseStaticFiles();
-
-app.UseExceptionHandler();
-
-app.Run();
-
+/// <summary>
+/// Entry point; public so that WebApplicationFactory-based tests can reference it.
+/// </summary>
 public partial class Program;

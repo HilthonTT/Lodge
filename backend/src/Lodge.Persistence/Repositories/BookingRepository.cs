@@ -1,4 +1,4 @@
-﻿using Lodge.Domain.Apartements;
+using Lodge.Domain.Apartments;
 using Lodge.Domain.Bookings;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,8 +29,9 @@ internal sealed class BookingRepository(LodgeDbContext context) : IBookingReposi
         return await context.Bookings.AnyAsync(
             booking =>
                  booking.ApartmentId == apartment.Id &&
-                    booking.Duration.Start <= duration.End &&
-                    booking.Duration.End >= duration.Start &&
+                    // Night-based: a stay may start on the day another one checks out.
+                    booking.Duration.Start < duration.End &&
+                    booking.Duration.End > duration.Start &&
                     ActiveBookingStatuses.Contains(booking.Status),
                 cancellationToken);
     }

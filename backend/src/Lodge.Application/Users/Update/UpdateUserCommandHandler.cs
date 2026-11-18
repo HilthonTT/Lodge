@@ -1,29 +1,17 @@
 ﻿using Lodge.Application.Abstractions.Authentication;
-using Lodge.Application.Abstractions.Data;
 using Lodge.Application.Abstractions.Messaging;
 using Lodge.Application.Abstractions.Storage;
+using Lodge.Application.Core.Errors;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Domain.Users;
-using MediatR;
 
 namespace Lodge.Application.Users.Update;
 
-/// <summary>
-/// Represents the <see cref="UpdateUserCommand"/> handler.
-/// </summary>
-/// <param name="userIdentifierProvider">The user identifier provider.</param>
-/// <param name="userRepository">The user repository.</param>
-/// <param name="blobService">The blob service.</param>
-/// <param name="unitOfWork">The unit of work.</param>
-/// <param name="publisher">The publisher.</param>
 internal sealed class UpdateUserCommandHandler(
     IUserIdentifierProvider userIdentifierProvider,
     IUserRepository userRepository,
-    IBlobService blobService,
-    IUnitOfWork unitOfWork,
-    IPublisher publisher) : ICommandHandler<UpdateUserCommand>
+    IBlobService blobService) : ICommandHandler<UpdateUserCommand>
 {
-    /// <inheritdoc />
     public async Task<Result> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
     {
         if (request.UserId != userIdentifierProvider.UserId)
@@ -42,6 +30,7 @@ internal sealed class UpdateUserCommandHandler(
         }
 
         User? user = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
+
         if (user is null)
         {
             return Result.Failure(UserErrors.NotFound(request.UserId));
@@ -49,33 +38,17 @@ internal sealed class UpdateUserCommandHandler(
 
         user.ChangeName(firstNameResult.Value, lastNameResult.Value);
 
-        if (await ImageExistsAsync(request.ImageId, cancellationToken))
+        if (request.ImageId is Guid imageId && imageId != user.ImageId)
         {
-            user.ChangeImage(request.ImageId!.Value);
+            // Only files uploaded by this user may be used as their profile picture.
+            if (!await blobService.IsUserOwnerAsync(imageId, user.Id, cancellationToken))
+            {
+                return Result.Failure(BlobErrors.NotFound(imageId));
+            }
+
+            user.ChangeImage(imageId);
         }
-
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        await publisher.Publish(new UserUpdatedEvent(user.Id), cancellationToken);
 
         return Result.Success();
-    }
-
-    /// <summary>
-    /// Checks if the specified image identifier exists.
-    /// </summary>
-    /// <param name="imageId">The image identifier.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>True if the image exits otherwise false.</returns>
-    private async Task<bool> ImageExistsAsync(Guid? imageId, CancellationToken cancellationToken)
-    {
-        if (!imageId.HasValue || imageId is null)
-        {
-            return false;
-        }
-
-        bool imageExists = await blobService.ExistsAsync(imageId.Value, cancellationToken);
-
-        return imageExists;
     }
 }

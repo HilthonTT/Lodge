@@ -1,63 +1,40 @@
-﻿using Api.FunctionalTests.Abstractions;
-using Api.FunctionalTests.Extensions;
-using FluentAssertions;
-using Lodge.Contracts.Authentication;
-using Lodge.Contracts.Users;
-using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.Http.Json;
-using System.Security.Claims;
+using Lodge.Api.FunctionalTests.Abstractions;
+using Lodge.Contracts.Users;
 
-namespace Api.FunctionalTests.Users;
+namespace Lodge.Api.FunctionalTests.Users;
 
-public class GetUserTests : BaseFunctionalTest
+public class GetUserTests(FunctionalTestWebAppFactory factory) : BaseFunctionalTest(factory)
 {
-    public GetUserTests(FunctionalTestWebAppFactory factory) 
-        : base(factory)
+    [Fact]
+    public async Task Should_ReturnUnauthorized_WhenAnonymous()
     {
+        HttpResponseMessage response = await HttpClient.GetAsync($"api/v1/users/{Guid.NewGuid()}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
     [Fact]
-    public async Task Should_ReturnNotFound_WhenUserDoesNotExist()
+    public async Task Should_ReturnOwnProfile()
     {
-        // Arrange
-        Guid userId = Guid.NewGuid();
+        (HttpClient client, Guid userId) = await CreateAuthenticatedUserAsync();
 
-        // Act
-        HttpResponseMessage response = await HttpClient.GetAsync($"api/v1/users/{userId}");
+        UserResponse? user = await client.GetFromJsonAsync<UserResponse>($"api/v1/users/{userId}");
 
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
-    }
-
-    [Fact]
-    public async Task Should_ReturnUser_WhenUserExists()
-    {
-        // Arrange
-        Guid userId = await CreateUserAsync();
-
-        // Act
-        UserResponse? user = await HttpClient.GetFromJsonAsync<UserResponse>($"api/v1/users/{userId}");
-
-        // Assert
         user.Should().NotBeNull();
+        user!.Id.Should().Be(userId);
     }
 
-    private async Task<Guid> CreateUserAsync()
+    [Fact]
+    public async Task Should_ReturnForbidden_ForAnotherUsersProfile()
     {
-        var request = new RegisterRequest("FirstName", "LastName", "email@email.com", "AbC-123");
+        // Regression: profiles (including e-mail addresses) were readable anonymously by id.
+        (HttpClient client, _) = await CreateAuthenticatedUserAsync();
+        (_, Guid otherUserId) = await CreateAuthenticatedUserAsync();
 
-        HttpResponseMessage response = await HttpClient.PostAsJsonAsync("api/v1/authentication/register", request);
+        HttpResponseMessage response = await client.GetAsync($"api/v1/users/{otherUserId}");
 
-        TokenResponse token = await response.GetTokenAsync();
-
-        var tokenHandler = new JwtSecurityTokenHandler();
-        JwtSecurityToken jwtToken = tokenHandler.ReadJwtToken(token.Token);
-
-        Claim? userIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "userId");
-
-        bool isGuid = Guid.TryParse(userIdClaim?.Value, out Guid userId);
-
-        return userId;
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 }

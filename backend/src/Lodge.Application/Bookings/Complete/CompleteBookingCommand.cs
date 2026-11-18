@@ -3,8 +3,7 @@
 namespace Lodge.Application.Bookings.Complete;
 
 /// <summary>
-/// Represents the complete booking command.
+/// Represents the complete booking command. Admin only: authorization is enforced by the endpoint policy.
 /// </summary>
-/// <param name="UserId">The user identifier.</param>
 /// <param name="BookingId">The booking identifier.</param>
-public sealed record CompleteBookingCommand(Guid UserId, Guid BookingId) : ICommand;
+public sealed record CompleteBookingCommand(Guid BookingId) : ICommand;

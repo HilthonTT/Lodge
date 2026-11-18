@@ -1,58 +1,40 @@
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-// Register services for Swagger and Reverse Proxy
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddReverseProxy()
+builder.Services
+    .AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 
-// Register CORS services
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowSpecificOrigin",
-        builder => builder.WithOrigins("http://localhost:3000")
-                          .AllowAnyHeader()
-                          .AllowAnyMethod());
-});
+// Per-client-IP fixed window. Note that server-side rendering (Next.js) calls the gateway from a single IP,
+// so the limit must be generous enough for that client.
+int permitLimit = builder.Configuration.GetValue("RateLimiting:PermitLimitPerMinute", 600);
 
-// Add rate limiter services
 builder.Services.AddRateLimiter(options =>
 {
-    options.AddPolicy("fixed-by-ip", httpContext =>
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("per-ip", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString(),
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             factory: _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 50,
-                Window = TimeSpan.FromMinutes(1)
+                PermitLimit = permitLimit,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
             }));
 });
 
-// Register health checks
 builder.Services.AddHealthChecks();
 
 WebApplication app = builder.Build();
 
-// Configure Swagger for development environment
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-// Apply HTTPS redirection
-app.UseHttpsRedirection();
-
-// Apply CORS middleware
-app.UseCors("AllowSpecificOrigin");
-
-// Apply rate limiter middleware
+// CORS is intentionally handled by the API only: the gateway forwards preflight requests unchanged,
+// and adding CORS here as well would produce duplicate Access-Control-* headers.
 app.UseRateLimiter();
 
-// Map reverse proxy and health check endpoints
+// The gateway's own liveness probe; /health is proxied to the API like every other path.
+app.MapHealthChecks("/gateway/health");
 app.MapReverseProxy();
-app.MapHealthChecks("/health");
 
-app.Run();
+await app.RunAsync();

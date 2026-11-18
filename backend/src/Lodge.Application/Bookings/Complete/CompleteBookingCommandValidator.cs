@@ -14,10 +14,6 @@ internal sealed class CompleteBookingCommandValidator : AbstractValidator<Comple
     /// </summary>
     public CompleteBookingCommandValidator()
     {
-        RuleFor(x => x.UserId)
-           .NotEmpty()
-           .WithError(ValidationErrors.CompleteBooking.UserIdIsRequired);
-
         RuleFor(x => x.BookingId)
             .NotEmpty()
             .WithError(ValidationErrors.CompleteBooking.BookingIdIsRequired);

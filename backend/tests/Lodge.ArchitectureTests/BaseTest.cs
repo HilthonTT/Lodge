@@ -5,7 +5,7 @@ using Lodge.Persistence;
 using Lodge.Presentation.Endpoints;
 using System.Reflection;
 
-namespace ArchitectureTests;
+namespace Lodge.ArchitectureTests;
 
 public abstract class BaseTest
 {

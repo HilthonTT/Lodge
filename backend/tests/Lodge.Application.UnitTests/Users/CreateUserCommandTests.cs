@@ -1,4 +1,3 @@
-﻿using FluentAssertions;
 using Lodge.Application.Abstractions.Authentication;
 using Lodge.Application.Abstractions.Cryptography;
 using Lodge.Application.Abstractions.Data;
@@ -8,7 +7,7 @@ using Lodge.Domain.Core.Primitives;
 using Lodge.Domain.Users;
 using NSubstitute;
 
-namespace Application.UnitTests.Users;
+namespace Lodge.Application.UnitTests.Users;
 
 public class CreateUserCommandTests
 {

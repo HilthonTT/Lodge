@@ -1,29 +1,22 @@
 ﻿using Lodge.Application.Abstractions.Authentication;
 using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
 
 namespace Lodge.Infrastructure.Authentication;
 
 /// <summary>
-/// Represents the user identifier provider.
+/// Reads the authenticated user's identifier from the <c>userId</c> claim of the current request.
 /// </summary>
-internal sealed class UserIdentifierProvider : IUserIdentifierProvider
+internal sealed class UserIdentifierProvider(IHttpContextAccessor httpContextAccessor) : IUserIdentifierProvider
 {
-    /// <summary>
-    /// Initializes a new instance of <see cref="UserIdentifierProvider"/> class.
-    /// </summary>
-    /// <param name="httpContextAccessor">The http context accessor.</param>
-    /// <exception cref="ArgumentException">
-    /// The exception is thrown when the user identity claim is missing.
-    /// </exception>
-    public UserIdentifierProvider(IHttpContextAccessor httpContextAccessor)
+    public Guid UserId
     {
-        string userIdClaim = httpContextAccessor.HttpContext?.User?.FindFirstValue("userId")
-            ?? throw new ArgumentException("The user identifier claim is required.", nameof(httpContextAccessor));
+        get
+        {
+            string? userIdClaim = httpContextAccessor.HttpContext?.User.FindFirst(JwtProvider.UserIdClaim)?.Value;
 
-        UserId = new Guid(userIdClaim);
+            return Guid.TryParse(userIdClaim, out Guid userId)
+                ? userId
+                : throw new InvalidOperationException("The current request is not authenticated.");
+        }
     }
-
-    /// <inheritdoc />
-    public Guid UserId { get; }
 }

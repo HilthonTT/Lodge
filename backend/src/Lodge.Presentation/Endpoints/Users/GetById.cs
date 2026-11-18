@@ -1,4 +1,4 @@
-﻿using Lodge.Application.Users.GetById;
+using Lodge.Application.Users.GetById;
 using Lodge.Contracts.Users;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Presentation.Extensions;
@@ -29,6 +29,7 @@ internal sealed class GetById : IEndpoint
 
             return result.Match(Results.Ok, CustomResults.Problem);
         })
-        .WithTags(Tags.Users);
+        .WithTags(Tags.Users)
+        .RequireAuthorization();
     }
 }

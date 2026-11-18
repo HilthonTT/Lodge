@@ -1,230 +1,141 @@
-﻿using FluentAssertions;
 using Lodge.Application.Abstractions.Authentication;
 using Lodge.Application.Abstractions.Data;
 using Lodge.Application.Bookings.Reserve;
-using Lodge.Domain.Apartements;
+using Lodge.Application.Core.Exceptions;
+using Lodge.Domain.Apartments;
 using Lodge.Domain.Bookings;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Domain.Shared;
 using Lodge.Domain.Users;
-using MediatR;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using NSubstitute.ReturnsExtensions;
 
-namespace Application.UnitTests.Bookings;
+namespace Lodge.Application.UnitTests.Bookings;
 
 public class ReserveBookingTests
 {
+    private static readonly DateTime UtcNow = new(2026, 6, 1, 9, 0, 0, DateTimeKind.Utc);
+    private static readonly DateOnly Today = DateOnly.FromDateTime(UtcNow);
+
     private static readonly ReserveBookingCommand Command = new(
         Guid.NewGuid(),
         Guid.NewGuid(),
         Guid.NewGuid(),
-        DateOnly.Parse("01-08-2024"),
-        DateOnly.Parse("10-08-2024"));
+        Today.AddDays(7),
+        Today.AddDays(10));
 
-    private static readonly Apartment Apartment = Apartment.Create(
+    private readonly Apartment _apartment = Apartment.Create(
         Name.Create("Name").Value,
         Description.Create("Description").Value,
         new Address("Country", "State", "ZipCode", "City", "Street"),
-        Money.Zero(),
-        Money.Zero(),
+        new Money(100, Currency.FromCode("USD")),
+        Money.Zero(Currency.FromCode("USD")),
         5,
         5,
-        "ImageUrl",
+        "/images/cabin.png",
         []);
 
+    private readonly IUserIdentifierProvider _userIdentifierProvider = Substitute.For<IUserIdentifierProvider>();
+    private readonly IApartmentRepository _apartmentRepository = Substitute.For<IApartmentRepository>();
+    private readonly IBookingRepository _bookingRepository = Substitute.For<IBookingRepository>();
+    private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
+    private readonly IDateTimeProvider _dateTimeProvider = Substitute.For<IDateTimeProvider>();
     private readonly ReserveBookingCommandHandler _handler;
-    private readonly IUserIdentifierProvider _userIdentifierProviderMock;
-    private readonly IApartmentRepository _apartmentRepositoryMock;
-    private readonly IBookingRepository _bookingRepositoryMock;
-    private readonly IUnitOfWork _unitOfWorkMock;
-    private readonly PricingService _pricingServiceMock;
-    private readonly IDateTimeProvider _dateTimeProviderMock;
-    private readonly IPublisher _publisherMock;
 
     public ReserveBookingTests()
     {
-        _userIdentifierProviderMock = Substitute.For<IUserIdentifierProvider>();
-        _apartmentRepositoryMock = Substitute.For<IApartmentRepository>();
-        _bookingRepositoryMock = Substitute.For<IBookingRepository>();
-        _unitOfWorkMock = Substitute.For<IUnitOfWork>();
-        _pricingServiceMock = new();
-        _dateTimeProviderMock = Substitute.For<IDateTimeProvider>();
-        _publisherMock = Substitute.For<IPublisher>();
+        _dateTimeProvider.UtcNow.Returns(UtcNow);
+        _userIdentifierProvider.UserId.Returns(Command.UserId);
+        _apartmentRepository.GetByIdAsync(Command.ApartmentId, Arg.Any<CancellationToken>()).Returns(_apartment);
+        _bookingRepository
+            .IsOverlappingAsync(Arg.Any<Apartment>(), Arg.Any<DateRange>(), Arg.Any<CancellationToken>())
+            .Returns(false);
 
         _handler = new ReserveBookingCommandHandler(
-            _userIdentifierProviderMock,
-            _apartmentRepositoryMock,
-            _bookingRepositoryMock,
-            _unitOfWorkMock,
-            _pricingServiceMock,
-            _dateTimeProviderMock,
-            _publisherMock);
+            _userIdentifierProvider,
+            _apartmentRepository,
+            _bookingRepository,
+            _unitOfWork,
+            new PricingService(),
+            _dateTimeProvider);
     }
 
     [Fact]
     public async Task Handle_Should_ReturnFailure_WhenUserLacksPermission()
     {
-        // Arrange
-        _userIdentifierProviderMock.UserId
-            .Returns(Guid.NewGuid());
+        _userIdentifierProvider.UserId.Returns(Guid.NewGuid());
 
-        _apartmentRepositoryMock.GetByIdAsync(Command.ApartmentId, default)
-            .Returns(Apartment);
-
-        _bookingRepositoryMock.IsOverlappingAsync(Arg.Any<Apartment>(), Arg.Any<DateRange>(), default)
-            .Returns(false);
-
-        // Act
         Result<Guid> result = await _handler.Handle(Command, default);
 
-        // Assert
         result.Error.Should().Be(UserErrors.InvalidPermissions);
     }
 
     [Fact]
     public async Task Handle_Should_ReturnFailure_WhenApartmentIsNull()
     {
-        // Arrange
-        _userIdentifierProviderMock.UserId
-            .Returns(Command.UserId);
+        _apartmentRepository.GetByIdAsync(Command.ApartmentId, Arg.Any<CancellationToken>()).ReturnsNull();
 
-        _apartmentRepositoryMock.GetByIdAsync(Command.ApartmentId, default)
-            .ReturnsNull();
-
-        _bookingRepositoryMock.IsOverlappingAsync(Arg.Any<Apartment>(), Arg.Any<DateRange>(), default)
-            .Returns(false);
-
-        // Act
         Result<Guid> result = await _handler.Handle(Command, default);
 
-        // Assert
         result.Error.Should().Be(ApartmentErrors.NotFound(Command.ApartmentId));
     }
 
     [Fact]
     public async Task Handle_Should_ReturnFailure_WhenDateRangeIsInvalid()
     {
-        // Arrange
-        ReserveBookingCommand invalidCommand = Command with 
-        { 
-            StartDate = DateOnly.Parse("10-08-2024"), 
-            EndDate = DateOnly.Parse("01-08-2024")
-        };
+        ReserveBookingCommand invalidCommand = Command with { StartDate = Today.AddDays(10), EndDate = Today.AddDays(7) };
 
-        _userIdentifierProviderMock.UserId
-            .Returns(invalidCommand.UserId);
-
-        _apartmentRepositoryMock.GetByIdAsync(invalidCommand.ApartmentId, default)
-            .Returns(Apartment);
-
-        _bookingRepositoryMock.IsOverlappingAsync(Arg.Any<Apartment>(), Arg.Any<DateRange>(), default)
-            .Returns(false);
-
-        // Act
         Result<Guid> result = await _handler.Handle(invalidCommand, default);
 
-        // Assert
         result.Error.Should().Be(DateRangeErrors.StartDatePrecedesEndDate);
+    }
+
+    [Fact]
+    public async Task Handle_Should_ReturnFailure_WhenStartDateIsInThePast()
+    {
+        ReserveBookingCommand pastCommand = Command with { StartDate = Today.AddDays(-1), EndDate = Today.AddDays(2) };
+
+        Result<Guid> result = await _handler.Handle(pastCommand, default);
+
+        result.Error.Should().Be(BookingErrors.StartDateInPast);
+        _bookingRepository.DidNotReceive().Insert(Arg.Any<Booking>());
     }
 
     [Fact]
     public async Task Handle_Should_ReturnFailure_WhenOverlapping()
     {
-        // Arrange
-        _userIdentifierProviderMock.UserId
-            .Returns(Command.UserId);
-
-        _apartmentRepositoryMock.GetByIdAsync(Command.ApartmentId, default)
-            .Returns(Apartment);
-
-        _bookingRepositoryMock.IsOverlappingAsync(Arg.Any<Apartment>(), Arg.Any<DateRange>(), default)
+        _bookingRepository
+            .IsOverlappingAsync(Arg.Any<Apartment>(), Arg.Any<DateRange>(), Arg.Any<CancellationToken>())
             .Returns(true);
 
-        // Act
         Result<Guid> result = await _handler.Handle(Command, default);
 
-        // Assert
         result.Error.Should().Be(BookingErrors.Overlap);
     }
 
     [Fact]
-    public async Task Handle_Should_ReturnSuccess_WhenCreateSucceeds()
+    public async Task Handle_Should_ReturnOverlap_WhenConcurrentReservationWins()
     {
-        // Arrange
-        _userIdentifierProviderMock.UserId
-            .Returns(Command.UserId);
+        _unitOfWork.SaveChangesAsync(Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ConcurrencyException("conflict", null));
 
-        _apartmentRepositoryMock.GetByIdAsync(Command.ApartmentId, default)
-            .Returns(Apartment);
-
-        _bookingRepositoryMock.IsOverlappingAsync(Arg.Any<Apartment>(), Arg.Any<DateRange>(), default)
-            .Returns(false);
-
-        // Act
         Result<Guid> result = await _handler.Handle(Command, default);
 
-        // Assert
+        result.Error.Should().Be(BookingErrors.Overlap);
+    }
+
+    [Fact]
+    public async Task Handle_Should_InsertBookingAndSave_WhenReservationSucceeds()
+    {
+        Result<Guid> result = await _handler.Handle(Command, default);
+
         result.IsSuccess.Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task Handle_Should_CallRepository_WhenCreateSucceeds()
-    {
-        // Arrange
-        _userIdentifierProviderMock.UserId
-           .Returns(Command.UserId);
-
-        _apartmentRepositoryMock.GetByIdAsync(Command.ApartmentId, default)
-            .Returns(Apartment);
-
-        _bookingRepositoryMock.IsOverlappingAsync(Arg.Any<Apartment>(), Arg.Any<DateRange>(), default)
-            .Returns(false);
-
-        // Act
-        Result<Guid> result = await _handler.Handle(Command, default);
-
-        // Assert
-        _bookingRepositoryMock.Received(1).Insert(Arg.Is<Booking>(b => b.Id == result.Value));
-    }
-
-    [Fact]
-    public async Task Handle_Should_CallUnitOfWork_WhenCreateSucceeds()
-    {
-        // Arrange
-        _userIdentifierProviderMock.UserId
-           .Returns(Command.UserId);
-
-        _apartmentRepositoryMock.GetByIdAsync(Command.ApartmentId, default)
-            .Returns(Apartment);
-
-        _bookingRepositoryMock.IsOverlappingAsync(Arg.Any<Apartment>(), Arg.Any<DateRange>(), default)
-            .Returns(false);
-
-        // Act
-        await _handler.Handle(Command, default);
-
-        // Assert
-        await _unitOfWorkMock.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task Handle_Should_CallPublisher_WhenCreateSucceeds()
-    {
-        // Arrange
-        _userIdentifierProviderMock.UserId
-           .Returns(Command.UserId);
-
-        _apartmentRepositoryMock.GetByIdAsync(Command.ApartmentId, default)
-            .Returns(Apartment);
-
-        _bookingRepositoryMock.IsOverlappingAsync(Arg.Any<Apartment>(), Arg.Any<DateRange>(), default)
-            .Returns(false);
-
-        // Act
-        await _handler.Handle(Command, default);
-
-        // Assert
-        await _publisherMock.Received(1).Publish(Arg.Any<INotification>());
+        _bookingRepository.Received(1).Insert(Arg.Is<Booking>(b =>
+            b.Id == result.Value &&
+            b.UserId == Command.UserId &&
+            b.TotalPrice.Amount == 300));
+        await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+        _apartment.LastBookedOnUtc.Should().Be(UtcNow);
     }
 }

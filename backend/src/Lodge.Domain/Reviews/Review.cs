@@ -51,9 +51,9 @@ public sealed class Review : Entity, IAuditableEntity
 
     public Guid UserId { get; private set; }
 
-    public Rating Rating { get; private set; }
+    public Rating Rating { get; private set; } = null!;
 
-    public Comment Comment { get; private set; }
+    public Comment Comment { get; private set; } = null!;
 
     public DateTime CreatedOnUtc { get; set; }
 

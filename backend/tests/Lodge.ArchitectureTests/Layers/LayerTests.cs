@@ -1,7 +1,7 @@
-﻿using FluentAssertions;
 using NetArchTest.Rules;
+using TestResult = NetArchTest.Rules.TestResult;
 
-namespace ArchitectureTests.Layers;
+namespace Lodge.ArchitectureTests.Layers;
 
 public class LayerTests : BaseTest
 {

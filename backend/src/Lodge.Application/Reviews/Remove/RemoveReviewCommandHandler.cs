@@ -1,4 +1,5 @@
 ﻿using Lodge.Application.Abstractions.Authentication;
+using Lodge.Application.Abstractions.Caching;
 using Lodge.Application.Abstractions.Data;
 using Lodge.Application.Abstractions.Messaging;
 using Lodge.Domain.Core.Primitives;
@@ -13,10 +14,12 @@ namespace Lodge.Application.Reviews.Remove;
 /// <param name="userIdentifierProvider">The user identifier provider.</param>
 /// <param name="reviewRepository">The user repository.</param>
 /// <param name="unitOfWork">The unit of work.</param>
+/// <param name="cacheInvalidator">The cache invalidator.</param>
 internal sealed class RemoveReviewCommandHandler(
     IUserIdentifierProvider userIdentifierProvider,
     IReviewRepository reviewRepository,
-    IUnitOfWork unitOfWork) : ICommandHandler<RemoveReviewCommand>
+    IUnitOfWork unitOfWork,
+    ICacheInvalidator cacheInvalidator) : ICommandHandler<RemoveReviewCommand>
 {
     /// <inheritdoc />
     public async Task<Result> Handle(RemoveReviewCommand request, CancellationToken cancellationToken)
@@ -35,6 +38,9 @@ internal sealed class RemoveReviewCommandHandler(
         reviewRepository.Remove(review);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // The apartment's average rating and review count are part of the cached apartment.
+        cacheInvalidator.InvalidateOnCommit(CacheKeys.Apartments.GetById(review.ApartmentId));
 
         return Result.Success();
     }

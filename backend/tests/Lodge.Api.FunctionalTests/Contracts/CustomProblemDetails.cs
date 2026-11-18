@@ -1,6 +1,6 @@
 ﻿using Lodge.Domain.Core.Primitives;
 
-namespace Api.FunctionalTests.Contracts;
+namespace Lodge.Api.FunctionalTests.Contracts;
 
 public sealed class CustomProblemDetails
 {

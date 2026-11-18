@@ -1,47 +1,34 @@
-﻿using Lodge.Application.Abstractions.Data;
+﻿using Dapper;
+using Lodge.Domain.Core.Events;
 using Lodge.Domain.Core.Primitives;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using System.Data;
-using Dapper;
-using Lodge.Domain.Core.Events;
+using Npgsql;
 
 namespace Lodge.Persistence.Outbox;
 
 /// <summary>
-/// Represents the process outbox messages job.
+/// Dispatches the domain events stored in the outbox. Rows are locked with <c>FOR UPDATE SKIP LOCKED</c>, so
+/// several API instances can run the job concurrently without processing a message twice.
 /// </summary>
-/// <param name="factory">The database connection factory.</param>
-/// <param name="publisher">The MediatR publisher.</param>
-/// <param name="dateTimeProvider">The date time provider.</param>
-/// <param name="logger">The logger.</param>
-internal sealed class ProcessOutboxMessagesJob(
-    IDbConnectionFactory factory, 
-    IPublisher publisher, 
+internal sealed partial class ProcessOutboxMessagesJob(
+    NpgsqlDataSource dataSource,
+    IPublisher publisher,
     IDateTimeProvider dateTimeProvider,
+    IOptions<OutboxOptions> options,
     ILogger<ProcessOutboxMessagesJob> logger) : IProcessOutboxMessagesJob
 {
-    private const int BatchSize = 15;
-    private static readonly JsonSerializerSettings SerializerSettings = new()
-    {
-        TypeNameHandling = TypeNameHandling.All
-    };
-
-    /// <inheritdoc />
     public async Task ProcessAsync()
     {
-        logger.LogInformation("Beginning to process outbox messages");
-
-        using IDbConnection connection = await factory.GetOpenConnectionAsync();
-        using IDbTransaction transaction = connection.BeginTransaction();
+        await using NpgsqlConnection connection = await dataSource.OpenConnectionAsync();
+        await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
 
         IReadOnlyList<OutboxMessageResponse> outboxMessages = await GetOutboxMessagesAsync(connection, transaction);
 
-        if (!outboxMessages.Any())
+        if (outboxMessages.Count == 0)
         {
-            logger.LogInformation("Completed processing outbox messages - no messages to process");
-
             return;
         }
 
@@ -53,88 +40,56 @@ internal sealed class ProcessOutboxMessagesJob(
             {
                 IDomainEvent domainEvent = JsonConvert.DeserializeObject<IDomainEvent>(
                     outboxMessage.Content,
-                    SerializerSettings)!;
+                    OutboxSerializer.Settings)!;
 
                 await publisher.Publish(domainEvent);
             }
+#pragma warning disable CA1031 // A failing message must not stop the batch; the error is stored on the row.
             catch (Exception caughtException)
+#pragma warning restore CA1031
             {
-                logger.LogError(
-                    caughtException,
-                    "Exception while processing outbox message {MessageId}",
-                    outboxMessage.Id);
-
+                LogProcessingFailed(logger, caughtException, outboxMessage.Id);
                 exception = caughtException;
             }
 
-            await UpdateOutboxMessageAsync(connection, transaction, outboxMessage, exception);
+            await connection.ExecuteAsync(
+                """
+                UPDATE outbox_messages
+                SET processed_on_utc = @ProcessedOnUtc,
+                    error = @Error
+                WHERE id = @Id
+                """,
+                new { outboxMessage.Id, ProcessedOnUtc = dateTimeProvider.UtcNow, Error = exception?.ToString() },
+                transaction);
         }
 
-        transaction.Commit();
+        await transaction.CommitAsync();
 
-        logger.LogInformation("Completed processing outbox messages");
+        LogProcessed(logger, outboxMessages.Count);
     }
 
-    /// <summary>
-    /// Gets the outbox messages that haven't yet been processed.
-    /// </summary>
-    /// <param name="connection">The database connection.</param>
-    /// <param name="transaction">The database transaction.</param>
-    /// <returns>The readonly list of <see cref="OutboxMessageResponse"/> records.</returns>
-    private static async Task<IReadOnlyList<OutboxMessageResponse>> GetOutboxMessagesAsync(
-        IDbConnection connection,
-        IDbTransaction transaction)
+    private async Task<IReadOnlyList<OutboxMessageResponse>> GetOutboxMessagesAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction)
     {
-        const string sql =
+        IEnumerable<OutboxMessageResponse> outboxMessages = await connection.QueryAsync<OutboxMessageResponse>(
             """
-            SELECT 
-                id,
-                content
+            SELECT id, content
             FROM outbox_messages
             WHERE processed_on_utc IS NULL
             ORDER BY created_on_utc
             LIMIT @BatchSize
             FOR UPDATE SKIP LOCKED
-            """;
-
-        IEnumerable<OutboxMessageResponse> outboxMessages = await connection.QueryAsync<OutboxMessageResponse>(
-            sql,
-            new { BatchSize },
+            """,
+            new { options.Value.BatchSize },
             transaction);
 
         return outboxMessages.ToList();
     }
 
-    /// <summary>
-    /// Updates the outbox message, "processes" it.
-    /// </summary>
-    /// <param name="connection">The database connection.</param>
-    /// <param name="transaction">The database transaction.</param>
-    /// <param name="outboxMessage">The outbox message.</param>
-    /// <param name="exception">The exception.</param>
-    /// <returns>The completed task.</returns>
-    private async Task UpdateOutboxMessageAsync(
-        IDbConnection connection,
-        IDbTransaction transaction,
-        OutboxMessageResponse outboxMessage,
-        Exception? exception)
-    {
-        const string sql =
-            """
-            UPDATE outbox_messages
-            SET processed_on_utc = @ProcessedOnUtc,
-                error = @Error
-            WHERE id = @Id
-            """;
+    [LoggerMessage(Level = LogLevel.Error, Message = "Exception while processing outbox message {MessageId}")]
+    private static partial void LogProcessingFailed(ILogger logger, Exception exception, Guid messageId);
 
-        await connection.ExecuteAsync(
-            sql,
-            new
-            {
-                outboxMessage.Id,
-                ProcessedOnUtc = dateTimeProvider.UtcNow,
-                Error = exception?.ToString()
-            },
-            transaction);
-    }
+    [LoggerMessage(Level = LogLevel.Information, Message = "Processed {Count} outbox messages")]
+    private static partial void LogProcessed(ILogger logger, int count);
 }

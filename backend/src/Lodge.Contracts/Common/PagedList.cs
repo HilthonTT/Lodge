@@ -1,72 +1,59 @@
-﻿namespace Lodge.Contracts.Common;
+﻿using System.Text.Json.Serialization;
+
+namespace Lodge.Contracts.Common;
 
 /// <summary>
-/// Represents the generic paged list.
+/// Represents one page of a list.
 /// </summary>
-/// <typeparam name="T">The type of list.</typeparam>
+/// <typeparam name="T">The item type.</typeparam>
 public sealed record PagedList<T>
 {
-    /// <summary>
-    /// Initializes a new instance of <see cref="PagedList{T}"/> record.
-    /// </summary>
-    /// <param name="items">The items.</param>
-    /// <param name="page">The page number.</param>
-    /// <param name="pageSize">The page size.</param>
-    /// <param name="totalCount">The total count.</param>
-    private PagedList(IEnumerable<T> items, int page, int pageSize, int totalCount)
+    [JsonConstructor]
+    public PagedList(IReadOnlyList<T> items, int page, int pageSize, int totalCount)
     {
-        Items = items.ToList();
+        Items = items;
         Page = page;
         PageSize = pageSize;
         TotalCount = totalCount;
     }
 
     /// <summary>
-    /// Gets the current page.
+    /// Gets the current (1-based) page.
     /// </summary>
     public int Page { get; }
 
     /// <summary>
-    /// Gets the page size. The maximum page size is 100.
+    /// Gets the page size.
     /// </summary>
     public int PageSize { get; }
 
     /// <summary>
-    /// Gets the total number of items.
+    /// Gets the total number of items across all pages.
     /// </summary>
     public int TotalCount { get; }
 
     /// <summary>
-    /// Gets the flag indicating whether the next page exists.
+    /// Gets a value indicating whether a next page exists.
     /// </summary>
-    public bool HasNextPage => Page * PageSize > TotalCount;
+    public bool HasNextPage => Page * PageSize < TotalCount;
 
     /// <summary>
-    /// Gets the flag indicating whether the previous page exists.
+    /// Gets a value indicating whether a previous page exists.
     /// </summary>
     public bool HasPreviousPage => Page > 1;
 
     /// <summary>
-    /// Gets the items.
+    /// Gets the items of the current page.
     /// </summary>
     public IReadOnlyList<T> Items { get; }
 
     /// <summary>
-    /// Creates a new instance of <see cref="PagedList{T}"/>
+    /// Creates a page from an in-memory sequence.
     /// </summary>
-    /// <param name="query">The items.</param>
-    /// <param name="page">The current page.</param>
-    /// <param name="pageSize">The page size.</param>
-    /// <returns>A new instance of the <see cref="PagedList{T}"/></returns>
-    public static PagedList<T> Create(IEnumerable<T> query, int page, int pageSize)
+    public static PagedList<T> Create(IEnumerable<T> source, int page, int pageSize)
     {
-        int totalCount = query.Count();
+        List<T> all = source as List<T> ?? [.. source];
 
-        List<T> items = [.. query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-        ];
-
-        return new(items, page, pageSize, totalCount);
+        return new PagedList<T>([.. all.Skip((page - 1) * pageSize).Take(pageSize)], page, pageSize, all.Count);
     }
 }

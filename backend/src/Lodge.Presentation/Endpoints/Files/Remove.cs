@@ -1,4 +1,4 @@
-﻿using Lodge.Application.Files.Remove;
+using Lodge.Application.Files.Remove;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Presentation.Extensions;
 using Lodge.Presentation.Infrastructure;
@@ -22,7 +22,7 @@ internal sealed class Remove : IEndpoint
             ISender sender,
             CancellationToken cancellationToken) =>
         {
-            var command = new RemoveFileCommand(fileId, userId);
+            var command = new RemoveFileCommand(userId, fileId);
 
             Result result = await sender.Send(command, cancellationToken);
 

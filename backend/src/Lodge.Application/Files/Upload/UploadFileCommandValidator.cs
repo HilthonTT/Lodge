@@ -1,34 +1,24 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Lodge.Application.Core.Errors;
 using Lodge.Application.Core.Extensions;
 
 namespace Lodge.Application.Files.Upload;
 
-/// <summary>
-/// Represents the <see cref="UploadFileCommand"/> validator.
-/// </summary>
 internal sealed class UploadFileCommandValidator : AbstractValidator<UploadFileCommand>
 {
-    /// <summary>
-    /// Initializes a new instance of <see cref="UploadFileCommandValidator"/> class.
-    /// </summary>
+    public const long MaxFileSizeInBytes = 5 * 1024 * 1024;
+
     public UploadFileCommandValidator()
     {
         RuleFor(x => x.UserId).NotEmpty().WithError(ValidationErrors.UploadFile.UserIdIsRequired);
 
-        RuleFor(x => x.ContentType)
-                .NotEmpty()
-                .WithError(ValidationErrors.UploadFile.ContentTypeIsRequired)
-                .Must(BeAnImage).WithError(ValidationErrors.UploadFile.InvalidContentType);
-    }
+        RuleFor(x => x.Length)
+            .GreaterThan(0).WithError(ValidationErrors.UploadFile.FileIsRequired)
+            .LessThanOrEqualTo(MaxFileSizeInBytes).WithError(ValidationErrors.UploadFile.FileTooLarge(MaxFileSizeInBytes));
 
-    /// <summary>
-    /// Validates whether the provided content type is an image.
-    /// </summary>
-    /// <param name="contentType">The content type to validate.</param>
-    /// <returns>True if the content type is an image, otherwise false.</returns>
-    private static bool BeAnImage(string contentType)
-    {
-        return contentType.StartsWith("image/");
+        RuleFor(x => x.ContentType)
+            .NotEmpty().WithError(ValidationErrors.UploadFile.ContentTypeIsRequired)
+            .Must(contentType => contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+            .WithError(ValidationErrors.UploadFile.InvalidContentType);
     }
 }

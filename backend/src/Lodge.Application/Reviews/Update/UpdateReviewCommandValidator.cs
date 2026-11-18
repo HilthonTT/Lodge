@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Lodge.Application.Core.Errors;
 using Lodge.Application.Core.Extensions;
 using Lodge.Domain.Reviews;
@@ -20,8 +20,7 @@ internal sealed class UpdateReviewCommandValidator : AbstractValidator<UpdateRev
         RuleFor(x => x.UserId).NotEmpty().WithError(ValidationErrors.UpdateReview.UserIdIsRequired);
 
         RuleFor(x => x.Rating)
-            .LessThan(5).WithError(ValidationErrors.UpdateReview.RatingMustBeBelowFive)
-            .GreaterThanOrEqualTo(0).WithError(ValidationErrors.UpdateReview.RatingMustBeGreaterOrEqualToZero);
+            .InclusiveBetween(1, 5).WithError(ValidationErrors.UpdateReview.RatingMustBeBetweenOneAndFive);
 
         RuleFor(x => x.Comment)
             .NotEmpty().WithError(ValidationErrors.UpdateReview.CommentIsRequired)

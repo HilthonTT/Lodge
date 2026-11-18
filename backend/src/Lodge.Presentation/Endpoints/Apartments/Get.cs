@@ -1,4 +1,4 @@
-﻿using Lodge.Application.Apartments.Get;
+using Lodge.Application.Apartments.Get;
 using Lodge.Contracts.Apartments;
 using Lodge.Contracts.Common;
 using Lodge.Domain.Core.Primitives;
@@ -21,12 +21,12 @@ internal sealed class Get : IEndpoint
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("apartments", async (
-            [FromQuery] int page,
-            [FromQuery] int pageSize,
+            [FromQuery] int? page,
+            [FromQuery] int? pageSize,
             ISender sender,
             CancellationToken cancellationToken) =>
         {
-            var query = new GetApartmentsQuery(page, pageSize);
+            var query = new GetApartmentsQuery(page ?? Paging.DefaultPage, pageSize ?? Paging.DefaultPageSize);
 
             Result<PagedList<ApartmentResponse>> result = await sender.Send(query, cancellationToken);
 

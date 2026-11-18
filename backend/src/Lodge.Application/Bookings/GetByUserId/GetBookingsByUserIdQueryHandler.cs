@@ -1,26 +1,22 @@
-﻿using Lodge.Application.Abstractions.Authentication;
+﻿using System.Data;
+using Lodge.Application.Abstractions.Assets;
+using Lodge.Application.Abstractions.Authentication;
 using Lodge.Application.Abstractions.Data;
 using Lodge.Application.Abstractions.Messaging;
 using Lodge.Contracts.Bookings;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Domain.Users;
-using System.Data;
 
 namespace Lodge.Application.Bookings.GetByUserId;
 
-/// <summary>
-/// Represents the <see cref="GetBookingsByUserIdQuery"/> handler.
-/// </summary>
-/// <param name="factory">The database connection factory.</param>
-/// <param name="userIdentifierProvider">The user identifier provider.</param>
 internal sealed class GetBookingsByUserIdQueryHandler(
-    IDbConnectionFactory factory, 
-    IUserIdentifierProvider userIdentifierProvider)
+    IDbConnectionFactory factory,
+    IUserIdentifierProvider userIdentifierProvider,
+    IAssetUrlResolver assetUrlResolver)
     : IQueryHandler<GetBookingsByUserIdQuery, List<BookingResponse>>
 {
-    /// <inheritdoc />
     public async Task<Result<List<BookingResponse>>> Handle(
-        GetBookingsByUserIdQuery request, 
+        GetBookingsByUserIdQuery request,
         CancellationToken cancellationToken)
     {
         if (request.UserId != userIdentifierProvider.UserId)
@@ -31,6 +27,11 @@ internal sealed class GetBookingsByUserIdQueryHandler(
         using IDbConnection connection = await factory.GetOpenConnectionAsync(cancellationToken);
 
         List<BookingResponse> bookings = await BookingQueries.GetByUserIdAsync(connection, request.UserId);
+
+        foreach (BookingResponse booking in bookings)
+        {
+            booking.ApartmentImageUrl = assetUrlResolver.Resolve(booking.ApartmentImageUrl);
+        }
 
         return bookings;
     }

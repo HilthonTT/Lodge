@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Lodge.Application.Core.Errors;
 using Lodge.Application.Core.Extensions;
 using Lodge.Domain.Reviews;
@@ -20,8 +20,7 @@ internal sealed class CreateReviewCommandValidator : AbstractValidator<CreateRev
         RuleFor(x => x.BookingId).NotEmpty().WithError(ValidationErrors.CreateReview.BookingIdIsRequired);
 
         RuleFor(x => x.Rating)
-            .LessThan(5).WithError(ValidationErrors.CreateReview.RatingMustBeBelowFive)
-            .GreaterThanOrEqualTo(0).WithError(ValidationErrors.CreateReview.RatingMustBeGreaterOrEqualToZero);
+            .InclusiveBetween(1, 5).WithError(ValidationErrors.CreateReview.RatingMustBeBetweenOneAndFive);
 
         RuleFor(x => x.Comment)
             .NotEmpty().WithError(ValidationErrors.CreateReview.CommentIsRequired)

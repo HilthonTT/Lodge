@@ -3,8 +3,7 @@
 namespace Lodge.Application.Bookings.Reject;
 
 /// <summary>
-/// Represents the reject booking command.
+/// Represents the reject booking command. Admin only: authorization is enforced by the endpoint policy.
 /// </summary>
-/// <param name="UserId">The user identifier.</param>
 /// <param name="BookingId">The booking identifier.</param>
-public sealed record RejectBookingCommand(Guid UserId, Guid BookingId) : ICommand;
+public sealed record RejectBookingCommand(Guid BookingId) : ICommand;

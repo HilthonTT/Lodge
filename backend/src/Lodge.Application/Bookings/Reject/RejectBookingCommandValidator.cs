@@ -14,10 +14,6 @@ internal sealed class RejectBookingCommandValidator : AbstractValidator<RejectBo
     /// </summary>
     public RejectBookingCommandValidator()
     {
-        RuleFor(x => x.UserId)
-            .NotEmpty()
-            .WithError(ValidationErrors.RejectBooking.UserIdIsRequired);
-
         RuleFor(x => x.BookingId)
             .NotEmpty()
             .WithError(ValidationErrors.RejectBooking.BookingIdIsRequired);

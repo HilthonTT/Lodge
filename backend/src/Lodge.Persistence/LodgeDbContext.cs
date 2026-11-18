@@ -1,5 +1,6 @@
 ﻿using Lodge.Application.Abstractions.Data;
-using Lodge.Domain.Apartements;
+using Lodge.Application.Core.Exceptions;
+using Lodge.Domain.Apartments;
 using Lodge.Domain.Bookings;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Domain.Reviews;
@@ -10,35 +11,43 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Lodge.Persistence;
 
+/// <summary>
+/// The EF Core database context; also the unit of work.
+/// </summary>
 public sealed class LodgeDbContext(DbContextOptions<LodgeDbContext> options)
     : DbContext(options), IUnitOfWork, IDbContext
 {
-    public DbSet<User> Users { get; set; }
+    public DbSet<User> Users { get; set; } = null!;
 
-    public DbSet<Apartment> Apartments { get; set; }
+    public DbSet<Apartment> Apartments { get; set; } = null!;
 
-    public DbSet<Booking> Bookings { get; set; }
+    public DbSet<Booking> Bookings { get; set; } = null!;
 
-    public DbSet<Review> Reviews { get; set; }
+    public DbSet<Review> Reviews { get; set; } = null!;
 
-    public DbSet<IdempotentRequest> IdempotentRequests { get; set; }
+    public DbSet<IdempotentRequest> IdempotentRequests { get; set; } = null!;
 
-    /// <inheritdoc />
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(LodgeDbContext).Assembly);
+        try
+        {
+            return await base.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException exception)
+        {
+            throw new ConcurrencyException("A concurrency conflict occurred while saving changes.", exception);
+        }
     }
 
-    /// <inheritdoc />
-    public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
-    {
-        IDbContextTransaction transaction = await Database.BeginTransactionAsync(cancellationToken);
+    public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default) =>
+        Database.BeginTransactionAsync(cancellationToken);
 
-        return transaction;
-    }
+    public void DiscardChanges() => ChangeTracker.Clear();
 
-    /// <inheritdoc />
     public new DbSet<TEntity> Set<TEntity>()
-            where TEntity : Entity
-            => base.Set<TEntity>();
+        where TEntity : Entity
+        => base.Set<TEntity>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder) =>
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(LodgeDbContext).Assembly);
 }

@@ -1,10 +1,10 @@
-﻿using FluentAssertions;
 using Lodge.Domain.Core.Events;
 using Lodge.Domain.Core.Primitives;
 using NetArchTest.Rules;
+using TestResult = NetArchTest.Rules.TestResult;
 using System.Reflection;
 
-namespace ArchitectureTests.Domain;
+namespace Lodge.ArchitectureTests.Domain;
 
 public class DomainTests : BaseTest
 {

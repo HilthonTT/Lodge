@@ -12,10 +12,10 @@ internal sealed class EmailNotificationService(IEmailService emailService) : IEm
 {
     /// <inheritdoc />
     public Task SendNotificationEmailAsync(
-        NotificationEmail notifcationEmail,
+        NotificationEmail notificationEmail,
         CancellationToken cancellationToken = default)
     {
-        var mailRequest = new MailRequest(notifcationEmail.EmailTo, notifcationEmail.Subject, notifcationEmail.Body);
+        var mailRequest = new MailRequest(notificationEmail.EmailTo, notificationEmail.Subject, notificationEmail.Body);
 
         return emailService.SendEmailAsync(mailRequest, cancellationToken);
     }
@@ -63,7 +63,7 @@ internal sealed class EmailNotificationService(IEmailService emailService) : IEm
                $"Hello {bookingReservedEmail.Name}," +
                Environment.NewLine +
                Environment.NewLine +
-               "You've booked an apartment, please confirm it.");
+               "You've reserved an apartment. Complete the payment to confirm your booking.");
 
         return emailService.SendEmailAsync(mailRequest, cancellationToken);
     }
@@ -91,7 +91,7 @@ internal sealed class EmailNotificationService(IEmailService emailService) : IEm
     {
         var mailRequest = new MailRequest(
                bookingRejectedEmail.EmailTo,
-               "Booking confirmed ❌",
+               "Booking rejected ❌",
                $"Hello {bookingRejectedEmail.Name}," +
                Environment.NewLine +
                Environment.NewLine +

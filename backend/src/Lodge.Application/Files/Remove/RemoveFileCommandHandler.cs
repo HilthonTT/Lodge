@@ -1,7 +1,6 @@
-﻿using Lodge.Application.Abstractions.Authentication;
+using Lodge.Application.Abstractions.Authentication;
 using Lodge.Application.Abstractions.Messaging;
 using Lodge.Application.Abstractions.Storage;
-using Lodge.Contracts.Storage;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Domain.Users;
 
@@ -26,7 +25,7 @@ internal sealed class RemoveFileCommandHandler(
 
         if (!await blobService.IsUserOwnerAsync(request.FileId, request.UserId, cancellationToken))
         {
-            return Result.Failure<FileResponse>(UserErrors.InvalidPermissions);
+            return Result.Failure(UserErrors.InvalidPermissions);
         }
 
         await blobService.DeleteAsync(request.FileId, cancellationToken);
