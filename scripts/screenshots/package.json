@@ -1,0 +1,14 @@
+{
+  "name": "lodge-screenshots",
+  "private": true,
+  "type": "module",
+  "description": "Captures the README screenshots and GIFs from a running Lodge stack.",
+  "scripts": {
+    "capture": "node capture.mjs"
+  },
+  "devDependencies": {
+    "gifenc": "1.0.3",
+    "playwright": "1.65.1",
+    "pngjs": "7.0.0"
+  }
+}

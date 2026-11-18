@@ -1,137 +1,199 @@
 <div align="center">
 
-<div>
-    <img src="https://img.shields.io/badge/Next.js-%23000000.svg?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js" />
-    <img src="https://img.shields.io/badge/-Tailwind_CSS-black?style=for-the-badge&logoColor=white&logo=tailwindcss&color=06B6D4" alt="tailwindcss" />
-    <img src="https://img.shields.io/badge/-Typescript-black?style=for-the-badge&logoColor=white&logo=typescript&color=3178C6" alt="typescript" />
-    <img src="https://img.shields.io/badge/Redis-%23DC382D.svg?style=for-the-badge&logo=redis&logoColor=white" alt="redis" />
-    <img src="https://img.shields.io/badge/PostgreSQL-%23336791.svg?style=for-the-badge&logo=postgresql&logoColor=white" alt="postgresql" />
-    <img src="https://img.shields.io/badge/C%23-%23239120.svg?style=for-the-badge&logo=c-sharp&logoColor=white" alt="C#" />
-    <img src="https://img.shields.io/badge/Serilog-%230D5D90.svg?style=for-the-badge&logo=serilog&logoColor=white" alt="Serilog" />
-    <img src="https://img.shields.io/badge/Docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
-    <img src="https://img.shields.io/badge/Stripe-%23646CFF.svg?style=for-the-badge&logo=stripe&logoColor=white" alt="Stripe" />
-    <img src="https://img.shields.io/badge/ASP.NET_Core-%235C2D91.svg?style=for-the-badge&logo=dotnet&logoColor=white" alt="ASP.NET Core" />
-    <img src="https://img.shields.io/badge/RabbitMQ-%23FF6600.svg?style=for-the-badge&logo=rabbitmq&logoColor=white" alt="RabbitMQ" />
+# 🏡 Lodge
+
+**A full-stack vacation rental platform: browse unique stays, pick your dates, see the full price and book.**
+
+Built with **ASP.NET Core 11** (Clean Architecture + CQRS) and **Next.js 16** (React 19).
+
+[![CI/CD](https://github.com/HilthonTT/Lodge/actions/workflows/ci.yml/badge.svg)](https://github.com/HilthonTT/Lodge/actions/workflows/ci.yml)
+![.NET](https://img.shields.io/badge/.NET-11-512BD4?logo=dotnet&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?logo=postgresql&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+<img src="docs/images/home.png" alt="Lodge home page with featured stays" width="900" />
+
 </div>
 
+---
 
-  <h3 align="center">Airbnb Clone</h3>
-  
-</div>
+## Contents
 
-## 📋 <a name="table">Table of Contents</a>
+- [Screenshots](#screenshots)
+- [Features](#features)
+- [Tech stack](#tech-stack)
+- [Quick start](#quick-start)
+- [Project structure](#project-structure)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [License](#license)
 
-1. ⚙️ [Tech Stack](#tech-stack)
-2. 🔋 [Features](#features)
-3. 🤸 [Quick Start](#quick-start)
+## Screenshots
 
-## <a name="tech-stack">⚙️ Tech Stack</a>
+### Booking a stay
 
-- ASP.NET Core
-- Next.JS
-- C#
-- Typescript
-- TailwindCSS
-- Redis
-- RabbitMQ
-- Serilog
-- Docker
-- ShadCN UI
-- MediatR
-- Tanstack React query
+Pick dates on the availability calendar. Booked nights are crossed out, and the price breakdown updates live.
 
-## <a name="features">🔋 Features</a>
+<img src="docs/images/booking-flow.gif" alt="Picking dates and reserving an apartment" width="900" />
 
-👉 Authentication System: A self-made robust authentication with JWT token based on a secret key.
+### Searching
 
-👉 Explore: Explore many apartments that might catch your fancy!
+<img src="docs/images/search-flow.gif" alt="Searching for stays by destination" width="900" />
 
-👉 React Query: Incorporating Tanstack react query for mutations.
+### Dark mode
 
-👉 Horizontally scaling with a Yarp Balancer.
+<img src="docs/images/dark-mode.gif" alt="Switching between light and dark theme" width="900" />
 
-👉 Logging: Implement logging with Serilog for monitoring.
+<details>
+<summary><b>More screenshots</b></summary>
 
+| | |
+| --- | --- |
+| **Apartment detail** <br/> <img src="docs/images/apartment.png" alt="Apartment detail page" /> | **Booking panel and price breakdown** <br/> <img src="docs/images/apartment-booking.png" alt="Booking panel with price breakdown" /> |
+| **Search results** <br/> <img src="docs/images/search.png" alt="Search results" /> | **My bookings** <br/> <img src="docs/images/bookings.png" alt="Bookings page with status badges" /> |
+| **Dark theme** <br/> <img src="docs/images/home-dark.png" alt="Home page in dark mode" /> | **Dark theme: detail** <br/> <img src="docs/images/apartment-dark.png" alt="Apartment page in dark mode" /> |
+| **Sign in** <br/> <img src="docs/images/login.png" alt="Sign-in page" /> | **Account settings** <br/> <img src="docs/images/settings.png" alt="Settings page" /> |
+| **Admin: manage bookings** <br/> <img src="docs/images/admin-bookings.png" alt="Admin bookings management page" /> | **Not found** <br/> <img src="docs/images/not-found.png" alt="404 page" /> |
 
-## <a name="quick-start">🤸 Quick Start</a>
+| Mobile: home | Mobile: apartment |
+| --- | --- |
+| <img src="docs/images/mobile-home.png" alt="Mobile home page" width="300" /> | <img src="docs/images/mobile-apartment.png" alt="Mobile apartment page" width="300" /> |
 
-Follow these steps to set up the project locally on your machine.
+</details>
 
-**Prerequisites**
+## Features
 
-Make sure you have the following installed on your machine:
+**For guests**
 
-- [Git](https://git-scm.com/)
-- [Node.js](https://nodejs.org/en)
-- [Bun](https://bun.sh)
-- [npm](https://www.npmjs.com/) (Node Package Manager)
-- [Visual Studio 2022](https://visualstudio.microsoft.com/vs/)
-- [Docker](https://www.docker.com/)
+- 🔎 **Search and filter** by destination, dates, guests and rooms, sorted by price, name or rating. Only stays that are free for the chosen dates are shown.
+- 📅 **Availability calendar** that supports back-to-back stays (you can check in on another guest's check-out day).
+- 💵 **Transparent pricing**: nightly rate, amenity up-charge, cleaning fee and total, all calculated by the backend.
+- 💳 **Stripe Checkout** to pay for a reservation. A signed webhook confirms the booking.
+- ⭐ **Ratings and reviews** on every listing, written by guests after a completed stay.
+- 🧾 **My bookings** with status filters, cancellation, and reviews for completed stays.
+- 👤 **Account settings**: personal info and password.
+- 🌗 **Light, dark and system themes**, responsive down to mobile, keyboard-accessible.
 
-**Cloning the Repository**
+**For admins**
+
+- 🛡️ **Manage bookings**: every booking across all guests, filterable by status, with reject and mark-completed actions.
+- ⏰ Finished stays are also completed automatically by a daily background job.
+
+**Under the hood**
+
+- 🧱 **Clean Architecture**: Domain, Application, Infrastructure, Persistence and Presentation layers. The layering rules are enforced by architecture tests.
+- 📨 **CQRS with MediatR**, plus pipeline behaviors for validation, caching, unit of work, idempotency and logging.
+- 📦 **Transactional outbox → RabbitMQ**: domain events become integration events (e.g. booking e-mails) without losing messages.
+- ⚡ **Redis query cache** and **Dapper** for read-heavy queries, **EF Core** for writes.
+- 🔐 **JWT authentication** with roles (guest / admin), per-resource ownership checks and PBKDF2-SHA512 password hashing.
+- 🔁 **Idempotent commands** via an `X-Idempotency-Key` header, so double-submits are safe.
+- 🌐 **YARP gateway** with per-IP rate limiting in front of the API.
+- 🩺 **Health checks**, **Serilog → Seq** structured logging, **Hangfire** dashboard, **Scalar** API docs.
+- ✅ **171 tests**: unit, architecture, plus integration and functional tests against real PostgreSQL and Redis using Testcontainers.
+
+## Tech stack
+
+| Area | Technologies |
+| --- | --- |
+| **Backend** | .NET 11, ASP.NET Core minimal APIs, EF Core 10 + Npgsql, Dapper, MediatR, FluentValidation, Asp.Versioning, Scalar/OpenAPI |
+| **Messaging & jobs** | RabbitMQ 4, Hangfire (transactional outbox) |
+| **Data** | PostgreSQL 18, Redis 8, Azure Blob Storage (Azurite locally) |
+| **Gateway** | YARP reverse proxy, ASP.NET Core rate limiting |
+| **Frontend** | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, Radix UI / shadcn, TanStack Query, react-hook-form + zod, next-themes, Leaflet |
+| **Observability** | Serilog, Seq, health checks |
+| **Payments & e-mail** | Stripe Checkout, MailKit (Mailpit locally) |
+| **Testing** | xunit v3, AwesomeAssertions, NSubstitute, Testcontainers, NetArchTest, Bogus |
+| **Tooling** | Docker Compose, GitHub Actions, Dependabot, Central Package Management, `.slnx` solution |
+
+## Quick start
+
+**Prerequisites:** [Docker](https://www.docker.com/). Add the [.NET 11 SDK](https://dotnet.microsoft.com/download) and [Node.js 22.12+](https://nodejs.org/) if you want to run the code outside Docker.
 
 ```bash
 git clone https://github.com/HilthonTT/Lodge.git
+cd Lodge
+docker compose up -d --build
 ```
 
-**_Frontend_**
+Then open **<http://localhost:3000>** and sign in with one of these:
 
-Navigate to the frontend directory:
+| E-mail | Password | Role |
+| --- | --- | --- |
+| `demo@lodge.dev` | `Demo123!` | Guest, with bookings in every status |
+| `admin@lodge.dev` | `Admin123!` | Admin, can open **Manage bookings** |
 
-```bash
-cd src/frontend
+The database is migrated and seeded with demo apartments, bookings and reviews on first start.
+
+| What | Where |
+| --- | --- |
+| Web app | <http://localhost:3000> |
+| API gateway | <http://localhost:8000> |
+| API docs (Scalar) | <http://localhost:5000/scalar> |
+| Logs (Seq) | <http://localhost:8081> |
+| Captured e-mails (Mailpit) | <http://localhost:8025> |
+| Background jobs (Hangfire) | <http://localhost:5000/hangfire> |
+| RabbitMQ management | <http://localhost:15672> (guest / guest) |
+
+Payments are optional. Without Stripe keys everything else works; see [Stripe setup](docs/development.md#stripe-optional).
+
+Running the API or frontend from source with hot reload, configuration, migrations and tests are all covered in the **[development guide](docs/development.md)**.
+
+## Project structure
+
+```
+Lodge/
+├─ Lodge.slnx                     # .NET solution (XML format)
+├─ global.json                    # pinned .NET SDK
+├─ Directory.Build.props          # shared MSBuild settings (net11.0, nullable, warnings as errors…)
+├─ Directory.Packages.props       # central NuGet versions
+├─ docker-compose.yml             # full local stack
+├─ backend/
+│  ├─ src/
+│  │  ├─ Lodge.Domain/            # entities, value objects, domain events, pricing
+│  │  ├─ Lodge.Contracts/         # request/response DTOs
+│  │  ├─ Lodge.Application/       # commands/queries, handlers, validators, pipeline behaviors
+│  │  ├─ Lodge.Infrastructure/    # JWT, Redis, RabbitMQ, e-mail, blob storage, Hangfire
+│  │  ├─ Lodge.Persistence/       # EF Core DbContext, migrations, repositories, outbox
+│  │  ├─ Lodge.BackgroundTasks/   # integration-event consumers
+│  │  ├─ Lodge.Presentation/      # minimal API endpoints, problem details, OpenAPI
+│  │  ├─ Lodge.Api/               # composition root, seeding, Dockerfile
+│  │  └─ Lodge.Gateway/           # YARP reverse proxy, Dockerfile
+│  └─ tests/
+│     ├─ Lodge.Domain.UnitTests/
+│     ├─ Lodge.Application.UnitTests/
+│     ├─ Lodge.Application.IntegrationTests/
+│     ├─ Lodge.Api.FunctionalTests/
+│     └─ Lodge.ArchitectureTests/
+├─ frontend/                      # Next.js 16 app (see frontend/README.md)
+│  └─ src/{app,features,components,lib,types}
+├─ docs/                          # architecture, API, development, CI/CD, screenshots
+├─ scripts/screenshots/           # Playwright script that regenerates docs/images
+└─ .github/                       # CI/CD workflow and Dependabot
 ```
 
-Install the project dependencies using npm:
+## Documentation
 
-```bash
-bun install
-```
+| Guide | What's inside |
+| --- | --- |
+| [Architecture](docs/architecture.md) | System diagram, layers, request pipeline, outbox flow, booking state machine |
+| [API reference](docs/api.md) | Endpoints, authentication, paging, errors, idempotency |
+| [Development guide](docs/development.md) | Running from source, configuration, Stripe, migrations, tests, troubleshooting |
+| [Frontend](docs/frontend.md) | Folder layout, data flow, auth, design tokens, adding a feature |
+| [CI/CD](docs/ci-cd.md) | GitHub Actions pipeline, container images, Dependabot |
 
-**Set Up Environment Variables**
+## Contributing
 
-Create a new file named `.env` in the root of your project and add the following content:
+1. Fork the repository and create a feature branch.
+2. Make sure the checks pass locally:
+   ```bash
+   dotnet build Lodge.slnx -warnaserror && dotnet test Lodge.slnx
+   cd frontend && npm run check
+   ```
+3. Open a pull request. CI runs the same checks and builds the Docker images.
 
-```env
-NEXT_PUBLIC_API_BASE_URL="https://localhost:5001"
-NEXT_PUBLIC_API_VERSION="v1"
-```
+## License
 
-**Running the Project**
-
-```bash
-bun run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser to view the project.
-
-**_Backend_**
-
-Navigate to the backend directory:
-
-```bash
-cd src/backend
-```
-
-Setup your appsettings.json (normally already prefilled) but you must fill in your stripe credentials here:
-Open stripe [Stripe](https://dashboard.stripe.com/)
-
-```appsetings.json
-"Stripe": {
-    "ReturnUrl": "http://localhost:3000/bookings",
-    "SecretKey": "SECRET-KEY",
-    "WebhookSecret": "WEBHOOK-SECRET"
-  }
-```
-
-Running the docker yml file:
-
-```bash
-docker-compose up
-```
-
-This command will start the necessary services as defined in your Docker Compose configuration.
-
-If everything succeeded, there should be an API at https://localhost:5001/swagger.json and a Yarp Balancer at https://localhost:8081/swagger.json
-
-Enjoy!
+[MIT](LICENSE) © 2024 Timothy
