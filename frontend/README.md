@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Lodge — frontend
 
-## Getting Started
+Next.js 16 (App Router) client for the Lodge booking API.
 
-First, run the development server:
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local   # point NEXT_PUBLIC_API_BASE_URL at the API
+npm ci
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The app builds and renders without a running backend: data pages are rendered
+on demand and show friendly error states when the API is unreachable.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+| Script              | What it does                                   |
+| ------------------- | ---------------------------------------------- |
+| `npm run dev`       | Dev server (Turbopack)                         |
+| `npm run build`     | Production build (`output: "standalone"`)      |
+| `npm start`         | Serve the production build                     |
+| `npm run lint`      | ESLint (flat config, `eslint .`)               |
+| `npm run typecheck` | Generate route types and run `tsc --noEmit`    |
+| `npm run check`     | lint + typecheck + build                       |
 
-## Learn More
+CI: `npm ci && npm run lint && npm run typecheck && npm run build`
 
-To learn more about Next.js, take a look at the following resources:
+## Environment
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Variable                   | Default                 | Notes                                                       |
+| -------------------------- | ----------------------- | ----------------------------------------------------------- |
+| `NEXT_PUBLIC_API_BASE_URL` | `http://localhost:8000` | API origin (no `/api` suffix). Inlined at build time.       |
+| `NEXT_PUBLIC_API_VERSION`  | `v1`                    | Requests go to `{base}/api/{version}/…`                     |
+| `API_INTERNAL_BASE_URL`    | –                       | Optional, server-only origin (e.g. docker service name).    |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+Values are validated with zod in `src/lib/env.ts`.
 
-## Deploy on Vercel
+## Structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+src/
+  app/          routes: (main) shop pages, (auth) login/register, api/health
+  components/   ui/ (shadcn primitives), shared/, layout/, providers
+  features/     apartments | auth | bookings | users  → api/, components/, hooks/, schemas/
+  lib/          env, api client (axios), auth (JWT cookie), dates, format, query keys
+  types/        API contract types (mirrors backend/src/Lodge.Contracts)
+  proxy.ts      auth gate for /bookings, /settings, /stays, /admin (admins only) (Next 16 "proxy")
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+## Docker
+
+```bash
+docker build -t lodge-frontend \
+  --build-arg NEXT_PUBLIC_API_BASE_URL=http://localhost:8000 .
+docker run -p 3000:3000 lodge-frontend
+```
