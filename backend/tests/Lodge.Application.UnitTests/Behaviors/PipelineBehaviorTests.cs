@@ -1,4 +1,4 @@
-using Lodge.Application.Abstractions.Behaviors;
+﻿using Lodge.Application.Abstractions.Behaviors;
 using Lodge.Application.Abstractions.Data;
 using Lodge.Application.Abstractions.Idempotency;
 using Lodge.Application.Bookings.Reserve;
@@ -13,7 +13,7 @@ namespace Lodge.Application.UnitTests.Behaviors;
 public class PipelineBehaviorTests
 {
     private static readonly ReserveBookingCommand Command = new(
-        Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), new DateOnly(2030, 1, 1), new DateOnly(2030, 1, 3));
+        Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), new DateOnly(2030, 1, 1), new DateOnly(2030, 1, 3), GuestCount: 2);
 
     [Fact]
     public async Task Idempotency_Should_ReturnTypedConflict_WhenRequestWasAlreadyProcessed()

@@ -1,10 +1,17 @@
 ﻿using System.Reflection;
 using FluentValidation;
+using Lodge.Application.Abstractions.App;
 using Lodge.Application.Abstractions.Assets;
 using Lodge.Application.Abstractions.Behaviors;
 using Lodge.Application.Abstractions.Caching;
+using Lodge.Application.Authentication;
+using Lodge.Application.Apartments;
 using Lodge.Application.Bookings.Complete;
+using Lodge.Application.Bookings.Expire;
+using Lodge.Application.Hosting;
+using Lodge.Application.Hosting.Superhost;
 using Lodge.Application.Stripe;
+using Lodge.Application.Users.TwoFactor;
 using Lodge.Domain.Bookings;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -39,6 +46,14 @@ public static class DependencyInjection
 
         services.AddSingleton<PricingService>();
 
+        services.AddOptions<AppOptions>()
+            .BindConfiguration(AppOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddScoped<IAccountTokenService, AccountTokenService>();
+        services.AddScoped<TwoFactorCodeVerifier>();
+
         services.AddOptions<AssetsOptions>().BindConfiguration(AssetsOptions.SectionName);
         services.AddSingleton<IAssetUrlResolver, AssetUrlResolver>();
 
@@ -53,6 +68,25 @@ public static class DependencyInjection
             .ValidateDataAnnotations()
             .ValidateOnStart();
         services.AddScoped<ICompleteBookingsJob, CompleteBookingsJob>();
+
+        services.AddOptions<ExpireBookingRequestsOptions>()
+            .BindConfiguration(ExpireBookingRequestsOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        services.AddScoped<IExpireBookingRequestsJob, ExpireBookingRequestsJob>();
+
+        services.AddOptions<SuperhostOptions>()
+            .BindConfiguration(SuperhostOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        services.AddOptions<SuperhostJobOptions>()
+            .BindConfiguration(SuperhostJobOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        services.AddScoped<IUpdateSuperhostStatusJob, UpdateSuperhostStatusJob>();
+
+        services.AddSingleton<ApartmentReader>();
+        services.AddScoped<IHostAccess, HostAccess>();
 
         return services;
     }

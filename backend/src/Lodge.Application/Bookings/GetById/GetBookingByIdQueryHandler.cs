@@ -26,13 +26,14 @@ internal sealed class GetBookingByIdQueryHandler(
             return Result.Failure<BookingResponse>(BookingErrors.NotFound(request.BookingId));
         }
 
-        if (booking.UserId != userIdentifierProvider.UserId)
+        Guid callerId = userIdentifierProvider.UserId;
+
+        // The guest and the listing's host can see the booking.
+        if (booking.UserId != callerId && booking.ListingHostId != callerId)
         {
             return Result.Failure<BookingResponse>(UserErrors.InvalidPermissions);
         }
 
-        booking.ApartmentImageUrl = assetUrlResolver.Resolve(booking.ApartmentImageUrl);
-
-        return booking;
+        return BookingQueries.Present(booking, callerId, assetUrlResolver);
     }
 }

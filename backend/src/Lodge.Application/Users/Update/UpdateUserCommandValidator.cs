@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Lodge.Application.Core.Errors;
 using Lodge.Application.Core.Extensions;
+using Lodge.Domain.Users;
 
 namespace Lodge.Application.Users.Update;
 
@@ -19,5 +20,7 @@ internal sealed class UpdateUserCommandValidator : AbstractValidator<UpdateUserC
         RuleFor(x => x.FirstName).NotEmpty().WithError(ValidationErrors.UpdateUser.FirstNameIsRequired);
 
         RuleFor(x => x.LastName).NotEmpty().WithError(ValidationErrors.UpdateUser.LastNameIsRequired);
+
+        RuleFor(x => x.Bio).MaximumLength(User.BioMaxLength).WithError(UserErrors.BioTooLong);
     }
 }

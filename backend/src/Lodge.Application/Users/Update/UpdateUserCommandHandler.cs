@@ -36,6 +36,16 @@ internal sealed class UpdateUserCommandHandler(
             return Result.Failure(UserErrors.NotFound(request.UserId));
         }
 
+        if (request.Bio is not null)
+        {
+            Result bioResult = user.ChangeBio(request.Bio);
+
+            if (bioResult.IsFailure)
+            {
+                return bioResult;
+            }
+        }
+
         user.ChangeName(firstNameResult.Value, lastNameResult.Value);
 
         if (request.ImageId is Guid imageId && imageId != user.ImageId)

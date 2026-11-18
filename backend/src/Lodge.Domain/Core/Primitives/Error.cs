@@ -99,4 +99,13 @@ public record Error
     /// <returns>An instance of <see cref="Error"/> with type <see cref="ErrorType.Validation"/>.</returns>
     public static Error Validation(string code, string description) =>
         new(code, description, ErrorType.Validation);
+
+    /// <summary>
+    /// Creates an <see cref="Error"/> with <see cref="ErrorType.TooManyRequests"/>.
+    /// </summary>
+    /// <param name="code">The error code.</param>
+    /// <param name="description">The error description.</param>
+    /// <returns>An instance of <see cref="Error"/> with type <see cref="ErrorType.TooManyRequests"/>.</returns>
+    public static Error TooManyRequests(string code, string description) =>
+        new(code, description, ErrorType.TooManyRequests);
 }

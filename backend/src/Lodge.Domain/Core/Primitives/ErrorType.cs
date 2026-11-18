@@ -33,5 +33,10 @@ public enum ErrorType
     /// <summary>
     /// Represents a permission error.
     /// </summary>
-    Permission = 5
+    Permission = 5,
+
+    /// <summary>
+    /// Represents a rate-limit error (HTTP 429).
+    /// </summary>
+    TooManyRequests = 6,
 }

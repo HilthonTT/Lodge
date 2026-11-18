@@ -1,6 +1,7 @@
-using Lodge.Application.Abstractions.Authentication;
+﻿using Lodge.Application.Abstractions.Authentication;
 using Lodge.Application.Abstractions.Cryptography;
 using Lodge.Application.Abstractions.Data;
+using Lodge.Application.Authentication;
 using Lodge.Application.Users.Create;
 using Lodge.Contracts.Authentication;
 using Lodge.Domain.Core.Primitives;
@@ -23,6 +24,7 @@ public class CreateUserCommandTests
     private readonly IPasswordHasher _passwordHasherMock;
     private readonly IUnitOfWork _unitOfWorkMock;
     private readonly IJwtProvider _jwtProviderMock;
+    private readonly IAccountTokenService _accountTokenServiceMock = Substitute.For<IAccountTokenService>();
 
     public CreateUserCommandTests()
     {
@@ -35,7 +37,8 @@ public class CreateUserCommandTests
             _userRepositoryMock,
             _passwordHasherMock,
             _unitOfWorkMock,
-            _jwtProviderMock);
+            _jwtProviderMock,
+            _accountTokenServiceMock);
     }
 
     [Fact]

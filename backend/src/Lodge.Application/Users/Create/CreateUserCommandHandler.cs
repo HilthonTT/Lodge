@@ -2,6 +2,7 @@
 using Lodge.Application.Abstractions.Cryptography;
 using Lodge.Application.Abstractions.Data;
 using Lodge.Application.Abstractions.Messaging;
+using Lodge.Application.Authentication;
 using Lodge.Contracts.Authentication;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Domain.Users;
@@ -15,11 +16,13 @@ namespace Lodge.Application.Users.Create;
 /// <param name="passwordHasher">The password hasher.</param>
 /// <param name="unitOfWork">The unit of work.</param>
 /// <param name="jwtProvider">The JWT provider.</param>
+/// <param name="accountTokenService">Sends the e-mail verification link.</param>
 internal sealed class CreateUserCommandHandler(
     IUserRepository userRepository,
     IPasswordHasher passwordHasher,
     IUnitOfWork unitOfWork,
-    IJwtProvider jwtProvider) : ICommandHandler<CreateUserCommand, TokenResponse>
+    IJwtProvider jwtProvider,
+    IAccountTokenService accountTokenService) : ICommandHandler<CreateUserCommand, TokenResponse>
 {
     /// <inheritdoc />
     public async Task<Result<TokenResponse>> Handle(
@@ -51,6 +54,8 @@ internal sealed class CreateUserCommandHandler(
         userRepository.Insert(user);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await accountTokenService.SendEmailVerificationAsync(user, cancellationToken);
 
         string token = jwtProvider.Create(user);
 

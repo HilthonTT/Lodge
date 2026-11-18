@@ -1,7 +1,6 @@
-using Lodge.Application.Bookings.Complete;
+﻿using Lodge.Application.Bookings.Complete;
 using Lodge.Domain.Apartments;
 using Lodge.Domain.Bookings;
-using Lodge.Domain.Shared;
 
 namespace Lodge.Application.UnitTests.Bookings;
 
@@ -33,25 +32,8 @@ public class CompleteBookingsJobTests
 
     private static Booking CreateBooking(DateOnly end, BookingStatus status)
     {
-        Currency usd = Currency.FromCode("USD");
-        var apartment = Apartment.Create(
-            Name.Create("Name").Value,
-            Description.Create("Description").Value,
-            new Address("Country", "State", "ZipCode", "City", "Street"),
-            new Money(100, usd),
-            Money.Zero(usd),
-            2,
-            2,
-            "/images/cabin.png",
-            []);
-
         DateOnly start = end.AddDays(-3);
-        var booking = Booking.Reserve(
-            apartment,
-            Guid.NewGuid(),
-            DateRange.Create(start, end).Value,
-            DateTime.UtcNow,
-            new PricingService());
+        Booking booking = TestApartments.Reserve(TestApartments.Create(), start, end, DateTime.UtcNow);
 
         DateTime beforeStart = start.AddDays(-1).ToDateTime(TimeOnly.MinValue);
 

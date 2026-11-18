@@ -21,6 +21,7 @@ namespace Lodge.Persistence.Migrations
                 .HasAnnotation("ProductVersion", "10.0.15")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "unaccent");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("Lodge.Domain.Apartments.Apartment", b =>
@@ -35,30 +36,110 @@ namespace Lodge.Persistence.Migrations
                         .HasColumnType("integer[]")
                         .HasColumnName("amenities");
 
+                    b.Property<decimal>("Bathrooms")
+                        .HasPrecision(4, 1)
+                        .HasColumnType("numeric(4,1)")
+                        .HasColumnName("bathrooms");
+
+                    b.Property<int>("Bedrooms")
+                        .HasColumnType("integer")
+                        .HasColumnName("bedrooms");
+
+                    b.Property<int>("Beds")
+                        .HasColumnType("integer")
+                        .HasColumnName("beds");
+
+                    b.Property<string>("CheckInInstructions")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("check_in_instructions");
+
+                    b.Property<TimeOnly>("CheckInTime")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("check_in_time");
+
+                    b.Property<TimeOnly>("CheckOutTime")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("check_out_time");
+
                     b.Property<DateTime>("CreatedOnUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_on_utc");
 
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("image_url");
+                    b.Property<bool>("Deleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("deleted");
+
+                    b.Property<DateTime?>("DeletedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_on_utc");
+
+                    b.Property<string>("HouseRules")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("house_rules");
+
+                    b.Property<bool>("InstantBook")
+                        .HasColumnType("boolean")
+                        .HasColumnName("instant_book");
+
+                    b.Property<bool>("IsListed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_listed");
 
                     b.Property<DateTime?>("LastBookedOnUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_booked_on_utc");
 
+                    b.Property<double>("Latitude")
+                        .HasColumnType("double precision")
+                        .HasColumnName("latitude");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("double precision")
+                        .HasColumnName("longitude");
+
+                    b.Property<int>("MaxNights")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_nights");
+
                     b.Property<int>("MaximumGuestCount")
                         .HasColumnType("integer")
                         .HasColumnName("maximum_guest_count");
 
-                    b.Property<int>("MaximumRoomCount")
+                    b.Property<int>("MinNights")
                         .HasColumnType("integer")
-                        .HasColumnName("maximum_room_count");
+                        .HasColumnName("min_nights");
 
                     b.Property<DateTime?>("ModifiedOnUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("modified_on_utc");
+
+                    b.Property<int>("MonthlyDiscountPercent")
+                        .HasColumnType("integer")
+                        .HasColumnName("monthly_discount_percent");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_id");
+
+                    b.Property<bool>("PartiesAllowed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("parties_allowed");
+
+                    b.Property<bool>("PetsAllowed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("pets_allowed");
+
+                    b.Property<int>("PropertyType")
+                        .HasColumnType("integer")
+                        .HasColumnName("property_type");
+
+                    b.Property<bool>("SmokingAllowed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("smoking_allowed");
 
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
@@ -66,10 +147,62 @@ namespace Lodge.Persistence.Migrations
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
+                    b.Property<decimal?>("WeekendPrice")
+                        .HasColumnType("numeric")
+                        .HasColumnName("weekend_price");
+
+                    b.Property<int>("WeeklyDiscountPercent")
+                        .HasColumnType("integer")
+                        .HasColumnName("weekly_discount_percent");
+
                     b.HasKey("Id")
                         .HasName("pk_apartments");
 
+                    b.HasIndex("Amenities")
+                        .HasDatabaseName("ix_apartments_amenities");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Amenities"), "gin");
+
+                    b.HasIndex("OwnerId")
+                        .HasDatabaseName("ix_apartments_owner_id");
+
+                    b.HasIndex("Latitude", "Longitude")
+                        .HasDatabaseName("ix_apartments_latitude_longitude");
+
                     b.ToTable("apartments", (string)null);
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Apartments.CalendarDay", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApartmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("apartment_id");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<bool>("IsBlocked")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_blocked");
+
+                    b.Property<decimal?>("Price")
+                        .HasColumnType("numeric")
+                        .HasColumnName("price");
+
+                    b.HasKey("Id")
+                        .HasName("pk_apartment_calendar_days");
+
+                    b.HasIndex("ApartmentId", "Date")
+                        .IsUnique()
+                        .HasDatabaseName("ix_apartment_calendar_days_apartment_id_date");
+
+                    b.ToTable("apartment_calendar_days", (string)null);
                 });
 
             modelBuilder.Entity("Lodge.Domain.Bookings.Booking", b =>
@@ -99,6 +232,19 @@ namespace Lodge.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_on_utc");
 
+                    b.Property<DateTime?>("ExpiredOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expired_on_utc");
+
+                    b.Property<int>("GuestCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("guest_count");
+
+                    b.Property<string>("MessageToHost")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("message_to_host");
+
                     b.Property<DateTime?>("ModifiedOnUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("modified_on_utc");
@@ -118,11 +264,14 @@ namespace Lodge.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("pk_bookings");
 
-                    b.HasIndex("ApartmentId")
-                        .HasDatabaseName("ix_bookings_apartment_id");
-
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_bookings_user_id");
+
+                    b.HasIndex("ApartmentId", "Status")
+                        .HasDatabaseName("ix_bookings_apartment_id_status");
+
+                    b.HasIndex("Status", "CreatedOnUtc")
+                        .HasDatabaseName("ix_bookings_status_created_on_utc");
 
                     b.ToTable("bookings", (string)null);
                 });
@@ -184,12 +333,88 @@ namespace Lodge.Persistence.Migrations
                     b.ToTable("reviews", (string)null);
                 });
 
+            modelBuilder.Entity("Lodge.Domain.Users.ExternalLogin", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_on_utc");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("provider");
+
+                    b.Property<string>("ProviderKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("provider_key");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_external_logins");
+
+                    b.HasIndex("Provider", "ProviderKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_external_logins_provider_provider_key");
+
+                    b.HasIndex("UserId", "Provider")
+                        .IsUnique()
+                        .HasDatabaseName("ix_external_logins_user_id_provider");
+
+                    b.ToTable("external_logins", (string)null);
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Users.RecoveryCode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CodeHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("code_hash");
+
+                    b.Property<DateTime?>("UsedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("used_on_utc");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_recovery_codes");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_recovery_codes_user_id");
+
+                    b.ToTable("recovery_codes", (string)null);
+                });
+
             modelBuilder.Entity("Lodge.Domain.Users.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
+
+                    b.Property<string>("Bio")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("bio");
 
                     b.Property<DateTime>("CreatedOnUtc")
                         .HasColumnType("timestamp with time zone")
@@ -205,9 +430,17 @@ namespace Lodge.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_on_utc");
 
+                    b.Property<DateTime?>("EmailVerifiedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("email_verified_on_utc");
+
                     b.Property<Guid?>("ImageId")
                         .HasColumnType("uuid")
                         .HasColumnName("image_id");
+
+                    b.Property<bool>("IsSuperhost")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_superhost");
 
                     b.Property<DateTime?>("ModifiedOnUtc")
                         .HasColumnType("timestamp with time zone")
@@ -219,8 +452,20 @@ namespace Lodge.Persistence.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("role");
 
+                    b.Property<DateTime?>("TwoFactorEnabledOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("two_factor_enabled_on_utc");
+
+                    b.Property<long?>("TwoFactorLastUsedStep")
+                        .HasColumnType("bigint")
+                        .HasColumnName("two_factor_last_used_step");
+
+                    b.Property<string>("TwoFactorSecret")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)")
+                        .HasColumnName("two_factor_secret");
+
                     b.Property<string>("_passwordHash")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("password_hash");
 
@@ -228,6 +473,92 @@ namespace Lodge.Persistence.Migrations
                         .HasName("pk_users");
 
                     b.ToTable("users", (string)null);
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Users.UserToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime?>("ConsumedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("consumed_on_utc");
+
+                    b.Property<DateTime>("CreatedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_on_utc");
+
+                    b.Property<DateTime>("ExpiresOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_on_utc");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("purpose");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("token_hash");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_user_tokens");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_user_tokens_token_hash");
+
+                    b.HasIndex("UserId", "Purpose", "CreatedOnUtc")
+                        .HasDatabaseName("ix_user_tokens_user_id_purpose_created_on_utc");
+
+                    b.ToTable("user_tokens", (string)null);
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Wishlists.Wishlist", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_on_utc");
+
+                    b.Property<DateTime?>("ModifiedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_on_utc");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("name");
+
+                    b.Property<DateTime>("UpdatedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_on_utc");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_wishlists");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_wishlists_user_id");
+
+                    b.ToTable("wishlists", (string)null);
                 });
 
             modelBuilder.Entity("Lodge.Persistence.Idempotency.IdempotentRequest", b =>
@@ -287,8 +618,38 @@ namespace Lodge.Persistence.Migrations
                     b.ToTable("outbox_messages", (string)null);
                 });
 
+            modelBuilder.Entity("Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("FriendlyName")
+                        .HasColumnType("text")
+                        .HasColumnName("friendly_name");
+
+                    b.Property<string>("Xml")
+                        .HasColumnType("text")
+                        .HasColumnName("xml");
+
+                    b.HasKey("Id")
+                        .HasName("pk_data_protection_keys");
+
+                    b.ToTable("data_protection_keys", (string)null);
+                });
+
             modelBuilder.Entity("Lodge.Domain.Apartments.Apartment", b =>
                 {
+                    b.HasOne("Lodge.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_apartments_users_owner_id");
+
                     b.OwnsOne("Lodge.Domain.Apartments.Address", "Address", b1 =>
                         {
                             b1.Property<Guid>("ApartmentId")
@@ -370,11 +731,46 @@ namespace Lodge.Persistence.Migrations
 
                             b1.HasKey("ApartmentId");
 
+                            b1.HasIndex("Amount")
+                                .HasDatabaseName("ix_apartments_price_amount");
+
                             b1.ToTable("apartments");
 
                             b1.WithOwner()
                                 .HasForeignKey("ApartmentId")
                                 .HasConstraintName("fk_apartments_apartments_id");
+                        });
+
+                    b.OwnsMany("Lodge.Domain.Apartments.ApartmentImage", "Images", b1 =>
+                        {
+                            b1.Property<Guid>("Id")
+                                .HasColumnType("uuid")
+                                .HasColumnName("id");
+
+                            b1.Property<Guid>("ApartmentId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("apartment_id");
+
+                            b1.Property<string>("Path")
+                                .HasMaxLength(512)
+                                .HasColumnType("character varying(512)")
+                                .HasColumnName("path");
+
+                            b1.Property<int>("Position")
+                                .HasColumnType("integer")
+                                .HasColumnName("position");
+
+                            b1.HasKey("Id")
+                                .HasName("pk_apartment_images");
+
+                            b1.HasIndex("ApartmentId", "Position")
+                                .HasDatabaseName("ix_apartment_images_apartment_id_position");
+
+                            b1.ToTable("apartment_images", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("ApartmentId")
+                                .HasConstraintName("fk_apartment_images_apartments_apartment_id");
                         });
 
                     b.OwnsOne("Lodge.Domain.Apartments.Description", "Description", b1 =>
@@ -428,11 +824,23 @@ namespace Lodge.Persistence.Migrations
                     b.Navigation("Description")
                         .IsRequired();
 
+                    b.Navigation("Images");
+
                     b.Navigation("Name")
                         .IsRequired();
 
                     b.Navigation("Price")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Apartments.CalendarDay", b =>
+                {
+                    b.HasOne("Lodge.Domain.Apartments.Apartment", null)
+                        .WithMany()
+                        .HasForeignKey("ApartmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_apartment_calendar_days_apartments_apartment_id");
                 });
 
             modelBuilder.Entity("Lodge.Domain.Bookings.Booking", b =>
@@ -489,6 +897,30 @@ namespace Lodge.Persistence.Migrations
                                 .IsRequired()
                                 .HasColumnType("text")
                                 .HasColumnName("cleaning_fee_currency");
+
+                            b1.HasKey("BookingId");
+
+                            b1.ToTable("bookings");
+
+                            b1.WithOwner()
+                                .HasForeignKey("BookingId")
+                                .HasConstraintName("fk_bookings_bookings_id");
+                        });
+
+                    b.OwnsOne("Lodge.Domain.Shared.Money", "Discount", b1 =>
+                        {
+                            b1.Property<Guid>("BookingId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("id");
+
+                            b1.Property<decimal>("Amount")
+                                .HasColumnType("numeric")
+                                .HasColumnName("discount_amount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasColumnName("discount_currency");
 
                             b1.HasKey("BookingId");
 
@@ -576,6 +1008,9 @@ namespace Lodge.Persistence.Migrations
                     b.Navigation("CleaningFee")
                         .IsRequired();
 
+                    b.Navigation("Discount")
+                        .IsRequired();
+
                     b.Navigation("Duration")
                         .IsRequired();
 
@@ -608,6 +1043,26 @@ namespace Lodge.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_reviews_users_user_id");
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Users.ExternalLogin", b =>
+                {
+                    b.HasOne("Lodge.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_external_logins_users_user_id");
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Users.RecoveryCode", b =>
+                {
+                    b.HasOne("Lodge.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_recovery_codes_users_user_id");
                 });
 
             modelBuilder.Entity("Lodge.Domain.Users.User", b =>
@@ -687,6 +1142,56 @@ namespace Lodge.Persistence.Migrations
 
                     b.Navigation("LastName")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Users.UserToken", b =>
+                {
+                    b.HasOne("Lodge.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_tokens_users_user_id");
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Wishlists.Wishlist", b =>
+                {
+                    b.HasOne("Lodge.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_wishlists_users_user_id");
+
+                    b.OwnsMany("Lodge.Domain.Wishlists.WishlistItem", "Items", b1 =>
+                        {
+                            b1.Property<Guid>("WishlistId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("wishlist_id");
+
+                            b1.Property<Guid>("ApartmentId")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("uuid")
+                                .HasColumnName("apartment_id");
+
+                            b1.Property<DateTime>("AddedOnUtc")
+                                .HasColumnType("timestamp with time zone")
+                                .HasColumnName("added_on_utc");
+
+                            b1.HasKey("WishlistId", "ApartmentId")
+                                .HasName("pk_wishlist_items");
+
+                            b1.HasIndex("ApartmentId")
+                                .HasDatabaseName("ix_wishlist_items_apartment_id");
+
+                            b1.ToTable("wishlist_items", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("WishlistId")
+                                .HasConstraintName("fk_wishlist_items_wishlists_wishlist_id");
+                        });
+
+                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }

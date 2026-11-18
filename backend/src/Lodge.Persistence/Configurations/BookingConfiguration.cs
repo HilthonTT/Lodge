@@ -24,6 +24,17 @@ internal sealed class BookingConfiguration : IEntityTypeConfiguration<Booking>
                 .HasConversion(currency => currency.Code, code => Currency.FromCode(code));
         });
 
+        builder.OwnsOne(booking => booking.Discount, priceBuilder =>
+        {
+            priceBuilder.WithOwner();
+
+            priceBuilder.Property(money => money.Amount).HasColumnName("discount_amount");
+
+            priceBuilder.Property(money => money.Currency)
+                .HasColumnName("discount_currency")
+                .HasConversion(currency => currency.Code, code => Currency.FromCode(code));
+        });
+
         builder.OwnsOne(booking => booking.CleaningFee, priceBuilder =>
         {
             priceBuilder.WithOwner();
@@ -56,6 +67,12 @@ internal sealed class BookingConfiguration : IEntityTypeConfiguration<Booking>
             durationBuilder.Property(dateRange => dateRange.End)
                 .HasColumnName("duration_end");
         });
+
+        builder.Property(booking => booking.MessageToHost).HasMaxLength(Booking.MessageToHostMaxLength);
+
+        // The expiry job looks for old booking requests; dashboards filter by apartment and status.
+        builder.HasIndex(booking => new { booking.Status, booking.CreatedOnUtc });
+        builder.HasIndex(booking => new { booking.ApartmentId, booking.Status });
 
         builder.HasOne<Apartment>()
             .WithMany()

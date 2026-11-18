@@ -1,4 +1,4 @@
-using Lodge.Application.Apartments.GetById;
+﻿using Lodge.Application.Apartments.GetById;
 using Lodge.Application.IntegrationTests.Abstractions;
 using Lodge.Application.Reviews.Create;
 using Lodge.Application.Reviews.Remove;
@@ -54,12 +54,22 @@ public class ReviewRatingCacheTests(IntegrationTestWebFactory factory) : BaseInt
     private async Task<Guid> AddCompletedBookingAsync(Apartment apartment, Guid userId)
     {
         DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var booking = Booking.Reserve(
+        DateRange duration = DateRange.Create(today.AddDays(-2000), today.AddDays(-1998)).Value;
+        Booking booking = Booking.Reserve(
             apartment,
             userId,
-            DateRange.Create(today.AddDays(-2000), today.AddDays(-1998)).Value,
+            duration,
+            1,
+            null,
             DateTime.UtcNow,
-            Factory.Services.GetRequiredService<PricingService>());
+            Factory.Services.GetRequiredService<PricingService>().CalculatePrice(apartment, duration)).Value;
+
+        if (booking.Status == BookingStatus.PendingApproval)
+        {
+            // A request to book: the host accepted it before the stay.
+            booking.Accept(duration.Start.AddDays(-1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)).IsSuccess.Should().BeTrue();
+        }
+
         booking.Confirm(DateTime.UtcNow);
         booking.Complete(DateTime.UtcNow).IsSuccess.Should().BeTrue();
 

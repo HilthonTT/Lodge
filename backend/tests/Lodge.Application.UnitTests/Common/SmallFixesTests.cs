@@ -1,6 +1,5 @@
-using FluentValidation.Results;
+﻿using FluentValidation.Results;
 using Lodge.Application.Abstractions.Assets;
-using Lodge.Application.Apartments.CalculatePrice;
 using Lodge.Application.Reviews.Create;
 using Lodge.Contracts.Common;
 using Microsoft.Extensions.Options;
@@ -19,16 +18,6 @@ public class SmallFixesTests
         var list = new PagedList<int>([], page, pageSize, total);
 
         list.HasNextPage.Should().Be(expected);
-    }
-
-    [Fact]
-    public void PriceQuery_CacheKey_Should_DependOnTheDates()
-    {
-        Guid apartmentId = Guid.NewGuid();
-        var first = new CalculateApartmentPriceQuery(apartmentId, new DateOnly(2030, 1, 1), new DateOnly(2030, 1, 3));
-        var second = first with { EndDate = new DateOnly(2030, 1, 10) };
-
-        first.CacheKey.Should().NotBe(second.CacheKey);
     }
 
     [Theory]

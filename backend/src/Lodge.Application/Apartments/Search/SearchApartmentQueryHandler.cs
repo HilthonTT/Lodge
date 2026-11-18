@@ -1,146 +1,285 @@
-﻿using System.Linq.Expressions;
-using Lodge.Application.Abstractions.Assets;
+﻿using System.Data;
+using Dapper;
 using Lodge.Application.Abstractions.Data;
 using Lodge.Application.Abstractions.Messaging;
+using Lodge.Application.Core.Extensions;
 using Lodge.Contracts.Apartments;
 using Lodge.Contracts.Common;
 using Lodge.Domain.Apartments;
 using Lodge.Domain.Bookings;
 using Lodge.Domain.Core.Primitives;
-using Lodge.Domain.Reviews;
-using Microsoft.EntityFrameworkCore;
 
 namespace Lodge.Application.Apartments.Search;
 
-internal sealed class SearchApartmentQueryHandler(IDbContext context, IAssetUrlResolver assetUrlResolver)
+/// <summary>
+/// Builds one parameterized SQL statement from the filters (every value is a parameter; only fixed SQL fragments are
+/// concatenated). Availability is checked with <c>NOT EXISTS</c> sub-queries on the bookings and the host calendar,
+/// which use the <c>(apartment_id, ...)</c> indexes.
+/// </summary>
+internal sealed class SearchApartmentQueryHandler(
+    IDbConnectionFactory factory,
+    ApartmentReader apartmentReader,
+    IDateTimeProvider dateTimeProvider)
     : IQueryHandler<SearchApartmentQuery, PagedList<ApartmentResponse>>
 {
-    private static readonly BookingStatus[] ActiveBookingStatuses =
-    [
-        BookingStatus.Reserved,
-        BookingStatus.Confirmed,
-        BookingStatus.Completed
-    ];
+    /// <summary>
+    /// "The stay [@CheckIn, @CheckOut) is free": no active booking overlaps it and the host blocked none of its nights.
+    /// </summary>
+    private const string StayIsFree =
+        """
+        NOT EXISTS (
+            SELECT 1 FROM bookings AS b
+            WHERE b.apartment_id = a.id
+              AND b.status = ANY(@ActiveStatuses)
+              AND b.duration_start < {1}
+              AND b.duration_end > {0})
+        AND NOT EXISTS (
+            SELECT 1 FROM apartment_calendar_days AS c
+            WHERE c.apartment_id = a.id
+              AND c.is_blocked
+              AND c.date >= {0}
+              AND c.date < {1})
+        """;
 
     public async Task<Result<PagedList<ApartmentResponse>>> Handle(
         SearchApartmentQuery request,
         CancellationToken cancellationToken)
     {
-        IQueryable<Apartment> apartmentsQuery = context.Set<Apartment>().AsNoTracking();
-        IQueryable<Review> reviews = context.Set<Review>();
+        var parameters = new DynamicParameters();
+        List<string> conditions = [ApartmentReader.ListedCondition];
 
-        if (!string.IsNullOrWhiteSpace(request.SearchTerm))
-        {
-            string searchTerm = request.SearchTerm.Trim().ToLower();
+        AddTextFilter(request, conditions, parameters);
+        AddCapacityAndPriceFilters(request, conditions, parameters);
+        AddFeatureFilters(request, conditions, parameters);
+        AddBoundsFilter(request, conditions, parameters);
+        AddAvailabilityFilters(request, conditions, parameters, DateOnly.FromDateTime(dateTimeProvider.UtcNow));
 
-            apartmentsQuery = apartmentsQuery.Where(a =>
-                a.Address.Country.ToLower().Contains(searchTerm) ||
-                a.Address.City.ToLower().Contains(searchTerm) ||
-                a.Name.Value.ToLower().Contains(searchTerm));
-        }
+        string where = $"WHERE {string.Join("\n  AND ", conditions)}";
 
-        if (request.GuestCount is >= 1)
-        {
-            apartmentsQuery = apartmentsQuery.Where(a => a.MaximumGuestCount >= request.GuestCount.Value);
-        }
+        using IDbConnection connection = await factory.GetOpenConnectionAsync(cancellationToken);
 
-        if (request.RoomCount is >= 1)
-        {
-            apartmentsQuery = apartmentsQuery.Where(a => a.MaximumRoomCount >= request.RoomCount.Value);
-        }
+        int totalCount = await connection.ExecuteScalarAsync<int>(
+            $"""
+            SELECT COUNT(*)
+            FROM apartments AS a
+            INNER JOIN users AS u ON u.id = a.owner_id
+            {where}
+            """,
+            parameters);
 
-        // Only show apartments that are available for the whole requested period
-        // (same night-based overlap rule as reservations).
-        if (request is { StartDate: DateOnly startDate, EndDate: DateOnly endDate })
-        {
-            IQueryable<Booking> bookings = context.Set<Booking>();
+        parameters.Add("PageSize", request.PageSize);
+        parameters.Add("Offset", (request.Page - 1) * request.PageSize);
 
-            apartmentsQuery = apartmentsQuery.Where(a => !bookings.Any(b =>
-                b.ApartmentId == a.Id &&
-                ActiveBookingStatuses.Contains(b.Status) &&
-                b.Duration.Start < endDate &&
-                b.Duration.End > startDate));
-        }
-
-        int totalCount = await apartmentsQuery.CountAsync(cancellationToken);
-
-        bool descending = string.Equals(request.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
-
-        List<ApartmentResponse> items = await Sort(apartmentsQuery, reviews, request.SortColumn, descending)
-            .Skip((request.Page - 1) * request.PageSize)
-            .Take(request.PageSize)
-            .Select(a => new ApartmentResponse
-            {
-                Id = a.Id,
-                Name = a.Name.Value,
-                Description = a.Description.Value,
-                Price = a.Price.Amount,
-                Currency = a.Price.Currency.Code,
-                ImageUrl = a.ImageUrl,
-                MaximumRoomCount = a.MaximumRoomCount,
-                MaximumGuestCount = a.MaximumGuestCount,
-                AverageRating = reviews.Where(r => r.ApartmentId == a.Id).Average(r => (decimal?)r.Rating.Value),
-                ReviewCount = reviews.Count(r => r.ApartmentId == a.Id),
-                Address = new AddressResponse
-                {
-                    Country = a.Address.Country,
-                    State = a.Address.State,
-                    City = a.Address.City,
-                    Street = a.Address.Street
-                }
-            })
-            .ToListAsync(cancellationToken);
-
-        foreach (ApartmentResponse apartment in items)
-        {
-            apartment.ImageUrl = assetUrlResolver.Resolve(apartment.ImageUrl);
-
-            // Same rounding as PostgreSQL's ROUND(numeric, 1) used by the Dapper queries.
-            apartment.AverageRating = apartment.AverageRating is decimal average
-                ? Math.Round(average, 1, MidpointRounding.AwayFromZero)
-                : null;
-        }
+        List<ApartmentResponse> items = await apartmentReader.QueryAsync(
+            connection,
+            $"""
+            {where}
+            ORDER BY {OrderBy(request.SortColumn, request.SortOrder)}
+            LIMIT @PageSize OFFSET @Offset
+            """,
+            parameters);
 
         return new PagedList<ApartmentResponse>(items, request.Page, request.PageSize, totalCount);
     }
 
-    private static IOrderedQueryable<Apartment> Sort(
-        IQueryable<Apartment> query,
-        IQueryable<Review> reviews,
-        string? sortColumn,
-        bool descending) =>
-        sortColumn?.ToLowerInvariant() switch
-        {
-            "rating" => SortByRating(query, reviews, descending),
-            "name" => OrderBy(query, a => a.Name.Value, descending),
-            "description" => OrderBy(query, a => a.Description.Value, descending),
-            "country" => OrderBy(query, a => a.Address.Country, descending),
-            "price_amount" => OrderBy(query, a => a.Price.Amount, descending),
-            "currency" => OrderBy(query, a => a.Price.Currency, descending),
-            _ => OrderBy(query, a => a.Name.Value, descending)
-        };
-
-    /// <summary>
-    /// Sorts by average rating; apartments without reviews come last in both directions.
-    /// </summary>
-    private static IOrderedQueryable<Apartment> SortByRating(
-        IQueryable<Apartment> query,
-        IQueryable<Review> reviews,
-        bool descending)
+    private static void AddTextFilter(SearchApartmentQuery request, List<string> conditions, DynamicParameters parameters)
     {
-        IOrderedQueryable<Apartment> unratedLast = query.OrderBy(a => !reviews.Any(r => r.ApartmentId == a.Id));
+        if (string.IsNullOrWhiteSpace(request.SearchTerm))
+        {
+            return;
+        }
 
-        Expression<Func<Apartment, decimal?>> averageRating =
-            a => reviews.Where(r => r.ApartmentId == a.Id).Average(r => (decimal?)r.Rating.Value);
-
-        return (descending ? unratedLast.ThenByDescending(averageRating) : unratedLast.ThenBy(averageRating))
-            .ThenBy(a => a.Id);
+        conditions.Add(
+            """
+            (unaccent(a.name) ILIKE unaccent(@Pattern)
+                OR unaccent(a.address_city) ILIKE unaccent(@Pattern)
+                OR unaccent(a.address_state) ILIKE unaccent(@Pattern)
+                OR unaccent(a.address_country) ILIKE unaccent(@Pattern))
+            """);
+        parameters.Add("Pattern", SqlPatterns.Contains(request.SearchTerm));
     }
 
-    private static IOrderedQueryable<Apartment> OrderBy<TKey>(
-        IQueryable<Apartment> query,
-        Expression<Func<Apartment, TKey>> keySelector,
-        bool descending) =>
-        (descending ? query.OrderByDescending(keySelector) : query.OrderBy(keySelector))
-            .ThenBy(a => a.Id);
+    private static void AddCapacityAndPriceFilters(
+        SearchApartmentQuery request,
+        List<string> conditions,
+        DynamicParameters parameters)
+    {
+        AddMinimum(conditions, parameters, "a.maximum_guest_count", "GuestCount", request.GuestCount);
+        AddMinimum(conditions, parameters, "a.bedrooms", "Bedrooms", request.Bedrooms);
+        AddMinimum(conditions, parameters, "a.beds", "Beds", request.Beds);
+        AddMinimum(conditions, parameters, "a.bathrooms", "Bathrooms", request.Bathrooms);
+        AddMinimum(conditions, parameters, "a.price_amount", "MinPrice", request.MinPrice);
+
+        if (request.MaxPrice is decimal maxPrice)
+        {
+            conditions.Add("a.price_amount <= @MaxPrice");
+            parameters.Add("MaxPrice", maxPrice);
+        }
+    }
+
+    private static void AddFeatureFilters(SearchApartmentQuery request, List<string> conditions, DynamicParameters parameters)
+    {
+        int[] amenities = [.. ParseAll<Amenity>(request.Amenities).Select(amenity => (int)amenity).Distinct()];
+
+        if (amenities.Length > 0)
+        {
+            // Array containment: the apartment has every requested amenity (uses the GIN index).
+            conditions.Add("a.amenities @> @Amenities");
+            parameters.Add("Amenities", amenities);
+        }
+
+        int[] propertyTypes = [.. ParseAll<PropertyType>(request.PropertyTypes).Select(type => (int)type).Distinct()];
+
+        if (propertyTypes.Length > 0)
+        {
+            conditions.Add("a.property_type = ANY(@PropertyTypes)");
+            parameters.Add("PropertyTypes", propertyTypes);
+        }
+
+        if (request.InstantBook is bool instantBook)
+        {
+            conditions.Add("a.instant_book = @InstantBook");
+            parameters.Add("InstantBook", instantBook);
+        }
+
+        if (request.Superhost is bool superhost)
+        {
+            conditions.Add("u.is_superhost = @Superhost");
+            parameters.Add("Superhost", superhost);
+        }
+    }
+
+    private static void AddBoundsFilter(SearchApartmentQuery request, List<string> conditions, DynamicParameters parameters)
+    {
+        AddMinimum(conditions, parameters, "a.latitude", "MinLatitude", request.MinLatitude);
+
+        if (request.MaxLatitude is double maxLatitude)
+        {
+            conditions.Add("a.latitude <= @MaxLatitude");
+            parameters.Add("MaxLatitude", maxLatitude);
+        }
+
+        if (request is { MinLongitude: double west, MaxLongitude: double east } && west > east)
+        {
+            // The map box crosses the antimeridian (e.g. 170 → -170).
+            conditions.Add("(a.longitude >= @MinLongitude OR a.longitude <= @MaxLongitude)");
+            parameters.Add("MinLongitude", west);
+            parameters.Add("MaxLongitude", east);
+            return;
+        }
+
+        AddMinimum(conditions, parameters, "a.longitude", "MinLongitude", request.MinLongitude);
+
+        if (request.MaxLongitude is double maxLongitude)
+        {
+            conditions.Add("a.longitude <= @MaxLongitude");
+            parameters.Add("MaxLongitude", maxLongitude);
+        }
+    }
+
+    private static void AddAvailabilityFilters(
+        SearchApartmentQuery request,
+        List<string> conditions,
+        DynamicParameters parameters,
+        DateOnly today)
+    {
+        if (request is { StartDate: DateOnly checkIn, EndDate: DateOnly checkOut })
+        {
+            conditions.Add("a.min_nights <= @Nights AND a.max_nights >= @Nights");
+            conditions.Add(string.Format(
+                System.Globalization.CultureInfo.InvariantCulture,
+                StayIsFree,
+                "@CheckIn::date",
+                "@CheckOut::date"));
+
+            parameters.Add("Nights", checkOut.DayNumber - checkIn.DayNumber);
+            parameters.Add("CheckIn", checkIn.ToDateTime(TimeOnly.MinValue));
+            parameters.Add("CheckOut", checkOut.ToDateTime(TimeOnly.MinValue));
+            parameters.Add("ActiveStatuses", BookingStatuses.ActiveValues);
+        }
+
+        if (request.Flexible is not null && FlexibleStay.TryParseLength(request.Flexible, out FlexibleStayLength length))
+        {
+            List<YearMonth> months = [];
+
+            foreach (string value in request.Months)
+            {
+                if (YearMonth.TryParse(value, out YearMonth month))
+                {
+                    months.Add(month);
+                }
+            }
+
+            IReadOnlyList<DateOnly> checkIns = FlexibleStay.CandidateCheckIns(length, months, today);
+
+            if (checkIns.Count == 0)
+            {
+                conditions.Add("FALSE");
+                return;
+            }
+
+            // At least one candidate check-in date starts a free window of the requested length.
+            conditions.Add("a.min_nights <= @FlexibleNights AND a.max_nights >= @FlexibleNights");
+            conditions.Add(
+                "EXISTS (SELECT 1 FROM unnest(@FlexibleCheckIns::date[]) AS s(check_in) WHERE " +
+                string.Format(
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    StayIsFree,
+                    "s.check_in",
+                    "s.check_in + @FlexibleNights") +
+                ")");
+
+            parameters.Add("FlexibleNights", FlexibleStay.Nights(length));
+            parameters.Add("FlexibleCheckIns", checkIns.Select(date => date.ToDateTime(TimeOnly.MinValue)).ToArray());
+            parameters.Add("ActiveStatuses", BookingStatuses.ActiveValues);
+        }
+    }
+
+    private static void AddMinimum<T>(
+        List<string> conditions,
+        DynamicParameters parameters,
+        string column,
+        string parameterName,
+        T? value)
+        where T : struct
+    {
+        if (value is T minimum)
+        {
+            conditions.Add($"{column} >= @{parameterName}");
+            parameters.Add(parameterName, minimum);
+        }
+    }
+
+    private static IEnumerable<TEnum> ParseAll<TEnum>(IEnumerable<string> names)
+        where TEnum : struct, Enum
+    {
+        foreach (string name in names)
+        {
+            if (EnumNames.TryParse(name, out TEnum value))
+            {
+                yield return value;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Maps the sort column to a fixed SQL expression (never user input). Unrated apartments come last.
+    /// </summary>
+    private static string OrderBy(string? sortColumn, string? sortOrder)
+    {
+        string direction = string.Equals(sortOrder, "desc", StringComparison.OrdinalIgnoreCase) ? "DESC" : "ASC";
+
+        string expression = sortColumn?.ToLowerInvariant() switch
+        {
+            "rating" => "rs.average_rating",
+            "description" => "a.description",
+            "country" => "a.address_country",
+            "price" or "price_amount" => "a.price_amount",
+            "currency" => "a.price_currency",
+            "newest" => "a.created_on_utc",
+            _ => "a.name",
+        };
+
+        return $"{expression} {direction} NULLS LAST, a.id";
+    }
 }

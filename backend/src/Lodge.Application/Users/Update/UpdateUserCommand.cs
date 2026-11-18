@@ -9,8 +9,10 @@ namespace Lodge.Application.Users.Update;
 /// <param name="FirstName">The first name.</param>
 /// <param name="LastName">The last name.</param>
 /// <param name="ImageId">The blob guid identifier referring to an image.</param>
+/// <param name="Bio">The biography. Null leaves it unchanged; an empty string clears it.</param>
 public sealed record UpdateUserCommand(
-    Guid UserId, 
-    string FirstName, 
+    Guid UserId,
+    string FirstName,
     string LastName,
-    Guid? ImageId) : ICommand;
+    Guid? ImageId,
+    string? Bio = null) : ICommand;

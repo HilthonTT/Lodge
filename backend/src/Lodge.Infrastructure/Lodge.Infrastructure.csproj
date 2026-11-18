@@ -24,6 +24,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="Lodge.ArchitectureTests" />
     <InternalsVisibleTo Include="Lodge.Application.UnitTests" />
+    <InternalsVisibleTo Include="Lodge.Api.FunctionalTests" />
   </ItemGroup>
 
 </Project>

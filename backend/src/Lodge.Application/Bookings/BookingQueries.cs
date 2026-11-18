@@ -1,6 +1,8 @@
 ﻿using System.Data;
 using Dapper;
+using Lodge.Application.Abstractions.Assets;
 using Lodge.Contracts.Bookings;
+using Lodge.Domain.Bookings;
 
 namespace Lodge.Application.Bookings;
 
@@ -9,6 +11,7 @@ namespace Lodge.Application.Bookings;
 /// </summary>
 internal static class BookingQueries
 {
+    // The apartment image is the cover photo (position 0) of the listing.
     private const string SelectBooking =
         """
         SELECT
@@ -24,11 +27,21 @@ internal static class BookingQueries
             b.amenities_up_charge_currency AS AmenitiesUpChargeCurrency,
             b.total_price_amount AS TotalPriceAmount,
             b.total_price_currency AS TotalPriceCurrency,
+            b.discount_amount AS DiscountAmount,
             b.duration_start AS DurationStart,
             b.duration_end AS DurationEnd,
             b.created_on_utc AS CreatedOnUtc,
+            b.guest_count AS GuestCount,
+            b.message_to_host AS MessageToHost,
             a.name AS ApartmentName,
-            a.image_url AS ApartmentImageUrl,
+            COALESCE((
+                SELECT COALESCE(i.path, '/api/v1/files/' || i.id::text)
+                FROM apartment_images AS i
+                WHERE i.apartment_id = a.id
+                ORDER BY i.position
+                LIMIT 1), '') AS ApartmentImageUrl,
+            a.owner_id AS ListingHostId,
+            a.check_in_instructions AS CheckInInstructions,
             u.first_name || ' ' || u.last_name AS GuestName,
             u.email AS GuestEmail,
             EXISTS (SELECT 1 FROM reviews AS r WHERE r.booking_id = b.id) AS HasReview
@@ -59,19 +72,41 @@ internal static class BookingQueries
     }
 
     /// <summary>
-    /// Returns one page of every user's bookings, newest first, optionally filtered by status.
+    /// Returns one page of bookings, newest first, optionally filtered by status, host and listing.
     /// </summary>
     public static async Task<(List<BookingResponse> Items, int TotalCount)> GetPageAsync(
         IDbConnection connection,
         int? status,
         int page,
-        int pageSize)
+        int pageSize,
+        Guid? hostId = null,
+        Guid? apartmentId = null)
     {
-        string where = status.HasValue ? "WHERE b.status = @Status" : string.Empty;
+        List<string> conditions = [];
+
+        if (status.HasValue)
+        {
+            conditions.Add("b.status = @Status");
+        }
+
+        if (hostId.HasValue)
+        {
+            conditions.Add("a.owner_id = @HostId");
+        }
+
+        if (apartmentId.HasValue)
+        {
+            conditions.Add("b.apartment_id = @ApartmentId");
+        }
+
+        string where = conditions.Count == 0 ? string.Empty : $"WHERE {string.Join(" AND ", conditions)}";
 
         string sql =
             $"""
-            SELECT COUNT(*) FROM bookings AS b {where};
+            SELECT COUNT(*)
+            FROM bookings AS b
+            INNER JOIN apartments AS a ON b.apartment_id = a.id
+            {where};
 
             {SelectBooking}
             {where}
@@ -81,11 +116,37 @@ internal static class BookingQueries
 
         using SqlMapper.GridReader grid = await connection.QueryMultipleAsync(
             sql,
-            new { Status = status ?? 0, PageSize = pageSize, Offset = (page - 1) * pageSize });
+            new
+            {
+                Status = status ?? 0,
+                HostId = hostId ?? Guid.Empty,
+                ApartmentId = apartmentId ?? Guid.Empty,
+                PageSize = pageSize,
+                Offset = (page - 1) * pageSize,
+            });
 
         int totalCount = await grid.ReadSingleAsync<int>();
         List<BookingResponse> items = (await grid.ReadAsync<BookingResponse>()).ToList();
 
         return (items, totalCount);
+    }
+
+    /// <summary>
+    /// Resolves the image URL and hides the check-in instructions from everyone except the listing's host and the
+    /// guest of a confirmed booking.
+    /// </summary>
+    public static BookingResponse Present(BookingResponse booking, Guid? callerId, IAssetUrlResolver assetUrlResolver)
+    {
+        booking.ApartmentImageUrl = assetUrlResolver.Resolve(booking.ApartmentImageUrl);
+
+        bool isHost = callerId == booking.ListingHostId;
+        bool isConfirmedGuest = callerId == booking.UserId && booking.Status == (int)BookingStatus.Confirmed;
+
+        if (!isHost && !isConfirmedGuest)
+        {
+            booking.CheckInInstructions = null;
+        }
+
+        return booking;
     }
 }

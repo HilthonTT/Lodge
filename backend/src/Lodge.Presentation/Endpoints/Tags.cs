@@ -18,4 +18,10 @@ internal static class Tags
     internal const string Reviews = "Reviews";
 
     internal const string Stripe = "Stripe";
+
+    internal const string Hosting = "Hosting";
+
+    internal const string Wishlists = "Wishlists";
+
+    internal const string Locations = "Locations";
 }

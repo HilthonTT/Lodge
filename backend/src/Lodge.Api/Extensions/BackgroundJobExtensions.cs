@@ -1,5 +1,7 @@
 ﻿using Hangfire;
 using Lodge.Application.Bookings.Complete;
+using Lodge.Application.Bookings.Expire;
+using Lodge.Application.Hosting.Superhost;
 using Lodge.Persistence.Outbox;
 using Microsoft.Extensions.Options;
 
@@ -27,6 +29,16 @@ internal static class BackgroundJobExtensions
             "complete-finished-bookings",
             job => job.CompleteFinishedBookingsAsync(CancellationToken.None),
             completeBookingsOptions.Schedule);
+
+        recurringJobManager.AddOrUpdate<IExpireBookingRequestsJob>(
+            "expire-booking-requests",
+            job => job.ExpireAsync(CancellationToken.None),
+            app.Services.GetRequiredService<IOptions<ExpireBookingRequestsOptions>>().Value.Schedule);
+
+        recurringJobManager.AddOrUpdate<IUpdateSuperhostStatusJob>(
+            "update-superhost-status",
+            job => job.UpdateAsync(CancellationToken.None),
+            app.Services.GetRequiredService<IOptions<SuperhostJobOptions>>().Value.Schedule);
 
         return app;
     }

@@ -104,4 +104,30 @@ public sealed class BookingResponse
     /// Gets or sets a value indicating whether a review exists for this booking.
     /// </summary>
     public bool HasReview { get; set; }
+
+    /// <summary>
+    /// Gets or sets the weekly or monthly discount already deducted from the total (same currency as the price).
+    /// </summary>
+    public decimal DiscountAmount { get; set; }
+
+    /// <summary>
+    /// Gets or sets the number of guests.
+    /// </summary>
+    public int GuestCount { get; set; }
+
+    /// <summary>
+    /// Gets or sets the guest's message to the host, or null.
+    /// </summary>
+    public string? MessageToHost { get; set; }
+
+    /// <summary>
+    /// Gets or sets the identifier of the listing's host.
+    /// </summary>
+    public Guid ListingHostId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the listing's check-in instructions: only set for the host, and for the guest once the booking
+    /// is confirmed; null otherwise.
+    /// </summary>
+    public string? CheckInInstructions { get; set; }
 }

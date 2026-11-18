@@ -1,4 +1,4 @@
-using Lodge.Application.Apartments.Search;
+﻿using Lodge.Application.Apartments.Search;
 using Lodge.Application.Bookings.Cancel;
 using Lodge.Application.Bookings.Reserve;
 using Lodge.Application.Core.Errors;
@@ -23,7 +23,7 @@ public class ReserveBookingTests(IntegrationTestWebFactory factory) : BaseIntegr
         Guid userId = await CreateAndSignInUserAsync();
         Guid apartmentId = await GetApartmentIdAsync();
         (DateOnly start, DateOnly end) = NextPeriod();
-        var command = new ReserveBookingCommand(Guid.NewGuid(), apartmentId, userId, start, end);
+        var command = new ReserveBookingCommand(Guid.NewGuid(), apartmentId, userId, start, end, GuestCount: 1);
 
         Result<Guid> first = await Sender.Send(command);
         Result<Guid> replay = await Sender.Send(command);
@@ -40,8 +40,8 @@ public class ReserveBookingTests(IntegrationTestWebFactory factory) : BaseIntegr
         (DateOnly start, DateOnly end) = NextPeriod();
         Guid requestId = Guid.NewGuid();
 
-        Result<Guid> failed = await Sender.Send(new ReserveBookingCommand(requestId, Guid.NewGuid(), userId, start, end));
-        Result<Guid> retried = await Sender.Send(new ReserveBookingCommand(requestId, apartmentId, userId, start, end));
+        Result<Guid> failed = await Sender.Send(new ReserveBookingCommand(requestId, Guid.NewGuid(), userId, start, end, GuestCount: 1));
+        Result<Guid> retried = await Sender.Send(new ReserveBookingCommand(requestId, apartmentId, userId, start, end, GuestCount: 1));
 
         failed.IsFailure.Should().BeTrue();
         retried.IsSuccess.Should().BeTrue();
@@ -54,9 +54,9 @@ public class ReserveBookingTests(IntegrationTestWebFactory factory) : BaseIntegr
         Guid apartmentId = await GetApartmentIdAsync();
         (DateOnly start, DateOnly end) = NextPeriod();
 
-        await Sender.Send(new ReserveBookingCommand(Guid.NewGuid(), apartmentId, userId, start, end));
+        await Sender.Send(new ReserveBookingCommand(Guid.NewGuid(), apartmentId, userId, start, end, GuestCount: 1));
         Result<Guid> overlapping = await Sender.Send(
-            new ReserveBookingCommand(Guid.NewGuid(), apartmentId, userId, start.AddDays(1), end.AddDays(1)));
+            new ReserveBookingCommand(Guid.NewGuid(), apartmentId, userId, start.AddDays(1), end.AddDays(1), GuestCount: 1));
 
         overlapping.Error.Should().Be(BookingErrors.Overlap);
     }
@@ -68,9 +68,9 @@ public class ReserveBookingTests(IntegrationTestWebFactory factory) : BaseIntegr
         Guid apartmentId = await GetApartmentIdAsync();
         (DateOnly start, DateOnly end) = NextPeriod();
 
-        await Sender.Send(new ReserveBookingCommand(Guid.NewGuid(), apartmentId, userId, start, end));
+        await Sender.Send(new ReserveBookingCommand(Guid.NewGuid(), apartmentId, userId, start, end, GuestCount: 1));
         Result<Guid> backToBack = await Sender.Send(
-            new ReserveBookingCommand(Guid.NewGuid(), apartmentId, userId, end, end.AddDays(2)));
+            new ReserveBookingCommand(Guid.NewGuid(), apartmentId, userId, end, end.AddDays(2), GuestCount: 1));
 
         backToBack.IsSuccess.Should().BeTrue();
     }
@@ -81,7 +81,7 @@ public class ReserveBookingTests(IntegrationTestWebFactory factory) : BaseIntegr
         Guid ownerId = await CreateAndSignInUserAsync();
         Guid apartmentId = await GetApartmentIdAsync();
         (DateOnly start, DateOnly end) = NextPeriod();
-        Result<Guid> booking = await Sender.Send(new ReserveBookingCommand(Guid.NewGuid(), apartmentId, ownerId, start, end));
+        Result<Guid> booking = await Sender.Send(new ReserveBookingCommand(Guid.NewGuid(), apartmentId, ownerId, start, end, GuestCount: 1));
 
         Guid otherUserId = await CreateAndSignInUserAsync();
         Result result = await Sender.Send(new CancelBookingCommand(otherUserId, booking.Value));
@@ -97,10 +97,10 @@ public class ReserveBookingTests(IntegrationTestWebFactory factory) : BaseIntegr
         Guid userId = await CreateAndSignInUserAsync();
         Guid apartmentId = await GetApartmentIdAsync();
         (DateOnly start, DateOnly end) = NextPeriod();
-        await Sender.Send(new ReserveBookingCommand(Guid.NewGuid(), apartmentId, userId, start, end));
+        await Sender.Send(new ReserveBookingCommand(Guid.NewGuid(), apartmentId, userId, start, end, GuestCount: 1));
 
         Result<PagedList<ApartmentResponse>> result = await Sender.Send(
-            new SearchApartmentQuery(null, null, null, 1, 100, start, end, null, null));
+            new SearchApartmentQuery { Page = 1, PageSize = 100, StartDate = start, EndDate = end });
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Items.Should().NotContain(a => a.Id == apartmentId);
@@ -108,7 +108,11 @@ public class ReserveBookingTests(IntegrationTestWebFactory factory) : BaseIntegr
     }
 
     private async Task<Guid> GetApartmentIdAsync() =>
-        await DbContext.Apartments.OrderBy(a => a.Id).Select(a => a.Id).FirstAsync();
+        await DbContext.Apartments
+            .Where(a => a.InstantBook && a.IsListed && a.MinNights == 1)
+            .OrderBy(a => a.Id)
+            .Select(a => a.Id)
+            .FirstAsync();
 
     private static (DateOnly Start, DateOnly End) NextPeriod()
     {

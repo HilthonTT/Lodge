@@ -29,8 +29,10 @@ internal sealed class Reserve : IEndpoint
                 requestId, 
                 request.ApartmentId, 
                 request.UserId,
-                request.StartDate, 
-                request.EndDate);
+                request.StartDate,
+                request.EndDate,
+                request.GuestCount,
+                request.MessageToHost);
 
             Result<Guid> result = await sender.Send(command, cancellationToken);
 

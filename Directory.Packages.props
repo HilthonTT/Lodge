@@ -23,6 +23,8 @@
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     <PackageVersion Include="EFCore.NamingConventions" Version="10.0.1" />
     <PackageVersion Include="Dapper" Version="2.1.89" />
+    <!-- 10.0.x on purpose: 11.0.0 depends on EF Core 11 (see above). -->
+    <PackageVersion Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="10.0.15" />
   </ItemGroup>
 
   <!-- Application -->

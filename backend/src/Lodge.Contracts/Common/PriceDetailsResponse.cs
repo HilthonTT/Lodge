@@ -1,32 +1,40 @@
 ﻿namespace Lodge.Contracts.Common;
 
 /// <summary>
-/// Represents the price details response
+/// Represents the price breakdown of a stay. New line items (e.g. service fee, taxes) are added as properties.
 /// </summary>
 public sealed class PriceDetailsResponse
 {
-    /// <summary>
-    /// Gets or sets the currency.
-    /// </summary>
     public string Currency { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the price per period.
+    /// Gets or sets the number of nights.
+    /// </summary>
+    public int Nights { get; set; }
+
+    /// <summary>
+    /// Gets or sets the sum of the nightly prices, before the discount.
     /// </summary>
     public decimal PricePerPeriod { get; set; }
 
     /// <summary>
-    /// Gets or sets the cleaning fee.
+    /// Gets or sets <see cref="PricePerPeriod"/> / <see cref="Nights"/>, rounded to cents.
     /// </summary>
+    public decimal AverageNightlyPrice { get; set; }
+
+    /// <summary>
+    /// Gets or sets the long-stay discount (0 when none), deducted from <see cref="PricePerPeriod"/>.
+    /// </summary>
+    public decimal DiscountAmount { get; set; }
+
+    /// <summary>
+    /// Gets or sets <c>"weekly"</c>, <c>"monthly"</c> or null.
+    /// </summary>
+    public string? DiscountType { get; set; }
+
     public decimal CleaningFee { get; set; }
 
-    /// <summary>
-    /// Gets or sets the amenities up charge.
-    /// </summary>
     public decimal AmenitiesUpCharge { get; set; }
 
-    /// <summary>
-    /// Gets or sets the total price.
-    /// </summary>
     public decimal TotalPrice { get; set; }
 }

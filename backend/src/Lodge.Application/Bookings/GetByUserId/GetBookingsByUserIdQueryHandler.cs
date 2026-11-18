@@ -30,7 +30,7 @@ internal sealed class GetBookingsByUserIdQueryHandler(
 
         foreach (BookingResponse booking in bookings)
         {
-            booking.ApartmentImageUrl = assetUrlResolver.Resolve(booking.ApartmentImageUrl);
+            BookingQueries.Present(booking, request.UserId, assetUrlResolver);
         }
 
         return bookings;

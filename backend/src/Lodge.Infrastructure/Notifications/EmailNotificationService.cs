@@ -131,4 +131,48 @@ internal sealed class EmailNotificationService(IEmailService emailService) : IEm
 
         return emailService.SendEmailAsync(mailRequest, cancellationToken);
     }
+
+    /// <inheritdoc />
+    public Task SendEmailVerificationEmailAsync(
+        EmailVerificationEmail emailVerificationEmail,
+        CancellationToken cancellationToken = default)
+    {
+        var mailRequest = new MailRequest(
+              emailVerificationEmail.EmailTo,
+              "Verify your e-mail address ✉️",
+              $"Hello {emailVerificationEmail.Name}," +
+              Environment.NewLine +
+              Environment.NewLine +
+              "Please confirm your e-mail address by opening this link (valid for 24 hours):" +
+              Environment.NewLine +
+              Environment.NewLine +
+              emailVerificationEmail.Link +
+              Environment.NewLine +
+              Environment.NewLine +
+              "If you did not create a Lodge account, you can ignore this e-mail.");
+
+        return emailService.SendEmailAsync(mailRequest, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task SendPasswordResetEmailAsync(
+        PasswordResetEmail passwordResetEmail,
+        CancellationToken cancellationToken = default)
+    {
+        var mailRequest = new MailRequest(
+              passwordResetEmail.EmailTo,
+              "Reset your password 🔑",
+              $"Hello {passwordResetEmail.Name}," +
+              Environment.NewLine +
+              Environment.NewLine +
+              "Open this link to choose a new password (valid for 1 hour):" +
+              Environment.NewLine +
+              Environment.NewLine +
+              passwordResetEmail.Link +
+              Environment.NewLine +
+              Environment.NewLine +
+              "If you did not ask to reset your password, you can ignore this e-mail.");
+
+        return emailService.SendEmailAsync(mailRequest, cancellationToken);
+    }
 }

@@ -47,16 +47,29 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
                 .IsUnique();
         });
 
-        builder.Property<string>("_passwordHash")
+        // Null for accounts created through a social login that never set a password.
+        builder.Property<string?>("_passwordHash")
             .HasField("_passwordHash")
-            .HasColumnName("password_hash")
-            .IsRequired();
+            .HasColumnName("password_hash");
+
+        builder.Property(user => user.EmailVerifiedOnUtc);
+
+        builder.Property(user => user.Bio).HasMaxLength(User.BioMaxLength);
+
+        // Encrypted with ASP.NET Core Data Protection.
+        builder.Property(user => user.TwoFactorSecret).HasMaxLength(1024);
+
+        builder.Property(user => user.TwoFactorEnabledOnUtc);
+
+        builder.Property(user => user.TwoFactorLastUsedStep);
 
         builder.Property(user => user.Role)
             .HasConversion<string>()
             .HasMaxLength(20)
             .HasColumnName("role")
             .IsRequired();
+
+        builder.Property(user => user.IsSuperhost);
 
         builder.Property(user => user.CreatedOnUtc).IsRequired();
 
@@ -67,5 +80,8 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasQueryFilter(user => !user.Deleted);
 
         builder.Ignore(user => user.FullName);
+        builder.Ignore(user => user.IsEmailVerified);
+        builder.Ignore(user => user.HasPassword);
+        builder.Ignore(user => user.TwoFactorEnabled);
     }
 }

@@ -33,6 +33,12 @@ internal sealed class ChangePasswordCommandHandler(
             return Result.Failure(UserErrors.NotFound(request.UserId));
         }
 
+        // Accounts created through a social login set their first password through "forgot password".
+        if (!user.HasPassword)
+        {
+            return Result.Failure(UserErrors.PasswordNotSet);
+        }
+
         // Hashes are salted, so the only way to detect "same password" is to verify it.
         if (user.VerifyPasswordHash(request.Password, passwordHashChecker))
         {
