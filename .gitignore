@@ -397,3 +397,16 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 /.containers
+
+# ---- Lodge ----
+# Node / Next.js (frontend has its own .gitignore too)
+.next/
+
+# Environment files (commit *.example only)
+.env
+.env.local
+.env.*.local
+
+# Playwright artifacts from the screenshot script
+test-results/
+playwright-report/
