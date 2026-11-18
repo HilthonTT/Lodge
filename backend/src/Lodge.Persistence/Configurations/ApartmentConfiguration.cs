@@ -1,4 +1,4 @@
-﻿using Lodge.Domain.Apartments;
+using Lodge.Domain.Apartments;
 using Lodge.Domain.Shared;
 using Lodge.Domain.Users;
 using Microsoft.EntityFrameworkCore;
@@ -67,6 +67,10 @@ internal sealed class ApartmentConfiguration : IEntityTypeConfiguration<Apartmen
         builder.Property(apartment => apartment.HouseRules).HasMaxLength(Apartment.TextMaxLength);
 
         builder.Property(apartment => apartment.CheckInInstructions).HasMaxLength(Apartment.TextMaxLength);
+
+        builder.Property(apartment => apartment.CancellationPolicy)
+            .HasConversion<string>()
+            .HasMaxLength(20);
 
         // "Must have all of these amenities" filters use the array containment operator (@>).
         builder.HasIndex(apartment => apartment.Amenities).HasMethod("gin");

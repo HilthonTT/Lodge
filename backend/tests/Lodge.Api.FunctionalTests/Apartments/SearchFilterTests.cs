@@ -144,7 +144,7 @@ public class SearchFilterTests(FunctionalTestWebAppFactory factory) : HostingFun
 
     [Theory]
     [InlineData("flexible=week&months=2030-01&startDate=2030-01-01&endDate=2030-01-05", "SearchApartments.FlexibleWithExactDates")]
-    [InlineData("flexible=week", "SearchApartments.InvalidMonths")]
+    [InlineData("flexible=week&months=2030-1x", "SearchApartments.InvalidMonths")]
     [InlineData("flexible=fortnight&months=2030-01", "SearchApartments.InvalidFlexible")]
     [InlineData("amenities=Moat", "SearchApartments.InvalidAmenity")]
     [InlineData("propertyTypes=Castle", "SearchApartments.InvalidPropertyType")]
@@ -156,6 +156,34 @@ public class SearchFilterTests(FunctionalTestWebAppFactory factory) : HostingFun
             await HttpClient.GetAsync($"api/v1/apartments/search?{queryString}"),
             HttpStatusCode.BadRequest,
             code);
+    }
+
+    [Fact]
+    public async Task FlexibleSearch_Should_DefaultToTheNextThreeMonths()
+    {
+        (await SearchAsync("flexible=weekend")).Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task PriceFilters_And_PriceRange_Should_CompareInUsd()
+    {
+        const string TestListings = "minLat=-41&maxLat=-39&minLng=-21&maxLng=-19";
+
+        // 920 EUR at the default rate (0.92 EUR per USD) is 1000 USD.
+        (_, _, Guid listingId) = await CreateHostWithListingAsync(listing => listing with
+        {
+            Price = 920,
+            Currency = "EUR",
+            CleaningFee = 0,
+        });
+
+        (await SearchAsync($"{TestListings}&minPrice=999&maxPrice=1001")).Should().ContainSingle(a => a.Id == listingId)
+            .Which.Should().BeEquivalentTo(new { Price = 920m, Currency = "EUR" });
+        (await SearchAsync($"{TestListings}&minPrice=900&maxPrice=950")).Should().NotContain(a => a.Id == listingId);
+
+        PriceRangeResponse? range = await HttpClient.GetFromJsonAsync<PriceRangeResponse>("api/v1/apartments/price-range");
+        range!.Currency.Should().Be("USD");
+        range.Max.Should().BeGreaterThanOrEqualTo(1000);
     }
 
     [Fact]

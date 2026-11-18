@@ -1,8 +1,9 @@
-﻿using System.Data;
+using System.Data;
 using Dapper;
 using Lodge.Application.Abstractions.Data;
 using Lodge.Application.Abstractions.Messaging;
 using Lodge.Application.Core.Extensions;
+using Lodge.Application.Payments;
 using Lodge.Contracts.Apartments;
 using Lodge.Contracts.Common;
 using Lodge.Domain.Apartments;
@@ -19,7 +20,8 @@ namespace Lodge.Application.Apartments.Search;
 internal sealed class SearchApartmentQueryHandler(
     IDbConnectionFactory factory,
     ApartmentReader apartmentReader,
-    IDateTimeProvider dateTimeProvider)
+    IDateTimeProvider dateTimeProvider,
+    CurrencyConverter currencyConverter)
     : IQueryHandler<SearchApartmentQuery, PagedList<ApartmentResponse>>
 {
     /// <summary>
@@ -49,7 +51,7 @@ internal sealed class SearchApartmentQueryHandler(
         List<string> conditions = [ApartmentReader.ListedCondition];
 
         AddTextFilter(request, conditions, parameters);
-        AddCapacityAndPriceFilters(request, conditions, parameters);
+        AddCapacityAndPriceFilters(request, conditions, parameters, currencyConverter.ToBaseSql("a.price_amount", "a.price_currency"));
         AddFeatureFilters(request, conditions, parameters);
         AddBoundsFilter(request, conditions, parameters);
         AddAvailabilityFilters(request, conditions, parameters, DateOnly.FromDateTime(dateTimeProvider.UtcNow));
@@ -74,7 +76,7 @@ internal sealed class SearchApartmentQueryHandler(
             connection,
             $"""
             {where}
-            ORDER BY {OrderBy(request.SortColumn, request.SortOrder)}
+            ORDER BY {OrderBy(request.SortColumn, request.SortOrder, currencyConverter.ToBaseSql("a.price_amount", "a.price_currency"))}
             LIMIT @PageSize OFFSET @Offset
             """,
             parameters);
@@ -99,20 +101,25 @@ internal sealed class SearchApartmentQueryHandler(
         parameters.Add("Pattern", SqlPatterns.Contains(request.SearchTerm));
     }
 
+    /// <summary>
+    /// Adds the capacity filters and the price filters; <c>minPrice</c>/<c>maxPrice</c> are in the base currency (USD):
+    /// each listing's nightly price is converted with the static <c>Currencies:Rates</c> before comparing.
+    /// </summary>
     private static void AddCapacityAndPriceFilters(
         SearchApartmentQuery request,
         List<string> conditions,
-        DynamicParameters parameters)
+        DynamicParameters parameters,
+        string basePrice)
     {
         AddMinimum(conditions, parameters, "a.maximum_guest_count", "GuestCount", request.GuestCount);
         AddMinimum(conditions, parameters, "a.bedrooms", "Bedrooms", request.Bedrooms);
         AddMinimum(conditions, parameters, "a.beds", "Beds", request.Beds);
         AddMinimum(conditions, parameters, "a.bathrooms", "Bathrooms", request.Bathrooms);
-        AddMinimum(conditions, parameters, "a.price_amount", "MinPrice", request.MinPrice);
+        AddMinimum(conditions, parameters, basePrice, "MinPrice", request.MinPrice);
 
         if (request.MaxPrice is decimal maxPrice)
         {
-            conditions.Add("a.price_amount <= @MaxPrice");
+            conditions.Add($"{basePrice} <= @MaxPrice");
             parameters.Add("MaxPrice", maxPrice);
         }
     }
@@ -210,6 +217,13 @@ internal sealed class SearchApartmentQueryHandler(
                 }
             }
 
+            if (months.Count == 0)
+            {
+                // Without months: the current month and the next two.
+                var current = new YearMonth(today.Year, today.Month);
+                months = [current, Next(current), Next(Next(current))];
+            }
+
             IReadOnlyList<DateOnly> checkIns = FlexibleStay.CandidateCheckIns(length, months, today);
 
             if (checkIns.Count == 0)
@@ -234,6 +248,9 @@ internal sealed class SearchApartmentQueryHandler(
             parameters.Add("ActiveStatuses", BookingStatuses.ActiveValues);
         }
     }
+
+    private static YearMonth Next(YearMonth month) =>
+        month.Month == 12 ? new YearMonth(month.Year + 1, 1) : new YearMonth(month.Year, month.Month + 1);
 
     private static void AddMinimum<T>(
         List<string> conditions,
@@ -265,7 +282,7 @@ internal sealed class SearchApartmentQueryHandler(
     /// <summary>
     /// Maps the sort column to a fixed SQL expression (never user input). Unrated apartments come last.
     /// </summary>
-    private static string OrderBy(string? sortColumn, string? sortOrder)
+    private static string OrderBy(string? sortColumn, string? sortOrder, string basePrice)
     {
         string direction = string.Equals(sortOrder, "desc", StringComparison.OrdinalIgnoreCase) ? "DESC" : "ASC";
 
@@ -274,7 +291,7 @@ internal sealed class SearchApartmentQueryHandler(
             "rating" => "rs.average_rating",
             "description" => "a.description",
             "country" => "a.address_country",
-            "price" or "price_amount" => "a.price_amount",
+            "price" or "price_amount" => basePrice,
             "currency" => "a.price_currency",
             "newest" => "a.created_on_utc",
             _ => "a.name",

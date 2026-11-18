@@ -23,6 +23,9 @@ internal static class PriceDetailsMapper
         },
         CleaningFee = details.CleaningFee.Amount,
         AmenitiesUpCharge = details.AmenitiesUpCharge.Amount,
+        ServiceFee = details.ServiceFee.Amount,
+        Taxes = details.Taxes.Amount,
+        TaxRatePercent = details.TaxRatePercent,
         TotalPrice = details.TotalPrice.Amount,
     };
 }

@@ -1,4 +1,5 @@
 using Hangfire;
+using Lodge.Application.Abstractions.Messaging;
 using Lodge.Application.Abstractions.Notifications;
 using Lodge.Application.Abstractions.Storage;
 using Lodge.BackgroundTasks.Tasks;
@@ -16,8 +17,9 @@ namespace Lodge.Api.FunctionalTests.Abstractions;
 
 /// <summary>
 /// Hosts the full HTTP API against throw-away PostgreSQL and Redis containers (requires a running Docker engine).
-/// Demo data is seeded, so tests can sign in as the demo user. E-mails are recorded and files are kept in memory,
-/// so nothing talks to a local SMTP server or blob storage.
+/// Demo data is seeded, so tests can sign in as the demo user. E-mails are recorded, files are kept in memory and
+/// integration events are dispatched in-process (no RabbitMQ). Payments run in simulated mode (Development without
+/// Stripe keys). Background jobs (outbox, payouts, ...) do not run on their own: tests trigger them.
 /// </summary>
 public sealed class FunctionalTestWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
@@ -63,6 +65,7 @@ public sealed class FunctionalTestWebAppFactory : WebApplicationFactory<Program>
                 ["App:ApiPublicBaseUrl"] = PublicBaseUrl,
                 ["App:FrontendBaseUrl"] = FrontendBaseUrl,
                 ["Mail:SmtpServer"] = "",
+                ["BackgroundJobs:Outbox:BatchSize"] = "1000",
                 ["Serilog:WriteTo:1:Name"] = "Console",
             }));
 
@@ -73,6 +76,9 @@ public sealed class FunctionalTestWebAppFactory : WebApplicationFactory<Program>
 
             services.RemoveAll<IBlobService>();
             services.AddSingleton<IBlobService>(Blobs);
+
+            services.RemoveAll<IIntegrationEventPublisher>();
+            services.AddSingleton<IIntegrationEventPublisher, InProcessIntegrationEventPublisher>();
 
             System.Reflection.Assembly hangfireAspNetCore = typeof(HangfireServiceCollectionExtensions).Assembly;
 

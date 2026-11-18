@@ -29,6 +29,10 @@ builder.Services.AddHealthChecks();
 
 WebApplication app = builder.Build();
 
+// SignalR (/hubs/**) has its own route and cluster (appsettings.json): WebSockets are proxied as-is, the route is
+// exempt from rate limiting ("RateLimiterPolicy": "Disable": a connection is long-lived, and long polling would burn
+// through the per-IP budget), and cookie-based session affinity keeps the negotiate and connect requests of a client on
+// the same API instance (the Redis backplane fans events out across instances).
 // CORS is intentionally handled by the API only: the gateway forwards preflight requests unchanged,
 // and adding CORS here as well would produce duplicate Access-Control-* headers.
 app.UseRateLimiter();

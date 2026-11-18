@@ -14,9 +14,10 @@ namespace Lodge.Application.Hosting.Summary;
 /// Gets the hosting dashboard numbers of the current user.
 /// </summary>
 /// <remarks>
-/// Upcoming stays: reserved or confirmed bookings that start today or later. Earnings: total price of confirmed and
-/// completed bookings (this month: those checking in this calendar month, UTC). Ratings and the Superhost progress
-/// cover every listing of the host, deleted ones included.
+/// Upcoming stays: reserved or confirmed bookings that start today or later. Earnings come from the payouts (stay
+/// subtotal minus the host fee): this month = scheduled, on hold and paid payouts dated this calendar month (UTC),
+/// paid total = paid payouts, upcoming payouts = scheduled and on hold payouts. Ratings (published reviews) and the
+/// Superhost progress cover every listing of the host, deleted ones included.
 /// </remarks>
 public sealed record GetHostingSummaryQuery : IQuery<HostingSummaryResponse>;
 
@@ -49,11 +50,15 @@ internal sealed class GetHostingSummaryQueryHandler(
                 (SELECT COUNT(*) FROM apartments AS a WHERE a.owner_id = @HostId AND NOT a.deleted)::int AS ListingCount,
                 COUNT(*) FILTER (WHERE b.status IN (1, 2) AND b.duration_start >= @Today::date)::int AS UpcomingStays,
                 COUNT(*) FILTER (WHERE b.status = 6)::int AS PendingRequests,
-                COALESCE(SUM(b.total_price_amount) FILTER (
-                    WHERE b.status IN (2, 5)
-                      AND b.duration_start >= @MonthStart::date
-                      AND b.duration_start < @NextMonthStart::date), 0) AS EarningsThisMonth,
-                COALESCE(SUM(b.total_price_amount) FILTER (WHERE b.status IN (2, 5)), 0) AS EarningsTotal,
+                (SELECT COALESCE(SUM(p.amount_amount), 0) FROM payouts AS p
+                 WHERE p.host_id = @HostId
+                   AND p.status IN ('Scheduled', 'OnHold', 'Paid')
+                   AND p.scheduled_for >= @MonthStart::date
+                   AND p.scheduled_for < @NextMonthStart::date) AS EarningsThisMonth,
+                (SELECT COALESCE(SUM(p.amount_amount), 0) FROM payouts AS p
+                 WHERE p.host_id = @HostId AND p.status = 'Paid') AS PaidTotal,
+                (SELECT COALESCE(SUM(p.amount_amount), 0) FROM payouts AS p
+                 WHERE p.host_id = @HostId AND p.status IN ('Scheduled', 'OnHold')) AS UpcomingPayouts,
                 (SELECT a.price_currency FROM apartments AS a
                  WHERE a.owner_id = @HostId
                  ORDER BY a.created_on_utc
@@ -90,7 +95,8 @@ internal sealed class GetHostingSummaryQueryHandler(
             row.UpcomingStays,
             row.PendingRequests,
             row.EarningsThisMonth,
-            row.EarningsTotal,
+            row.PaidTotal,
+            row.UpcomingPayouts,
             row.Currency ?? DefaultCurrency,
             averageRating,
             performance.ReviewCount,
@@ -116,7 +122,9 @@ internal sealed class GetHostingSummaryQueryHandler(
 
         public decimal EarningsThisMonth { get; init; }
 
-        public decimal EarningsTotal { get; init; }
+        public decimal PaidTotal { get; init; }
+
+        public decimal UpcomingPayouts { get; init; }
 
         public string? Currency { get; init; }
 

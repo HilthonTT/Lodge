@@ -1,4 +1,4 @@
-﻿using FluentValidation.Results;
+using FluentValidation.Results;
 using Lodge.Application.Abstractions.Assets;
 using Lodge.Application.Reviews.Create;
 using Lodge.Contracts.Common;
@@ -27,7 +27,21 @@ public class SmallFixesTests
     [InlineData(6, false)]
     public void CreateReviewValidator_Should_AcceptRatingsFromOneToFive(int rating, bool valid)
     {
-        var command = new CreateReviewCommand(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), rating, "Lovely stay");
+        var command = new CreateReviewCommand(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            rating,
+            "Lovely stay",
+            new Contracts.Reviews.CategoryRatingsDto
+            {
+                Cleanliness = 5,
+                Accuracy = 5,
+                CheckIn = 5,
+                Communication = 5,
+                Location = 5,
+                Value = 5,
+            });
 
         ValidationResult result = new CreateReviewCommandValidator().Validate(command);
 

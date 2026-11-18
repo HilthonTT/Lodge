@@ -20,12 +20,13 @@ public sealed record SuperhostRequirements(int MinCompletedStays, decimal MinAve
 /// <param name="AverageRating">The average review rating, or null without reviews.</param>
 /// <param name="ReviewCount">The number of reviews.</param>
 /// <param name="HostCancellations">
-/// The number of bookings ended by the host side: declined requests and rejected bookings (status Rejected).
-/// Guests' cancellations and expired requests do not count.
+/// The number of bookings ended by the host side: declined requests, rejected bookings (status Rejected) and
+/// confirmed bookings the host cancelled. Guest cancellations never count.
 /// </param>
 /// <param name="TotalBookings">
-/// The number of bookings that were accepted or rejected at some point: every status except PendingApproval and
-/// Expired.
+/// The number of bookings the host answered: accepted ones (instant bookings and accepted requests, whatever happened
+/// to them afterwards, guest cancellations included) and declined or rejected ones. Pending requests, expired requests
+/// and requests the guest cancelled before the host answered are not counted.
 /// </param>
 public sealed record HostPerformance(
     int CompletedStays,

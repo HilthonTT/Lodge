@@ -45,24 +45,28 @@ internal sealed class UploadListingPhotoCommandHandler(
         }
 
         // The declared content type is not trusted: the file is buffered and its leading bytes are checked.
-        using var buffer = new MemoryStream();
-        await request.Stream.CopyToAsync(buffer, cancellationToken);
+        Result<BufferedImage> image = await ImageFormats.BufferAsync(
+            request.Stream,
+            UploadListingPhotoCommand.MaxFileSizeInBytes,
+            ApartmentErrors.InvalidPhoto,
+            ApartmentErrors.PhotoTooLarge,
+            cancellationToken);
 
-        if (buffer.Length > UploadListingPhotoCommand.MaxFileSizeInBytes)
+        if (image.IsFailure)
         {
-            return Result.Failure<PhotoUploadResponse>(ApartmentErrors.PhotoTooLarge);
+            return Result.Failure<PhotoUploadResponse>(image.Error);
         }
 
-        string? contentType = ImageFormats.Detect(buffer.GetBuffer().AsSpan(0, (int)Math.Min(buffer.Length, 16)));
+        Guid fileId;
 
-        if (contentType is null)
+        using (BufferedImage buffered = image.Value)
         {
-            return Result.Failure<PhotoUploadResponse>(ApartmentErrors.InvalidPhoto);
+            fileId = await blobService.UploadAsync(
+                caller.Value.UserId,
+                buffered.Content,
+                buffered.ContentType,
+                cancellationToken);
         }
-
-        buffer.Position = 0;
-
-        Guid fileId = await blobService.UploadAsync(caller.Value.UserId, buffer, contentType, cancellationToken);
 
         return new PhotoUploadResponse(fileId, appOptions.Value.FileUrl(fileId));
     }

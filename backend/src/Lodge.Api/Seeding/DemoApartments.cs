@@ -43,6 +43,8 @@ internal sealed record DemoListing(
 
     public bool InstantBook { get; init; } = true;
 
+    public CancellationPolicy CancellationPolicy { get; init; } = CancellationPolicy.Moderate;
+
     public int MinNights { get; init; } = 1;
 
     public decimal? WeekendPrice { get; init; }
@@ -84,13 +86,16 @@ internal sealed record DemoListing(
         HouseRules = HouseRules ?? "Quiet hours from 22:00 to 08:00. Please take off your shoes inside.",
         CheckInInstructions = CheckInInstructions,
         InstantBook = InstantBook,
+        CancellationPolicy = CancellationPolicy,
         MinNights = MinNights,
         MaxNights = Apartment.MaxNightsLimit,
     };
 }
 
 /// <summary>
-/// The demo listings: Sam hosts eight of them (three need his approval), Priya two.
+/// The demo listings: Sam hosts eight of them (three need his approval), Priya two. Cancellation policies vary:
+/// Flexible (cottage, houseboat, treehouse), Moderate (cabin, family home, château, lake house) and Strict (seaside
+/// retreat, igloo, villa).
 /// </summary>
 internal static class DemoApartments
 {
@@ -132,6 +137,7 @@ internal static class DemoApartments
             [Amenity.WiFi, Amenity.GardenView, Amenity.PetFriendly, Amenity.Kitchen, Amenity.Fireplace, Amenity.Heating],
             DemoHost.Sam)
         {
+            CancellationPolicy = CancellationPolicy.Flexible,
             InstantBook = false,
             MinNights = 2,
             PetsAllowed = true,
@@ -160,6 +166,7 @@ internal static class DemoApartments
             [Amenity.WiFi, Amenity.SwimmingPool, Amenity.Terrace, Amenity.AirConditioning, Amenity.Tropical, Amenity.BeachAccess, Amenity.Kitchen, Amenity.Washer],
             DemoHost.Sam)
         {
+            CancellationPolicy = CancellationPolicy.Strict,
             MinNights = 3,
             WeekendPrice = 295,
         },
@@ -171,7 +178,10 @@ internal static class DemoApartments
             52.3752, 4.8840,
             Price: 165, CleaningFee: 40, Bedrooms: 1, Beds: 1, Bathrooms: 1, Guests: 2, "/images/house-boat.png",
             [Amenity.WiFi, Amenity.Boats, Amenity.TopCities, Amenity.Heating, Amenity.SelfCheckIn],
-            DemoHost.Priya),
+            DemoHost.Priya)
+        {
+            CancellationPolicy = CancellationPolicy.Flexible,
+        },
         new(
             AuroraGlassIgloo,
             "A heated glass igloo deep in the Arctic forest. Watch the northern lights from your bed and end the day in the private sauna.",
@@ -182,6 +192,7 @@ internal static class DemoApartments
             [Amenity.WiFi, Amenity.Domes, Amenity.Spa, Amenity.Heating],
             DemoHost.Sam)
         {
+            CancellationPolicy = CancellationPolicy.Strict,
             InstantBook = false,
             MinNights = 2,
         },
@@ -195,6 +206,7 @@ internal static class DemoApartments
             [Amenity.WiFi, Amenity.Parking, Amenity.AirConditioning, Amenity.SwimmingPool, Amenity.Gym, Amenity.Spa, Amenity.Terrace, Amenity.Mansions, Amenity.HotTub, Amenity.Kitchen, Amenity.Washer, Amenity.Workspace, Amenity.EVCharger],
             DemoHost.Sam)
         {
+            CancellationPolicy = CancellationPolicy.Strict,
             MinNights = 3,
             WeeklyDiscountPercent = 10,
             MonthlyDiscountPercent = 25,
@@ -234,6 +246,7 @@ internal static class DemoApartments
             [Amenity.WiFi, Amenity.PetFriendly, Amenity.Treehouses, Amenity.Heating],
             DemoHost.Sam)
         {
+            CancellationPolicy = CancellationPolicy.Flexible,
             WeekendPrice = 245,
             PetsAllowed = true,
         },

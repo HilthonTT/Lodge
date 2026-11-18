@@ -1,8 +1,12 @@
-﻿using Lodge.Application.Abstractions.Data;
+using Lodge.Application.Abstractions.Data;
 using Lodge.Application.Core.Exceptions;
 using Lodge.Domain.Apartments;
 using Lodge.Domain.Bookings;
 using Lodge.Domain.Core.Primitives;
+using Lodge.Domain.Experiences;
+using Lodge.Domain.Messaging;
+using Lodge.Domain.Notifications;
+using Lodge.Domain.Payouts;
 using Lodge.Domain.Reviews;
 using Lodge.Domain.Users;
 using Lodge.Domain.Wishlists;
@@ -35,11 +39,33 @@ public sealed class LodgeDbContext(DbContextOptions<LodgeDbContext> options)
 
     public DbSet<Review> Reviews { get; set; } = null!;
 
+    public DbSet<GuestReview> GuestReviews { get; set; } = null!;
+
+    public DbSet<Payout> Payouts { get; set; } = null!;
+
+    public DbSet<PayoutAccount> PayoutAccounts { get; set; } = null!;
+
     public DbSet<CalendarDay> CalendarDays { get; set; } = null!;
 
     public DbSet<Wishlist> Wishlists { get; set; } = null!;
 
     public DbSet<IdempotentRequest> IdempotentRequests { get; set; } = null!;
+
+    public DbSet<Conversation> Conversations { get; set; } = null!;
+
+    public DbSet<Message> Messages { get; set; } = null!;
+
+    public DbSet<Notification> Notifications { get; set; } = null!;
+
+    public DbSet<NotificationPreferences> NotificationPreferences { get; set; } = null!;
+
+    public DbSet<Experience> Experiences { get; set; } = null!;
+
+    public DbSet<ExperienceSession> ExperienceSessions { get; set; } = null!;
+
+    public DbSet<ExperienceBooking> ExperienceBookings { get; set; } = null!;
+
+    public DbSet<ExperienceReview> ExperienceReviews { get; set; } = null!;
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

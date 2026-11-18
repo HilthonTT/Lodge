@@ -45,14 +45,17 @@ public sealed class HostListingSummaryResponse
 }
 
 /// <summary>
-/// The hosting dashboard numbers (<c>GET /hosting/summary</c>).
+/// The hosting dashboard numbers (<c>GET /hosting/summary</c>). Earnings come from the payouts (after the host fee):
+/// <paramref name="EarningsThisMonth"/> = scheduled, on hold and paid payouts dated this calendar month (UTC),
+/// <paramref name="PaidTotal"/> = all paid payouts, <paramref name="UpcomingPayouts"/> = scheduled and on hold payouts.
 /// </summary>
 public sealed record HostingSummaryResponse(
     int ListingCount,
     int UpcomingStays,
     int PendingRequests,
     decimal EarningsThisMonth,
-    decimal EarningsTotal,
+    decimal PaidTotal,
+    decimal UpcomingPayouts,
     string Currency,
     decimal? AverageRating,
     int ReviewCount,
@@ -64,7 +67,9 @@ public sealed record HostingSummaryResponse(
 /// </summary>
 /// <param name="CompletedStays">Completed stays across the host's listings.</param>
 /// <param name="AverageRating">The average rating across the host's listings (2 decimals), or null.</param>
-/// <param name="CancellationRate">Host-side cancellations (declined/rejected) / bookings, between 0 and 1.</param>
+/// <param name="CancellationRate">
+/// Host-side cancellations (declined/rejected requests and host-cancelled bookings) / bookings, between 0 and 1.
+/// </param>
 /// <param name="MeetsRequirements">Whether the host currently meets every requirement.</param>
 /// <param name="Requirements">The requirements.</param>
 public sealed record SuperhostProgressResponse(

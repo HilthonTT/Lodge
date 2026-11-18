@@ -22,6 +22,8 @@ internal sealed class CreateReviewCommandValidator : AbstractValidator<CreateRev
         RuleFor(x => x.Rating)
             .InclusiveBetween(1, 5).WithError(ValidationErrors.CreateReview.RatingMustBeBetweenOneAndFive);
 
+        RuleFor(x => x.Categories).ValidCategories();
+
         RuleFor(x => x.Comment)
             .NotEmpty().WithError(ValidationErrors.CreateReview.CommentIsRequired)
             .MaximumLength(Comment.MaxLength).WithError(ValidationErrors.CreateReview.CommentMustNotBeAbove(Comment.MaxLength));

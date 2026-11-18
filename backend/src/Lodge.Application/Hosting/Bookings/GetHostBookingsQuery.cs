@@ -1,3 +1,5 @@
+using Lodge.Application.Bookings.Expire;
+using Microsoft.Extensions.Options;
 using System.Data;
 using FluentValidation;
 using Lodge.Application.Abstractions.Assets;
@@ -39,7 +41,9 @@ internal sealed class GetHostBookingsQueryValidator : AbstractValidator<GetHostB
 internal sealed class GetHostBookingsQueryHandler(
     IHostAccess hostAccess,
     IDbConnectionFactory factory,
-    IAssetUrlResolver assetUrlResolver) : IQueryHandler<GetHostBookingsQuery, PagedList<BookingResponse>>
+    IAssetUrlResolver assetUrlResolver,
+    IDateTimeProvider dateTimeProvider,
+    IOptions<ExpireBookingRequestsOptions> expiryOptions) : IQueryHandler<GetHostBookingsQuery, PagedList<BookingResponse>>
 {
     public async Task<Result<PagedList<BookingResponse>>> Handle(
         GetHostBookingsQuery request,
@@ -62,9 +66,11 @@ internal sealed class GetHostBookingsQueryHandler(
             hostId: caller.Value.UserId,
             apartmentId: request.ListingId);
 
+        DateOnly today = DateOnly.FromDateTime(dateTimeProvider.UtcNow);
+
         foreach (BookingResponse booking in items)
         {
-            BookingQueries.Present(booking, caller.Value.UserId, assetUrlResolver);
+            BookingQueries.Present(booking, caller.Value.UserId, assetUrlResolver, today, expiryOptions.Value.ExpiryHours);
         }
 
         return new PagedList<BookingResponse>(items, request.Page, request.PageSize, totalCount);

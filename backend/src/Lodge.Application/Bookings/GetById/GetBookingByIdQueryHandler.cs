@@ -1,4 +1,6 @@
-﻿using System.Data;
+using Lodge.Application.Bookings.Expire;
+using Microsoft.Extensions.Options;
+using System.Data;
 using Lodge.Application.Abstractions.Assets;
 using Lodge.Application.Abstractions.Authentication;
 using Lodge.Application.Abstractions.Data;
@@ -13,7 +15,9 @@ namespace Lodge.Application.Bookings.GetById;
 internal sealed class GetBookingByIdQueryHandler(
     IDbConnectionFactory factory,
     IUserIdentifierProvider userIdentifierProvider,
-    IAssetUrlResolver assetUrlResolver) : IQueryHandler<GetBookingByIdQuery, BookingResponse>
+    IAssetUrlResolver assetUrlResolver,
+    IDateTimeProvider dateTimeProvider,
+    IOptions<ExpireBookingRequestsOptions> expiryOptions) : IQueryHandler<GetBookingByIdQuery, BookingResponse>
 {
     public async Task<Result<BookingResponse>> Handle(GetBookingByIdQuery request, CancellationToken cancellationToken)
     {
@@ -34,6 +38,6 @@ internal sealed class GetBookingByIdQueryHandler(
             return Result.Failure<BookingResponse>(UserErrors.InvalidPermissions);
         }
 
-        return BookingQueries.Present(booking, callerId, assetUrlResolver);
+        return BookingQueries.Present(booking, callerId, assetUrlResolver, DateOnly.FromDateTime(dateTimeProvider.UtcNow), expiryOptions.Value.ExpiryHours);
     }
 }

@@ -54,8 +54,29 @@ public class BookingRequestTests
         booking.Accept(UtcNow).IsSuccess.Should().BeTrue();
 
         booking.Status.Should().Be(BookingStatus.Reserved);
-        booking.DomainEvents.Should().ContainSingle().Which.Should().BeOfType<BookingReservedDomainEvent>();
+        booking.DomainEvents.Select(domainEvent => domainEvent.GetType())
+            .Should().Equal(typeof(BookingReservedDomainEvent), typeof(BookingAcceptedDomainEvent));
         booking.Confirm(UtcNow).IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
+    public void AcceptedOnUtc_Should_BeSet_ForInstantBookings_AndAcceptedRequestsOnly()
+    {
+        // Used by the Superhost cancellation rate: only bookings the host accepted (or declined) count.
+        TestData.Reserve(TestData.CreateApartment(TestData.Details()), Today.AddDays(10), 3, UtcNow).AcceptedOnUtc.Should().Be(UtcNow);
+
+        Booking request = TestData.Reserve(RequestToBookApartment(), Today.AddDays(10), 3, UtcNow);
+        request.AcceptedOnUtc.Should().BeNull();
+        request.Accept(UtcNow.AddHours(2)).IsSuccess.Should().BeTrue();
+        request.AcceptedOnUtc.Should().Be(UtcNow.AddHours(2));
+
+        Booking cancelledRequest = TestData.Reserve(RequestToBookApartment(), Today.AddDays(20), 3, UtcNow);
+        cancelledRequest.Cancel(UtcNow).IsSuccess.Should().BeTrue();
+        cancelledRequest.AcceptedOnUtc.Should().BeNull();
+
+        Booking declined = TestData.Reserve(RequestToBookApartment(), Today.AddDays(30), 3, UtcNow);
+        declined.Decline(UtcNow).IsSuccess.Should().BeTrue();
+        declined.AcceptedOnUtc.Should().BeNull();
     }
 
     [Fact]

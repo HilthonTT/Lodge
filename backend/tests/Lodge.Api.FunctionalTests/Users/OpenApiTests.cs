@@ -35,6 +35,24 @@ public class OpenApiTests(FunctionalTestWebAppFactory factory) : BaseFunctionalT
         ]);
     }
 
+    [Theory]
+    [InlineData("/api/v1/bookings")]
+    [InlineData("/api/v1/reviews")]
+    [InlineData("/api/v1/files")]
+    [InlineData("/api/v1/experience-bookings")]
+    public async Task OpenApiDocument_Should_DescribeTheIdempotencyKeyAsARequiredGuid(string path)
+    {
+        using JsonDocument document = JsonDocument.Parse(await HttpClient.GetStringAsync("openapi/v1.json"));
+
+        JsonElement header = document.RootElement.GetProperty("paths").GetProperty(path).GetProperty("post")
+            .GetProperty("parameters").EnumerateArray()
+            .Single(p => p.GetProperty("name").GetString() == "X-Idempotency-Key");
+
+        header.GetProperty("in").GetString().Should().Be("header");
+        header.GetProperty("required").GetBoolean().Should().BeTrue();
+        header.GetProperty("schema").GetProperty("format").GetString().Should().Be("uuid");
+    }
+
     [Fact]
     public async Task OpenApiDocument_Should_DescribeTheHostingAndListingEndpoints()
     {

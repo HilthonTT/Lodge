@@ -86,7 +86,7 @@ public class HostingValidationTests
 
     [Theory]
     [InlineData(null, "2026-12", "SearchApartments.MonthsRequireFlexible")]
-    [InlineData("week", null, "SearchApartments.InvalidMonths")]
+    [InlineData("week", "2026", "SearchApartments.InvalidMonths")]
     [InlineData("week", "2026-13", "SearchApartments.InvalidMonths")]
     [InlineData("fortnight", "2026-12", "SearchApartments.InvalidFlexible")]
     public void SearchValidator_Should_ValidateFlexibleDates(string? flexible, string? month, string expectedCode)
@@ -96,6 +96,28 @@ public class HostingValidationTests
         ValidationResult result = new SearchApartmentQueryValidator().Validate(query);
 
         result.Errors.Select(error => error.ErrorCode).Should().Contain(expectedCode);
+    }
+
+    [Fact]
+    public void SearchValidator_Should_AcceptFlexibleDatesWithoutMonths()
+    {
+        var query = new SearchApartmentQuery { Flexible = "week" };
+
+        new SearchApartmentQueryValidator().Validate(query).IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void RequestExpiry_Should_FollowTheExpiryJobRules()
+    {
+        var createdOnUtc = new DateTime(2026, 6, 1, 10, 0, 0, DateTimeKind.Utc);
+
+        // 24 hours after the request...
+        BookingQueries.RequestExpiresOnUtc(createdOnUtc, new DateOnly(2026, 6, 20), 24)
+            .Should().Be(new DateTime(2026, 6, 2, 10, 0, 0, DateTimeKind.Utc));
+
+        // ...unless the check-in day ends first.
+        BookingQueries.RequestExpiresOnUtc(createdOnUtc, new DateOnly(2026, 6, 1), 24)
+            .Should().Be(new DateTime(2026, 6, 2, 0, 0, 0, DateTimeKind.Utc));
     }
 
     [Fact]
@@ -171,7 +193,7 @@ public class HostingValidationTests
             _ => Guid.NewGuid(),
         };
 
-        BookingQueries.Present(booking, callerId, resolver);
+        BookingQueries.Present(booking, callerId, resolver, DateOnly.FromDateTime(DateTime.UtcNow), 24);
 
         booking.CheckInInstructions.Should().Be(visible ? "Code 1234" : null);
         booking.ApartmentImageUrl.Should().Be("http://lodge.test/images/cabin.png");

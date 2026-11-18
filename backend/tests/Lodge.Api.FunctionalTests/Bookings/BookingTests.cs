@@ -62,7 +62,7 @@ public class BookingTests(FunctionalTestWebAppFactory factory) : BaseFunctionalT
     }
 
     [Fact]
-    public async Task Checkout_Should_ReturnBadRequest_WhenStripeIsNotConfigured()
+    public async Task Checkout_Should_ReturnNotFound_ForAnUnknownBooking()
     {
         (HttpClient client, Guid userId) = await LoginAsDemoUserAsync();
 
@@ -70,7 +70,7 @@ public class BookingTests(FunctionalTestWebAppFactory factory) : BaseFunctionalT
             "api/v1/stripe/checkout",
             new StripeCheckoutRequest(userId, Guid.NewGuid()));
 
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]

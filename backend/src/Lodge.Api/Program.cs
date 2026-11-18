@@ -7,6 +7,7 @@ using Lodge.Infrastructure;
 using Lodge.Persistence;
 using Lodge.Presentation;
 using Lodge.Presentation.Extensions;
+using Lodge.Presentation.Realtime;
 using Serilog;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -59,6 +60,9 @@ RouteGroupBuilder versionedGroup = app
     .WithApiVersionSet(apiVersionSet);
 
 app.MapEndpoints(versionedGroup);
+
+// SignalR: /hubs/notifications (outside /api/v1; the gateway proxies /hubs/** with WebSockets).
+app.MapRealtimeHubs();
 
 app.MapLodgeHealthChecks();
 

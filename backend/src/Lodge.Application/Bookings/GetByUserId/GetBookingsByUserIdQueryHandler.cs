@@ -1,4 +1,6 @@
-﻿using System.Data;
+using Lodge.Application.Bookings.Expire;
+using Microsoft.Extensions.Options;
+using System.Data;
 using Lodge.Application.Abstractions.Assets;
 using Lodge.Application.Abstractions.Authentication;
 using Lodge.Application.Abstractions.Data;
@@ -12,7 +14,9 @@ namespace Lodge.Application.Bookings.GetByUserId;
 internal sealed class GetBookingsByUserIdQueryHandler(
     IDbConnectionFactory factory,
     IUserIdentifierProvider userIdentifierProvider,
-    IAssetUrlResolver assetUrlResolver)
+    IAssetUrlResolver assetUrlResolver,
+    IDateTimeProvider dateTimeProvider,
+    IOptions<ExpireBookingRequestsOptions> expiryOptions)
     : IQueryHandler<GetBookingsByUserIdQuery, List<BookingResponse>>
 {
     public async Task<Result<List<BookingResponse>>> Handle(
@@ -28,9 +32,11 @@ internal sealed class GetBookingsByUserIdQueryHandler(
 
         List<BookingResponse> bookings = await BookingQueries.GetByUserIdAsync(connection, request.UserId);
 
+        DateOnly today = DateOnly.FromDateTime(dateTimeProvider.UtcNow);
+
         foreach (BookingResponse booking in bookings)
         {
-            BookingQueries.Present(booking, request.UserId, assetUrlResolver);
+            BookingQueries.Present(booking, request.UserId, assetUrlResolver, today, expiryOptions.Value.ExpiryHours);
         }
 
         return bookings;

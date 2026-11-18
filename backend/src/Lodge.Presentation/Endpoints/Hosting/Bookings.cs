@@ -3,6 +3,7 @@ using Lodge.Application.Hosting.Summary;
 using Lodge.Contracts.Bookings;
 using Lodge.Contracts.Common;
 using Lodge.Contracts.Hosting;
+using Lodge.Contracts.Reviews;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Presentation.Extensions;
 using Lodge.Presentation.Infrastructure;
@@ -62,6 +63,35 @@ internal sealed class Bookings : IEndpoint
             Result result = await sender.Send(new DeclineBookingRequestCommand(bookingId), cancellationToken);
 
             return result.Match(Results.NoContent, CustomResults.Problem);
+        })
+        .WithTags(Tags.Hosting)
+        .RequireAuthorization();
+
+        app.MapPut("hosting/bookings/{bookingId:guid}/cancel", async (
+            Guid bookingId,
+            ISender sender,
+            CancellationToken cancellationToken) =>
+        {
+            Result result = await sender.Send(new HostCancelBookingCommand(bookingId), cancellationToken);
+
+            return result.Match(Results.NoContent, CustomResults.Problem);
+        })
+        .WithTags(Tags.Hosting)
+        .RequireAuthorization();
+
+        app.MapPost("hosting/bookings/{bookingId:guid}/guest-review", async (
+            Guid bookingId,
+            GuestReviewRequest request,
+            ISender sender,
+            CancellationToken cancellationToken) =>
+        {
+            Result<Guid> result = await sender.Send(
+                new CreateGuestReviewCommand(bookingId, request.Rating, request.Comment),
+                cancellationToken);
+
+            return result.Match(
+                id => Results.Created($"hosting/bookings/{bookingId}/guest-review", new CreatedResponse(id)),
+                CustomResults.Problem);
         })
         .WithTags(Tags.Hosting)
         .RequireAuthorization();

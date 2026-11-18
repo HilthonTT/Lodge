@@ -1,11 +1,16 @@
-﻿using Lodge.Application.Abstractions.Authentication;
+using Lodge.Application.Abstractions.Authentication;
 using Lodge.Application.Abstractions.Data;
+using Lodge.Application.Abstractions.Realtime;
+using Lodge.Application.Messaging;
 using Lodge.Application.Bookings.Reserve;
+using Lodge.Application.Payments;
 using Lodge.Application.Core.Exceptions;
 using Lodge.Domain.Apartments;
 using Lodge.Domain.Bookings;
 using Lodge.Domain.Core.Primitives;
+using Lodge.Domain.Messaging;
 using Lodge.Domain.Users;
+using Microsoft.Extensions.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using NSubstitute.ReturnsExtensions;
@@ -38,6 +43,7 @@ public class ReserveBookingTests
     private readonly IBookingRepository _bookingRepository = Substitute.For<IBookingRepository>();
     private readonly ICalendarDayRepository _calendarDayRepository = Substitute.For<ICalendarDayRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
+    private readonly IConversationRepository _conversationRepository = Substitute.For<IConversationRepository>();
     private readonly IDateTimeProvider _dateTimeProvider = Substitute.For<IDateTimeProvider>();
     private readonly ReserveBookingCommandHandler _handler;
 
@@ -62,7 +68,11 @@ public class ReserveBookingTests
             _bookingRepository,
             _calendarDayRepository,
             _unitOfWork,
-            new PricingService(),
+            // No service fee and no taxes, so totals are the stay subtotal.
+            new BookingPricing(
+                new PricingService(),
+                Options.Create(new PaymentsOptions { GuestServiceFeePercent = 0, DefaultTaxRatePercent = 0, TaxRates = [] })),
+            new ConversationService(Substitute.For<IDbContext>(), _conversationRepository, Substitute.For<IRealtimeOutbox>()),
             _dateTimeProvider);
     }
 

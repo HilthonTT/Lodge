@@ -1,4 +1,4 @@
-﻿using Lodge.Application.Reviews.Create;
+using Lodge.Application.Reviews.Create;
 using Lodge.Contracts.Reviews;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Presentation.Extensions;
@@ -20,17 +20,23 @@ internal sealed class Create : IEndpoint
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("reviews", async (
-            [FromHeader(Name = "X-Idempotency-Key")] Guid requestId,
+            [FromHeader(Name = IdempotencyKey.HeaderName)] string? idempotencyKey,
             CreateReviewRequest request,
             ISender sender,
             CancellationToken cancellationToken) =>
         {
+            if (!IdempotencyKey.TryParse(idempotencyKey, out Guid requestId))
+            {
+                return IdempotencyKey.Invalid();
+            }
+
             var command = new CreateReviewCommand(
-                requestId, 
-                request.UserId, 
-                request.BookingId, 
-                request.Rating, 
-                request.Comment);
+                requestId,
+                request.UserId,
+                request.BookingId,
+                request.Rating,
+                request.Comment,
+                request.Categories);
 
             Result<Guid> result = await sender.Send(command, cancellationToken);
 

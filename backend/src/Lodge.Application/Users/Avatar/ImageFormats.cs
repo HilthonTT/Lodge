@@ -1,7 +1,10 @@
+using Lodge.Domain.Core.Primitives;
+
 namespace Lodge.Application.Users.Avatar;
 
 /// <summary>
-/// Detects JPEG, PNG and WebP images from their leading bytes ("magic numbers").
+/// Detects JPEG, PNG and WebP images from their leading bytes ("magic numbers"). Shared by every image upload
+/// (avatars, listing and experience photos, <c>POST /files</c>).
 /// </summary>
 internal static class ImageFormats
 {
@@ -44,4 +47,63 @@ internal static class ImageFormats
 
         return null;
     }
+
+    /// <summary>
+    /// Buffers an uploaded image and checks its size and leading bytes; the declared content type is not trusted.
+    /// On success the returned buffer is positioned at 0 and the content type is the detected one.
+    /// </summary>
+    /// <param name="source">The uploaded stream.</param>
+    /// <param name="maxBytes">The maximum size in bytes.</param>
+    /// <param name="invalidImage">The error when the file is empty or not a JPEG, PNG or WebP image.</param>
+    /// <param name="tooLarge">The error when the file is larger than <paramref name="maxBytes"/>.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    public static async Task<Result<BufferedImage>> BufferAsync(
+        Stream source,
+        long maxBytes,
+        Error invalidImage,
+        Error tooLarge,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        var buffer = new MemoryStream();
+        byte[] chunk = new byte[81920];
+        int read;
+
+        // Reads at most one byte more than allowed, so an oversized upload is never fully buffered.
+        while ((read = await source.ReadAsync(
+                   chunk.AsMemory(0, (int)Math.Min(chunk.Length, maxBytes + 1 - buffer.Length)),
+                   cancellationToken)) > 0)
+        {
+            buffer.Write(chunk, 0, read);
+
+            if (buffer.Length > maxBytes)
+            {
+                await buffer.DisposeAsync();
+                return Result.Failure<BufferedImage>(tooLarge);
+            }
+        }
+
+        string? contentType = Detect(buffer.GetBuffer().AsSpan(0, (int)Math.Min(buffer.Length, 16)));
+
+        if (contentType is null)
+        {
+            await buffer.DisposeAsync();
+            return Result.Failure<BufferedImage>(invalidImage);
+        }
+
+        buffer.Position = 0;
+
+        return new BufferedImage(buffer, contentType);
+    }
+}
+
+/// <summary>
+/// A validated, in-memory image upload.
+/// </summary>
+/// <param name="Content">The image bytes, positioned at 0.</param>
+/// <param name="ContentType">The detected content type.</param>
+internal sealed record BufferedImage(MemoryStream Content, string ContentType) : IDisposable
+{
+    public void Dispose() => Content.Dispose();
 }

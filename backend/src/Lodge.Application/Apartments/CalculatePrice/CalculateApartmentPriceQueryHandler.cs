@@ -1,4 +1,5 @@
 using Lodge.Application.Abstractions.Messaging;
+using Lodge.Application.Payments;
 using Lodge.Contracts.Common;
 using Lodge.Domain.Apartments;
 using Lodge.Domain.Bookings;
@@ -13,7 +14,7 @@ namespace Lodge.Application.Apartments.CalculatePrice;
 internal sealed class CalculateApartmentPriceQueryHandler(
     IApartmentRepository apartmentRepository,
     ICalendarDayRepository calendarDayRepository,
-    PricingService pricingService) : IQueryHandler<CalculateApartmentPriceQuery, PriceDetailsResponse>
+    BookingPricing bookingPricing) : IQueryHandler<CalculateApartmentPriceQuery, PriceDetailsResponse>
 {
     /// <inheritdoc />
     public async Task<Result<PriceDetailsResponse>> Handle(
@@ -40,7 +41,7 @@ internal sealed class CalculateApartmentPriceQueryHandler(
             request.EndDate,
             cancellationToken);
 
-        PricingDetails pricingDetails = pricingService.CalculatePrice(apartment, dateRangeResult.Value, overrides);
+        PricingDetails pricingDetails = bookingPricing.Calculate(apartment, dateRangeResult.Value, overrides);
 
         return PriceDetailsMapper.ToResponse(pricingDetails);
     }

@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using Dapper;
 using Lodge.Application.Abstractions.Assets;
 using Lodge.Contracts.Bookings;
@@ -28,6 +28,15 @@ internal static class BookingQueries
             b.total_price_amount AS TotalPriceAmount,
             b.total_price_currency AS TotalPriceCurrency,
             b.discount_amount AS DiscountAmount,
+            b.service_fee_amount AS ServiceFeeAmount,
+            b.taxes_amount AS TaxAmount,
+            b.tax_rate_percent AS TaxRatePercent,
+            b.cancellation_policy AS CancellationPolicy,
+            b.amount_paid AS AmountPaid,
+            b.paid_on_utc AS PaidOnUtc,
+            b.refund_amount AS RefundAmount,
+            b.refund_status AS RefundStatus,
+            b.cancelled_by_host AS CancelledByHost,
             b.duration_start AS DurationStart,
             b.duration_end AS DurationEnd,
             b.created_on_utc AS CreatedOnUtc,
@@ -44,7 +53,8 @@ internal static class BookingQueries
             a.check_in_instructions AS CheckInInstructions,
             u.first_name || ' ' || u.last_name AS GuestName,
             u.email AS GuestEmail,
-            EXISTS (SELECT 1 FROM reviews AS r WHERE r.booking_id = b.id) AS HasReview
+            EXISTS (SELECT 1 FROM reviews AS r WHERE r.booking_id = b.id) AS HasReview,
+            EXISTS (SELECT 1 FROM guest_reviews AS g WHERE g.booking_id = b.id) AS HasGuestReview
         FROM bookings AS b
         INNER JOIN apartments AS a ON b.apartment_id = a.id
         INNER JOIN users AS u ON b.user_id = u.id
@@ -132,19 +142,51 @@ internal static class BookingQueries
     }
 
     /// <summary>
-    /// Resolves the image URL and hides the check-in instructions from everyone except the listing's host and the
-    /// guest of a confirmed booking.
+    /// When an unanswered request expires, by the rules of the expiry job: <paramref name="expiryHours"/> after it was
+    /// made, or once its check-in day has passed (the host can still accept on the check-in day), whichever is first.
     /// </summary>
-    public static BookingResponse Present(BookingResponse booking, Guid? callerId, IAssetUrlResolver assetUrlResolver)
+    public static DateTime RequestExpiresOnUtc(DateTime createdOnUtc, DateOnly checkIn, int expiryHours)
     {
+        DateTime byAge = DateTime.SpecifyKind(createdOnUtc, DateTimeKind.Utc).AddHours(expiryHours);
+        DateTime byCheckIn = checkIn.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+
+        return byAge < byCheckIn ? byAge : byCheckIn;
+    }
+
+    /// <summary>
+    /// Resolves the image URL, hides the check-in instructions from everyone except the listing's host and the guest
+    /// of a confirmed booking, and works out whether the caller can review the stay (the guest reviews the listing,
+    /// the host reviews the guest; completed stays only, within the review window).
+    /// </summary>
+    public static BookingResponse Present(
+        BookingResponse booking,
+        Guid? callerId,
+        IAssetUrlResolver assetUrlResolver,
+        DateOnly today,
+        int requestExpiryHours)
+    {
+        booking.RequestExpiresOnUtc = booking.Status == (int)BookingStatus.PendingApproval
+            ? RequestExpiresOnUtc(booking.CreatedOnUtc, DateOnly.FromDateTime(booking.DurationStart), requestExpiryHours)
+            : null;
+
         booking.ApartmentImageUrl = assetUrlResolver.Resolve(booking.ApartmentImageUrl);
 
         bool isHost = callerId == booking.ListingHostId;
-        bool isConfirmedGuest = callerId == booking.UserId && booking.Status == (int)BookingStatus.Confirmed;
+        bool isGuest = callerId == booking.UserId;
+        bool isConfirmedGuest = isGuest && booking.Status == (int)BookingStatus.Confirmed;
 
         if (!isHost && !isConfirmedGuest)
         {
             booking.CheckInInstructions = null;
+        }
+
+        if (booking.Status == (int)BookingStatus.Completed)
+        {
+            DateOnly deadline = DateOnly.FromDateTime(booking.DurationEnd).AddDays(Booking.ReviewWindowDays);
+            bool windowOpen = today <= deadline;
+
+            booking.ReviewDeadline = deadline;
+            booking.CanReview = windowOpen && ((isGuest && !booking.HasReview) || (isHost && !booking.HasGuestReview));
         }
 
         return booking;

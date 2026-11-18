@@ -1,4 +1,4 @@
-﻿using Lodge.Domain.Core.Primitives;
+using Lodge.Domain.Core.Primitives;
 
 namespace Lodge.Domain.Bookings;
 
@@ -63,7 +63,16 @@ public static class BookingErrors
         "Booking.InvalidGuestCount",
         $"The number of guests must be between 1 and {maximumGuestCount}");
 
-    public static readonly Error OwnListing = Error.Problem(
+    public static readonly Error NotCompleted = Error.Problem(
+        "Booking.NotCompleted",
+        "Only completed stays can be reviewed");
+
+    public static readonly Error ReviewWindowClosed = Error.Problem(
+        "Booking.ReviewWindowClosed",
+        $"Stays can only be reviewed up to {Booking.ReviewWindowDays} days after check-out");
+
+    public static readonly Error OwnListing
+ = Error.Problem(
         "Booking.OwnListing",
         "Hosts cannot book their own listing");
 

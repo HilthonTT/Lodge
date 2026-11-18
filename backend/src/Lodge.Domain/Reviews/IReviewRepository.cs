@@ -1,36 +1,28 @@
 ﻿namespace Lodge.Domain.Reviews;
 
 /// <summary>
-/// Represents the review repository interface
+/// Represents the repository of reviews (guest to listing) and guest reviews (host to guest).
 /// </summary>
 public interface IReviewRepository
 {
     /// <summary>
     /// Gets the review with the specified identifier.
     /// </summary>
-    /// <param name="id">The review identifier.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>The instance that may contain the review with the specified identifier.</returns>
     Task<Review?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Checks if a user has already reviewed a specified apartment.
+    /// Gets the guest's review of the stay, if any.
     /// </summary>
-    /// <param name="apartmentId">The apartment identifier.</param>
-    /// <param name="userId">The user identifier.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>A task representing the asynchronous operation that returns true if the user has already reviewed the apartment, otherwise false.</returns>
-    Task<bool> HasAlreadyReviewed(Guid apartmentId, Guid userId, CancellationToken cancellationToken = default);
+    Task<Review?> GetByBookingIdAsync(Guid bookingId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Inserts the specified review into the database.
+    /// Gets the host's review of the guest of the stay, if any.
     /// </summary>
-    /// <param name="review">The review to be inserted into the database.</param>
+    Task<GuestReview?> GetGuestReviewByBookingIdAsync(Guid bookingId, CancellationToken cancellationToken = default);
+
     void Insert(Review review);
 
-    /// <summary>
-    /// Removes the specified review from the database.
-    /// </summary>
-    /// <param name="review">The review to be removed from the database.</param>
+    void Insert(GuestReview review);
+
     void Remove(Review review);
 }

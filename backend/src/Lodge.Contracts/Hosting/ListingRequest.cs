@@ -73,6 +73,12 @@ public sealed record ListingRequest
 
     public bool InstantBook { get; init; } = true;
 
+    /// <summary>
+    /// Gets the cancellation policy name (case-insensitive): <c>Flexible</c>, <c>Moderate</c> (default) or
+    /// <c>Strict</c>.
+    /// </summary>
+    public string CancellationPolicy { get; init; } = "Moderate";
+
     public int MinNights { get; init; } = 1;
 
     public int MaxNights { get; init; } = 365;

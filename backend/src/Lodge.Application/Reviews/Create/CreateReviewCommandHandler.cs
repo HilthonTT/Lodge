@@ -10,19 +10,16 @@ using Lodge.Domain.Users;
 namespace Lodge.Application.Reviews.Create;
 
 /// <summary>
-/// Represents the <see cref="CreateReviewCommand"/> command.
+/// The guest reviews the listing of a completed stay, within the review window. The review stays unpublished (only
+/// visible to its author) until the host has reviewed the guest too, or until the window closes.
 /// </summary>
-/// <param name="userIdentifierProvider">The user identifier.</param>
-/// <param name="reviewRepository">The review repository.</param>
-/// <param name="bookingRepository">The booking repository.</param>
-/// <param name="unitOfWork">The unit of work.</param>
-/// <param name="cacheInvalidator">The cache invalidator.</param>
 internal sealed class CreateReviewCommandHandler(
     IUserIdentifierProvider userIdentifierProvider,
     IReviewRepository reviewRepository,
     IBookingRepository bookingRepository,
     IUnitOfWork unitOfWork,
-    ICacheInvalidator cacheInvalidator) : ICommandHandler<CreateReviewCommand, Guid>
+    ICacheInvalidator cacheInvalidator,
+    IDateTimeProvider dateTimeProvider) : ICommandHandler<CreateReviewCommand, Guid>
 {
     /// <inheritdoc />
     public async Task<Result<Guid>> Handle(CreateReviewCommand request, CancellationToken cancellationToken)
@@ -43,21 +40,30 @@ internal sealed class CreateReviewCommandHandler(
             return Result.Failure<Guid>(UserErrors.InvalidPermissions);
         }
 
-        if (await reviewRepository.HasAlreadyReviewed(booking.ApartmentId, userIdentifierProvider.UserId, cancellationToken))
+        if (await reviewRepository.GetByBookingIdAsync(booking.Id, cancellationToken) is not null)
         {
             return Result.Failure<Guid>(ReviewErrors.AlreadyReviewed);
         }
 
         Result<Rating> ratingResult = Rating.Create(request.Rating);
         Result<Comment> commentResult = Comment.Create(request.Comment);
+        Result<CategoryRatings> categoriesResult = ReviewMapping.ToCategories(request.Categories);
 
-        Result firstFailureOrSuccess = Result.FirstFailureOrSuccess(ratingResult, commentResult);
+        Result firstFailureOrSuccess = Result.FirstFailureOrSuccess(ratingResult, commentResult, categoriesResult);
         if (firstFailureOrSuccess.IsFailure)
         {
             return Result.Failure<Guid>(firstFailureOrSuccess.Error);
         }
 
-        Result<Review> reviewResult = Review.Create(booking, ratingResult.Value, commentResult.Value);
+        DateTime utcNow = dateTimeProvider.UtcNow;
+
+        Result<Review> reviewResult = Review.Create(
+            booking,
+            ratingResult.Value,
+            categoriesResult.Value,
+            commentResult.Value,
+            utcNow);
+
         if (reviewResult.IsFailure)
         {
             return Result.Failure<Guid>(reviewResult.Error);
@@ -66,6 +72,15 @@ internal sealed class CreateReviewCommandHandler(
         Review review = reviewResult.Value;
 
         reviewRepository.Insert(review);
+
+        // Double-blind: when the host has already reviewed the guest, both reviews are published.
+        GuestReview? guestReview = await reviewRepository.GetGuestReviewByBookingIdAsync(booking.Id, cancellationToken);
+
+        if (guestReview is not null)
+        {
+            review.Publish(utcNow);
+            guestReview.Publish(utcNow);
+        }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 

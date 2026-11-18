@@ -1,6 +1,7 @@
 using FluentValidation;
 using Lodge.Application.Core.Errors;
 using Lodge.Application.Core.Extensions;
+using Lodge.Application.Users.Avatar;
 
 namespace Lodge.Application.Files.Upload;
 
@@ -18,7 +19,7 @@ internal sealed class UploadFileCommandValidator : AbstractValidator<UploadFileC
 
         RuleFor(x => x.ContentType)
             .NotEmpty().WithError(ValidationErrors.UploadFile.ContentTypeIsRequired)
-            .Must(contentType => contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+            .Must(contentType => ImageFormats.AllowedContentTypes.Contains(contentType))
             .WithError(ValidationErrors.UploadFile.InvalidContentType);
     }
 }

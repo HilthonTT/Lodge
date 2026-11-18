@@ -1,9 +1,11 @@
 ﻿using Lodge.Application.Abstractions.Notifications;
+using Lodge.Application.Notifications;
 using Lodge.Application.Bookings.Reject;
 using Lodge.BackgroundTasks.Abstractions.Messaging;
 using Lodge.Contracts.Emails;
 using Lodge.Domain.Bookings;
 using Lodge.Domain.Core.Exceptions;
+using Lodge.Domain.Notifications;
 using Lodge.Domain.Users;
 
 namespace Lodge.BackgroundTasks.IntegrationEvents.Bookings.BookingRejected;
@@ -17,7 +19,8 @@ namespace Lodge.BackgroundTasks.IntegrationEvents.Bookings.BookingRejected;
 internal sealed class NotifyUserOnBookingRejectedEventHandler(
     IBookingRepository bookingRepository,
     IUserRepository userRepository,
-    IEmailNotificationService emailNotificationService) : IIntegrationEventHandler<BookingRejectedIntegrationEvent>
+    IEmailNotificationService emailNotificationService,
+    INotificationPreferencesProvider preferencesProvider) : IIntegrationEventHandler<BookingRejectedIntegrationEvent>
 {
     /// <inheritdoc />
     public async Task Handle(BookingRejectedIntegrationEvent notification, CancellationToken cancellationToken)
@@ -33,6 +36,12 @@ internal sealed class NotifyUserOnBookingRejectedEventHandler(
         if (user is null)
         {
             throw new DomainException(UserErrors.NotFound(booking.UserId));
+        }
+
+        // Reservation e-mails respect the guest's notification preferences.
+        if (!await preferencesProvider.AllowsEmailAsync(user.Id, NotificationCategory.Reservations, cancellationToken))
+        {
+            return;
         }
 
         var bookingRejectedEmail = new BookingRejectedEmail(user.Email, user.FullName);

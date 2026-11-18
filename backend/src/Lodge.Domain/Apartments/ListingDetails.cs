@@ -64,6 +64,8 @@ public sealed record ListingDetails
 
     public bool InstantBook { get; init; } = true;
 
+    public CancellationPolicy CancellationPolicy { get; init; } = CancellationPolicy.Moderate;
+
     public int MinNights { get; init; } = 1;
 
     public int MaxNights { get; init; } = Apartment.MaxNightsLimit;

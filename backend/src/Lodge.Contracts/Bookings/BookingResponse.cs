@@ -1,4 +1,4 @@
-﻿namespace Lodge.Contracts.Bookings;
+namespace Lodge.Contracts.Bookings;
 
 /// <summary>
 /// Represents the booking response.
@@ -130,4 +130,71 @@ public sealed class BookingResponse
     /// is confirmed; null otherwise.
     /// </summary>
     public string? CheckInInstructions { get; set; }
+
+    /// <summary>
+    /// Gets or sets the guest service fee (included in the total).
+    /// </summary>
+    public decimal ServiceFeeAmount { get; set; }
+
+    /// <summary>
+    /// Gets or sets the occupancy tax (included in the total).
+    /// </summary>
+    public decimal TaxAmount { get; set; }
+
+    /// <summary>
+    /// Gets or sets the occupancy tax rate, in percent.
+    /// </summary>
+    public decimal TaxRatePercent { get; set; }
+
+    /// <summary>
+    /// Gets or sets the cancellation policy snapshotted at reservation: <c>Flexible</c>, <c>Moderate</c> or
+    /// <c>Strict</c>.
+    /// </summary>
+    public string CancellationPolicy { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the amount paid, or null when unpaid (or paid before payment tracking existed).
+    /// </summary>
+    public decimal? AmountPaid { get; set; }
+
+    public DateTime? PaidOnUtc { get; set; }
+
+    /// <summary>
+    /// Gets or sets the refund of a cancelled paid booking, or null.
+    /// </summary>
+    public decimal? RefundAmount { get; set; }
+
+    /// <summary>
+    /// Gets or sets <c>None</c>, <c>Pending</c>, <c>Succeeded</c>, <c>Failed</c> or <c>Manual</c>.
+    /// </summary>
+    public string RefundStatus { get; set; } = "None";
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the host cancelled the booking.
+    /// </summary>
+    public bool CancelledByHost { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the caller can review this stay now: the guest (listing review) or
+    /// the host (guest review) of a completed stay, within the review window, without a review yet.
+    /// </summary>
+    public bool CanReview { get; set; }
+
+    /// <summary>
+    /// Gets or sets the last day on which the stay can be reviewed (check-out + 14 days) for completed stays, else
+    /// null.
+    /// </summary>
+    public DateOnly? ReviewDeadline { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the host has reviewed the guest of this stay.
+    /// </summary>
+    public bool HasGuestReview { get; set; }
+
+    /// <summary>
+    /// Gets or sets when an unanswered request (status 6) expires: created + <c>ExpiryHours</c> (24 by default), or
+    /// at the end of the check-in day (UTC) if that comes first; null for other statuses. The expiry job runs every
+    /// 15 minutes, so the status changes shortly after.
+    /// </summary>
+    public DateTime? RequestExpiresOnUtc { get; set; }
 }

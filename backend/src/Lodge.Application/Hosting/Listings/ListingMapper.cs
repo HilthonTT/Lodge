@@ -71,6 +71,7 @@ internal static class ListingMapper
             HouseRules = request.HouseRules,
             CheckInInstructions = request.CheckInInstructions,
             InstantBook = request.InstantBook,
+            CancellationPolicy = EnumNames.Parse<CancellationPolicy>(request.CancellationPolicy),
             MinNights = request.MinNights,
             MaxNights = request.MaxNights,
         };

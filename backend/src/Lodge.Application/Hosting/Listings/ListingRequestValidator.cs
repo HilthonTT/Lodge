@@ -68,6 +68,10 @@ internal sealed class ListingRequestValidator : AbstractValidator<ListingRequest
             .Must(x => ListingMapper.TryParseTime(x.CheckInTime, out _) && ListingMapper.TryParseTime(x.CheckOutTime, out _))
             .WithError(ValidationErrors.Listing.InvalidTime);
 
+        RuleFor(x => x.CancellationPolicy)
+            .Must(policy => EnumNames.TryParse<CancellationPolicy>(policy, out _))
+            .WithError(ApartmentErrors.InvalidCancellationPolicy);
+
         RuleFor(x => x.HouseRules)
             .MaximumLength(Apartment.TextMaxLength)
             .WithError(ApartmentErrors.HouseRulesTooLong);

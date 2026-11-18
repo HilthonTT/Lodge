@@ -1,4 +1,4 @@
-﻿using Lodge.Domain.Core.Primitives;
+using Lodge.Domain.Core.Primitives;
 
 namespace Lodge.Domain.Apartments;
 
@@ -42,6 +42,10 @@ public static class ApartmentErrors
     public static readonly Error InvalidStayLimits = Error.Validation(
         "Apartment.InvalidStayLimits",
         $"The minimum and maximum number of nights must be between 1 and {Apartment.MaxNightsLimit}, minimum first.");
+
+    public static readonly Error InvalidCancellationPolicy = Error.Validation(
+        "Apartment.InvalidCancellationPolicy",
+        "The cancellation policy must be Flexible, Moderate or Strict.");
 
     public static readonly Error InvalidDiscount = Error.Validation(
         "Apartment.InvalidDiscount",

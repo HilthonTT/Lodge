@@ -62,7 +62,7 @@ internal sealed class SearchApartmentQueryValidator : AbstractValidator<SearchAp
             .WithError(ValidationErrors.SearchApartments.FlexibleWithExactDates);
 
         RuleFor(x => x.Months)
-            .Must(months => months.Count is >= 1 and <= MaxMonths && months.All(month => YearMonth.TryParse(month, out _)))
+            .Must(months => months.Count <= MaxMonths && months.All(month => YearMonth.TryParse(month, out _)))
             .When(x => x.Flexible is not null)
             .WithError(ValidationErrors.SearchApartments.InvalidMonths);
 

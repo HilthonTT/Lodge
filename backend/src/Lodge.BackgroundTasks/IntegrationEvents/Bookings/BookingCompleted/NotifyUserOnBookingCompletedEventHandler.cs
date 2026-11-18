@@ -1,9 +1,11 @@
 ﻿using Lodge.Application.Abstractions.Notifications;
+using Lodge.Application.Notifications;
 using Lodge.Application.Bookings.Complete;
 using Lodge.BackgroundTasks.Abstractions.Messaging;
 using Lodge.Contracts.Emails;
 using Lodge.Domain.Bookings;
 using Lodge.Domain.Core.Exceptions;
+using Lodge.Domain.Notifications;
 using Lodge.Domain.Users;
 
 namespace Lodge.BackgroundTasks.IntegrationEvents.Bookings.BookingCompleted;
@@ -17,7 +19,8 @@ namespace Lodge.BackgroundTasks.IntegrationEvents.Bookings.BookingCompleted;
 internal sealed class NotifyUserOnBookingCompletedEventHandler(
     IBookingRepository bookingRepository,
     IUserRepository userRepository,
-    IEmailNotificationService emailNotificationService) : IIntegrationEventHandler<BookingCompletedIntegrationEvent>
+    IEmailNotificationService emailNotificationService,
+    INotificationPreferencesProvider preferencesProvider) : IIntegrationEventHandler<BookingCompletedIntegrationEvent>
 {
     /// <inheritdoc />
     public async Task Handle(BookingCompletedIntegrationEvent notification, CancellationToken cancellationToken)
@@ -33,6 +36,12 @@ internal sealed class NotifyUserOnBookingCompletedEventHandler(
         if (user is null)
         {
             throw new DomainException(UserErrors.NotFound(booking.UserId));
+        }
+
+        // Reservation e-mails respect the guest's notification preferences.
+        if (!await preferencesProvider.AllowsEmailAsync(user.Id, NotificationCategory.Reservations, cancellationToken))
+        {
+            return;
         }
 
         var bookingCompletedEmail = new BookingCompletedEmail(user.Email, user.FullName);

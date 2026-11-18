@@ -1,4 +1,5 @@
-﻿using Lodge.Application.Stripe.Checkout;
+using Lodge.Application.Stripe.Checkout;
+using Lodge.Contracts.Payments;
 using Lodge.Contracts.Stripe;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Presentation.Extensions;
@@ -11,7 +12,7 @@ using Microsoft.AspNetCore.Routing;
 namespace Lodge.Presentation.Endpoints.Stripe;
 
 /// <summary>
-/// Represents the stripe endpoint for checking out your booking
+/// Starts the payment of a reserved booking: returns <c>{ url }</c> (Stripe Checkout, or the simulated checkout page).
 /// </summary>
 internal sealed class Checkout : IEndpoint
 {
@@ -25,7 +26,7 @@ internal sealed class Checkout : IEndpoint
         {
             var command = new StripeCheckoutCommand(request.UserId, request.BookingId);
 
-            Result<string> result = await sender.Send(command, cancellationToken);
+            Result<CheckoutResponse> result = await sender.Send(command, cancellationToken);
 
             return result.Match(Results.Ok, CustomResults.Problem);
         })

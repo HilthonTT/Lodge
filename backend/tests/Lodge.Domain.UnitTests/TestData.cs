@@ -36,7 +36,13 @@ internal static class TestData
     public static Apartment CreateApartment(ListingDetails details) =>
         Apartment.Create(OwnerId, details, [ApartmentImage.FromPath("/images/cabin.png")]).Value;
 
-    public static Booking Reserve(Apartment apartment, DateOnly start, int nights, DateTime utcNow, int guests = 2)
+    public static Booking Reserve(
+        Apartment apartment,
+        DateOnly start,
+        int nights,
+        DateTime utcNow,
+        int guests = 2,
+        FeeRates? fees = null)
     {
         DateRange duration = DateRange.Create(start, start.AddDays(nights)).Value;
 
@@ -47,6 +53,6 @@ internal static class TestData
             guests,
             null,
             utcNow,
-            new PricingService().CalculatePrice(apartment, duration)).Value;
+            new PricingService().CalculatePrice(apartment, duration, feeRates: fees)).Value;
     }
 }

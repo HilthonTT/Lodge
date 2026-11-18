@@ -1,7 +1,9 @@
-﻿using Lodge.Application.Abstractions.Authentication;
+using Lodge.Application.Abstractions.Authentication;
 using Lodge.Application.Abstractions.Data;
 using Lodge.Application.Abstractions.Messaging;
 using Lodge.Application.Core.Exceptions;
+using Lodge.Application.Messaging;
+using Lodge.Application.Payments;
 using Lodge.Domain.Apartments;
 using Lodge.Domain.Bookings;
 using Lodge.Domain.Core.Primitives;
@@ -16,7 +18,8 @@ internal sealed class ReserveBookingCommandHandler(
     IBookingRepository bookingRepository,
     ICalendarDayRepository calendarDayRepository,
     IUnitOfWork unitOfWork,
-    PricingService pricingService,
+    BookingPricing bookingPricing,
+    ConversationService conversationService,
     IDateTimeProvider dateTimeProvider) : ICommandHandler<ReserveBookingCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(ReserveBookingCommand request, CancellationToken cancellationToken)
@@ -78,7 +81,7 @@ internal sealed class ReserveBookingCommandHandler(
             request.GuestCount,
             request.MessageToHost,
             utcNow,
-            pricingService.CalculatePrice(apartment, duration, priceOverrides));
+            bookingPricing.Calculate(apartment, duration, priceOverrides));
 
         if (booking.IsFailure)
         {
@@ -86,6 +89,9 @@ internal sealed class ReserveBookingCommandHandler(
         }
 
         bookingRepository.Insert(booking.Value);
+
+        // The booking opens (or continues) the conversation with the host, with the guest's message if any.
+        await conversationService.OpenForNewBookingAsync(booking.Value, apartment.OwnerId, utcNow, cancellationToken);
 
         try
         {

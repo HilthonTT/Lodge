@@ -28,7 +28,8 @@ public class SuperhostAndProfileTests(FunctionalTestWebAppFactory factory) : Hos
         summary!.IsSuperhost.Should().BeTrue();
         summary.ListingCount.Should().Be(8);
         summary.PendingRequests.Should().BeGreaterThanOrEqualTo(2);
-        summary.EarningsTotal.Should().BeGreaterThan(0);
+        summary.PaidTotal.Should().BeGreaterThan(0);
+        summary.UpcomingPayouts.Should().BeGreaterThan(0);
         summary.Currency.Should().Be("USD");
         summary.ReviewCount.Should().Be(9);
         summary.AverageRating.Should().Be(4.89m);
@@ -93,7 +94,12 @@ public class SuperhostAndProfileTests(FunctionalTestWebAppFactory factory) : Hos
                 booking.Confirm(DateTime.UtcNow);
                 booking.Complete(DateTime.UtcNow).IsSuccess.Should().BeTrue();
                 dbContext.Bookings.Add(booking);
-                dbContext.Reviews.Add(Review.Create(booking, Rating.Create(5).Value, Comment.Create("Perfect!").Value).Value);
+                dbContext.Reviews.Add(Review.CreatePublished(
+                    booking,
+                    Rating.Create(5).Value,
+                    CategoryRatings.Uniform(Rating.Create(5).Value),
+                    Comment.Create("Perfect!").Value,
+                    DateTime.UtcNow));
             }
 
             // Priya does not qualify (3 completed stays, average 3.7).
@@ -129,7 +135,40 @@ public class SuperhostAndProfileTests(FunctionalTestWebAppFactory factory) : Hos
         HostingSummaryResponse? summary = await host.GetFromJsonAsync<HostingSummaryResponse>("api/v1/hosting/summary");
         summary!.Should().BeEquivalentTo(new { IsSuperhost = true, ReviewCount = 5, AverageRating = 5m });
         summary.Superhost.Should().BeEquivalentTo(new { CompletedStays = 5, CancellationRate = 0m, MeetsRequirements = true });
-        summary.EarningsTotal.Should().BeGreaterThan(0);
+        // Earnings come from payouts; these stays were confirmed without a payment, so there are none.
+        summary.PaidTotal.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task CancellationRate_Should_CountOnlyBookingsTheHostAnswered()
+    {
+        (HttpClient host, _, Guid listingId) = await CreateHostWithListingAsync(listing => listing with { InstantBook = false });
+
+        // Declined by the host: counts, as a cancellation.
+        (_, _, Guid declined) = await BookAsGuestAsync(listingId, NextFreeDate(), 2);
+        (await host.PutAsync($"api/v1/hosting/bookings/{declined}/decline", null)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        // Accepted, then cancelled by the guest: counts, but not as a cancellation.
+        (HttpClient guest, Guid guestId, Guid acceptedThenCancelled) = await BookAsGuestAsync(listingId, NextFreeDate(), 2);
+        (await host.PutAsync($"api/v1/hosting/bookings/{acceptedThenCancelled}/accept", null)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await guest.PutAsJsonAsync($"api/v1/bookings/{acceptedThenCancelled}/cancel", new CancelBookingRequest(guestId)))
+            .StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        // Accepted: counts.
+        (_, _, Guid accepted) = await BookAsGuestAsync(listingId, NextFreeDate(), 2);
+        (await host.PutAsync($"api/v1/hosting/bookings/{accepted}/accept", null)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        // Cancelled by the guest before the host answered, expired, or still pending: not counted.
+        (HttpClient other, Guid otherId, Guid withdrawn) = await BookAsGuestAsync(listingId, NextFreeDate(), 2);
+        (await other.PutAsJsonAsync($"api/v1/bookings/{withdrawn}/cancel", new CancelBookingRequest(otherId)))
+            .StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (_, _, Guid expired) = await BookAsGuestAsync(listingId, NextFreeDate(), 2);
+        await UpdateBookingAsync(expired, booking => booking.Expire(DateTime.UtcNow));
+        await BookAsGuestAsync(listingId, NextFreeDate(), 2);
+
+        // 1 declined out of 3 answered bookings.
+        HostingSummaryResponse? summary = await host.GetFromJsonAsync<HostingSummaryResponse>("api/v1/hosting/summary");
+        summary!.Superhost.CancellationRate.Should().Be(0.3333m);
     }
 
     [Fact]

@@ -1,4 +1,4 @@
-﻿using Lodge.Application.Abstractions.Messaging;
+using Lodge.Application.Abstractions.Messaging;
 using Lodge.Contracts.Apartments;
 using Lodge.Contracts.Common;
 
@@ -46,12 +46,13 @@ public sealed record SearchApartmentQuery : IQuery<PagedList<ApartmentResponse>>
     public decimal? Bathrooms { get; init; }
 
     /// <summary>
-    /// Gets the minimum base nightly price.
+    /// Gets the minimum base nightly price, in the base currency (USD): listing prices are converted with the static
+    /// <c>Currencies:Rates</c> before comparing.
     /// </summary>
     public decimal? MinPrice { get; init; }
 
     /// <summary>
-    /// Gets the maximum base nightly price.
+    /// Gets the maximum base nightly price, in the base currency (USD; see <see cref="MinPrice"/>).
     /// </summary>
     public decimal? MaxPrice { get; init; }
 
@@ -85,12 +86,13 @@ public sealed record SearchApartmentQuery : IQuery<PagedList<ApartmentResponse>>
     public double? MaxLongitude { get; init; }
 
     /// <summary>
-    /// Gets <c>weekend</c>, <c>week</c> or <c>month</c>; requires <see cref="Months"/> and excludes exact dates.
+    /// Gets <c>weekend</c>, <c>week</c> or <c>month</c>; excludes exact dates.
     /// </summary>
     public string? Flexible { get; init; }
 
     /// <summary>
-    /// Gets the months (<c>yyyy-MM</c>) a flexible stay may start in.
+    /// Gets the months (<c>yyyy-MM</c>, at most 12) a flexible stay may start in; defaults to the current month and the
+    /// next two.
     /// </summary>
     public IReadOnlyList<string> Months { get; init; } = [];
 }

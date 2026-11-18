@@ -1,4 +1,4 @@
-﻿using Lodge.Application.Abstractions.Emails;
+using Lodge.Application.Abstractions.Emails;
 using Lodge.Application.Abstractions.Notifications;
 using Lodge.Contracts.Emails;
 
@@ -121,13 +121,31 @@ internal sealed class EmailNotificationService(IEmailService emailService) : IEm
         BookingCancelledEmail bookingCancelledEmail,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(bookingCancelledEmail);
+
+        string what = bookingCancelledEmail.ListingName is null
+            ? "Your booking"
+            : $"Your booking at {bookingCancelledEmail.ListingName}";
+
+        string who = bookingCancelledEmail.CancelledByHost ? " by the host" : string.Empty;
+
+        string refund = bookingCancelledEmail.RefundAmount switch
+        {
+            null => string.Empty,
+            0 => " No refund applies under the cancellation policy.",
+            decimal amount when bookingCancelledEmail.RefundIsManual =>
+                $" A refund of {FormatAmount(amount, bookingCancelledEmail.Currency)} will be arranged by our team.",
+            decimal amount =>
+                $" You will be refunded {FormatAmount(amount, bookingCancelledEmail.Currency)} to your original payment method.",
+        };
+
         var mailRequest = new MailRequest(
               bookingCancelledEmail.EmailTo,
               "Booking cancelled ❌",
               $"Hello {bookingCancelledEmail.Name}," +
               Environment.NewLine +
               Environment.NewLine +
-              "Your booking has been cancelled.");
+              $"{what} has been cancelled{who}.{refund}");
 
         return emailService.SendEmailAsync(mailRequest, cancellationToken);
     }
@@ -172,6 +190,73 @@ internal sealed class EmailNotificationService(IEmailService emailService) : IEm
               Environment.NewLine +
               Environment.NewLine +
               "If you did not ask to reset your password, you can ignore this e-mail.");
+
+        return emailService.SendEmailAsync(mailRequest, cancellationToken);
+    }
+
+    private static string FormatAmount(decimal amount, string? currency) =>
+        string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{amount:0.00} {currency}").TrimEnd();
+
+    /// <inheritdoc />
+    public Task SendNewMessageEmailAsync(NewMessageEmail newMessageEmail, CancellationToken cancellationToken = default)
+    {
+        var mailRequest = new MailRequest(
+            newMessageEmail.EmailTo,
+            $"New message from {newMessageEmail.SenderFirstName} 💬",
+            $"Hello {newMessageEmail.Name}," +
+            Environment.NewLine +
+            Environment.NewLine +
+            $"{newMessageEmail.SenderFirstName} sent you a message about {newMessageEmail.ListingName}:" +
+            Environment.NewLine +
+            Environment.NewLine +
+            $"\"{newMessageEmail.Preview}\"" +
+            Environment.NewLine +
+            Environment.NewLine +
+            $"Reply: {newMessageEmail.Link}");
+
+        return emailService.SendEmailAsync(mailRequest, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task SendTripReminderEmailAsync(TripReminderEmail tripReminderEmail, CancellationToken cancellationToken = default)
+    {
+        string instructions = string.IsNullOrWhiteSpace(tripReminderEmail.CheckInInstructions)
+            ? string.Empty
+            : Environment.NewLine + Environment.NewLine + "Check-in instructions:" + Environment.NewLine +
+              tripReminderEmail.CheckInInstructions;
+
+        var mailRequest = new MailRequest(
+            tripReminderEmail.EmailTo,
+            $"Your trip to {tripReminderEmail.ListingName} is coming up 🧳",
+            $"Hello {tripReminderEmail.Name}," +
+            Environment.NewLine +
+            Environment.NewLine +
+            $"Check-in at {tripReminderEmail.ListingName} is on {tripReminderEmail.CheckIn:yyyy-MM-dd}." +
+            instructions +
+            Environment.NewLine +
+            Environment.NewLine +
+            $"Trip details: {tripReminderEmail.Link}");
+
+        return emailService.SendEmailAsync(mailRequest, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task SendReviewReminderEmailAsync(ReviewReminderEmail reviewReminderEmail, CancellationToken cancellationToken = default)
+    {
+        string ask = reviewReminderEmail.ForHost
+            ? $"How was your guest at {reviewReminderEmail.ListingName}? Leave a review for them"
+            : $"How was your stay at {reviewReminderEmail.ListingName}? Leave a review";
+
+        var mailRequest = new MailRequest(
+            reviewReminderEmail.EmailTo,
+            "Share your experience ⭐",
+            $"Hello {reviewReminderEmail.Name}," +
+            Environment.NewLine +
+            Environment.NewLine +
+            $"{ask} by {reviewReminderEmail.ReviewDeadline:yyyy-MM-dd}." +
+            Environment.NewLine +
+            Environment.NewLine +
+            reviewReminderEmail.Link);
 
         return emailService.SendEmailAsync(mailRequest, cancellationToken);
     }

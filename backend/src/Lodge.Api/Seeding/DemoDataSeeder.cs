@@ -1,12 +1,15 @@
-﻿using Lodge.Application.Abstractions.Cryptography;
+using Lodge.Application.Abstractions.Cryptography;
+using Lodge.Application.Payments;
 using Lodge.Domain.Apartments;
 using Lodge.Domain.Bookings;
 using Lodge.Domain.Core.Primitives;
+using Lodge.Domain.Payouts;
 using Lodge.Domain.Reviews;
 using Lodge.Domain.Users;
 using Lodge.Domain.Wishlists;
 using Lodge.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Lodge.Api.Seeding;
 
@@ -20,13 +23,19 @@ namespace Lodge.Api.Seeding;
 /// Host login: <see cref="HostEmail"/> / <see cref="HostPassword"/> (a Superhost with most listings).
 /// Admin login: <see cref="AdminEmail"/> / <see cref="AdminPassword"/>.
 /// Every seeded account has a verified e-mail address and a short bio, and none has two-factor authentication.
+/// Payments are simulated: confirmed bookings have a simulated payment and a payout; Sam has an active simulated payout
+/// account (past payouts paid), Priya has none (her due payouts are on hold). Seeded reviews are published, with
+/// category ratings, two host replies and two host-to-guest reviews; the demo user has a cancelled, refunded booking
+/// and a finished stay that can still be reviewed. Experiences, conversations and notifications are seeded too (see
+/// <c>DemoDataSeeder.Engagement.cs</c>).
 /// Images are stored as relative paths (<c>/images/...</c>, served from <c>wwwroot</c>) and resolved to absolute
 /// URLs with <c>Assets:PublicBaseUrl</c> when returned by the API.
 /// </remarks>
 internal sealed partial class DemoDataSeeder(
     LodgeDbContext dbContext,
     IPasswordHasher passwordHasher,
-    PricingService pricingService,
+    BookingPricing bookingPricing,
+    IOptions<PaymentsOptions> paymentsOptions,
     IDateTimeProvider dateTimeProvider,
     ILogger<DemoDataSeeder> logger)
 {
@@ -37,6 +46,8 @@ internal sealed partial class DemoDataSeeder(
     public const string AdminEmail = "admin@lodge.dev";
     public const string AdminPassword = "Admin123!";
     public const string PriyaEmail = "priya.patel@lodge.dev";
+    public const string JamieEmail = "jamie.lee@lodge.dev";
+    public const string LucasEmail = "lucas.martin@lodge.dev";
     public const string DreamTripsWishlist = "Dream trips";
 
     /// <summary>
@@ -63,13 +74,16 @@ internal sealed partial class DemoDataSeeder(
         DateOnly today = DateOnly.FromDateTime(utcNow);
 
         User demo = CreateUser("Alex", "Morgan", DemoEmail, Bios.Demo);
-        User jamie = CreateUser("Jamie", "Lee", "jamie.lee@lodge.dev", Bios.Jamie);
+        User jamie = CreateUser("Jamie", "Lee", JamieEmail, Bios.Jamie);
         User priya = CreateUser("Priya", "Patel", PriyaEmail, Bios.Priya);
-        User lucas = CreateUser("Lucas", "Martin", "lucas.martin@lodge.dev", Bios.Lucas);
+        User lucas = CreateUser("Lucas", "Martin", LucasEmail, Bios.Lucas);
         User sam = CreateHost();
         dbContext.Users.AddRange(demo, jamie, priya, lucas, sam);
 
         Dictionary<string, Apartment> apartments = await SeedApartmentsAsync(sam, priya, cancellationToken);
+
+        // Sam gets paid through a (simulated) payout account; Priya has not connected one, so her payouts are on hold.
+        PayoutAccount samPayoutAccount = CreateSimulatedPayoutAccount(sam);
 
         // Past, completed stays with reviews (the request-to-book ones were accepted by the host back then).
         (string Apartment, User Guest, int StartOffset, int Nights, int Rating, string Comment)[] pastStays =
@@ -88,32 +102,71 @@ internal sealed partial class DemoDataSeeder(
             (DemoApartments.CanalHouseboat, lucas, -200, 2, 3, "Great location, but the bedroom gets warm in summer."),
         ];
 
-        foreach ((string apartmentName, User guest, int startOffset, int nights, int rating, string comment) in pastStays)
+        Dictionary<(string Apartment, User Guest), (Booking Booking, Review Review)> pastBookings = [];
+
+        for (int index = 0; index < pastStays.Length; index++)
         {
-            Booking booking = Book(apartments[apartmentName], guest, today.AddDays(startOffset), nights, utcNow);
-            booking.Confirm(utcNow);
+            (string apartmentName, User guest, int startOffset, int nights, int rating, string comment) = pastStays[index];
+            Apartment apartment = apartments[apartmentName];
+
+            Booking booking = Book(apartment, guest, today.AddDays(startOffset), nights, utcNow);
+            Pay(booking, apartment, samPayoutAccount, sam, today, utcNow);
             booking.Complete(utcNow);
 
-            Review review = Review.Create(booking, Rating.Create(rating).Value, Comment.Create(comment).Value).Value;
+            Review review = Review.CreatePublished(
+                booking,
+                Rating.Create(rating).Value,
+                SeedCategories(rating, index),
+                Comment.Create(comment).Value,
+                booking.Duration.End.AddDays(2).ToDateTime(new TimeOnly(18, 0), DateTimeKind.Utc));
             dbContext.Reviews.Add(review);
+
+            pastBookings[(apartmentName, guest)] = (booking, review);
         }
 
-        // A finished stay the demo user has not reviewed yet.
+        // Sam answers a couple of reviews and reviews two of his guests.
+        pastBookings[(DemoApartments.PineRidgeCabin, jamie)].Review.Reply(
+            "Thank you Jamie! The hot tub is waiting for your next winter getaway.",
+            utcNow);
+        pastBookings[(DemoApartments.ChateauDesVignes, lucas)].Review.Reply(
+            "Merci Lucas, it was a pleasure to host your family. Come back for the harvest!",
+            utcNow);
+
+        dbContext.GuestReviews.Add(GuestReview.CreatePublished(
+            pastBookings[(DemoApartments.MapleGroveFamilyHome, jamie)].Booking,
+            sam.Id,
+            Rating.Create(5).Value,
+            Comment.Create("Jamie and family left the house spotless and were a joy to host. Welcome back anytime!").Value,
+            utcNow));
+        dbContext.GuestReviews.Add(GuestReview.CreatePublished(
+            pastBookings[(DemoApartments.ChateauDesVignes, lucas)].Booking,
+            sam.Id,
+            Rating.Create(5).Value,
+            Comment.Create("Lucas communicated clearly and treated the château with great care.").Value,
+            utcNow));
+
+        // A finished stay the demo user has not reviewed yet (the review window is still open).
         Booking unreviewed = Book(apartments[DemoApartments.RedwoodTreehouse], demo, today.AddDays(-9), 2, utcNow);
-        unreviewed.Confirm(utcNow);
+        Pay(unreviewed, apartments[DemoApartments.RedwoodTreehouse], samPayoutAccount, sam, today, utcNow);
         unreviewed.Complete(utcNow);
 
         // The demo user's upcoming bookings, one per status shown in the UI.
-        Book(apartments[DemoApartments.HillsideLuxuryVilla], demo, today.AddDays(14), 5, utcNow).Confirm(utcNow);
+        Pay(Book(apartments[DemoApartments.HillsideLuxuryVilla], demo, today.AddDays(14), 5, utcNow),
+            apartments[DemoApartments.HillsideLuxuryVilla], samPayoutAccount, sam, today, utcNow);
         Book(apartments[DemoApartments.MapleGroveFamilyHome], demo, today.AddDays(30), 3, utcNow);
         Request(apartments[DemoApartments.AuroraGlassIgloo], demo, today.AddDays(30), 3, utcNow,
             "Hi Sam! We are celebrating our anniversary and would love to see the northern lights.");
         Request(apartments[DemoApartments.LavenderHillCottage], demo, today.AddDays(7), 3, utcNow).Cancel(utcNow);
         Request(apartments[DemoApartments.ChateauDesVignes], demo, today.AddDays(45), 4, utcNow).Decline(utcNow);
 
+        // A paid stay the demo user cancelled 10 days before check-in (Strict policy: 50% back, already refunded).
+        SeedRefundedCancellation(apartments[DemoApartments.AuroraGlassIgloo], demo, samPayoutAccount, sam, today, utcNow);
+
         // Other guests' upcoming stays and requests, so calendars and the host dashboard are busy.
-        Book(apartments[DemoApartments.PineRidgeCabin], jamie, today.AddDays(3), 4, utcNow).Confirm(utcNow);
-        Book(apartments[DemoApartments.CanalHouseboat], lucas, today.AddDays(10), 5, utcNow).Confirm(utcNow);
+        Pay(Book(apartments[DemoApartments.PineRidgeCabin], jamie, today.AddDays(3), 4, utcNow),
+            apartments[DemoApartments.PineRidgeCabin], samPayoutAccount, sam, today, utcNow);
+        Pay(Book(apartments[DemoApartments.CanalHouseboat], lucas, today.AddDays(10), 5, utcNow),
+            apartments[DemoApartments.CanalHouseboat], samPayoutAccount, sam, today, utcNow);
         Book(apartments[DemoApartments.SeasideFamilyRetreat], lucas, today.AddDays(21), 7, utcNow);
         Request(apartments[DemoApartments.ChateauDesVignes], jamie, today.AddDays(60), 4, utcNow,
             "We would like to celebrate my parents' 40th wedding anniversary with the family.");
@@ -121,6 +174,9 @@ internal sealed partial class DemoDataSeeder(
         SeedCalendar(apartments, today);
 
         SeedWishlist(demo, apartments, utcNow);
+
+        // Experiences, conversations and notifications.
+        await SeedEngagementAsync(demo, jamie, priya, lucas, sam, apartments, cancellationToken);
 
         // Demo data must not trigger welcome/booking e-mails through the outbox.
         foreach (Entity entity in dbContext.ChangeTracker.Entries<Entity>().Select(e => e.Entity))
@@ -158,6 +214,16 @@ internal sealed partial class DemoDataSeeder(
         {
             SeedWishlist(demo, apartments, dateTimeProvider.UtcNow);
         }
+
+        if (!await dbContext.PayoutAccounts.AnyAsync(a => a.UserId == sam.Id, cancellationToken))
+        {
+            CreateSimulatedPayoutAccount(sam);
+        }
+
+        User jamie = await dbContext.Users.FirstAsync(u => u.Email.Value == JamieEmail, cancellationToken);
+        User lucas = await dbContext.Users.FirstAsync(u => u.Email.Value == LucasEmail, cancellationToken);
+
+        await SeedEngagementAsync(demo, jamie, priya, lucas, sam, apartments, cancellationToken);
 
         foreach (Entity entity in dbContext.ChangeTracker.Entries<Entity>().Select(e => e.Entity))
         {
@@ -255,6 +321,86 @@ internal sealed partial class DemoDataSeeder(
         return byName;
     }
 
+    private PayoutAccount CreateSimulatedPayoutAccount(User host)
+    {
+        PayoutAccount account = PayoutAccount.Create(host.Id, $"sim_acct_seed_{host.Id:N}");
+        account.Update(payoutsEnabled: true);
+
+        dbContext.PayoutAccounts.Add(account);
+
+        return account;
+    }
+
+    /// <summary>
+    /// Records a simulated payment for a reserved booking (confirming it) and schedules the host payout: payouts that
+    /// are due (check-in + 1 day has passed) are paid when the host has an active payout account, else on hold.
+    /// </summary>
+    private Payout Pay(
+        Booking booking,
+        Apartment apartment,
+        PayoutAccount samPayoutAccount,
+        User sam,
+        DateOnly today,
+        DateTime utcNow)
+    {
+        DateTime paidOnUtc = booking.Duration.Start.AddDays(-7).ToDateTime(new TimeOnly(10, 0), DateTimeKind.Utc);
+
+        booking.ConfirmPayment($"sim_pi_seed_{booking.Id:N}", booking.TotalPrice.Amount, paidOnUtc < utcNow ? paidOnUtc : utcNow);
+
+        var payout = Payout.Schedule(booking, apartment.OwnerId, bookingPricing.HostServiceFeePercent);
+
+        if (payout.ScheduledFor <= today)
+        {
+            if (apartment.IsOwnedBy(sam.Id) && samPayoutAccount.CanReceivePayouts)
+            {
+                payout.MarkPaid($"sim_tr_seed_{payout.Id:N}", payout.ScheduledFor.ToDateTime(new TimeOnly(5, 0), DateTimeKind.Utc));
+            }
+            else
+            {
+                payout.PutOnHold();
+            }
+        }
+
+        dbContext.Payouts.Add(payout);
+
+        return payout;
+    }
+
+    /// <summary>
+    /// A paid booking that the guest cancelled today, 10 days before check-in, with its refund already sent.
+    /// </summary>
+    private void SeedRefundedCancellation(
+        Apartment apartment,
+        User guest,
+        PayoutAccount samPayoutAccount,
+        User sam,
+        DateOnly today,
+        DateTime utcNow)
+    {
+        Booking booking = Book(apartment, guest, today.AddDays(10), 2, utcNow);
+        Payout payout = Pay(booking, apartment, samPayoutAccount, sam, today, utcNow);
+
+        RefundQuote quote = booking.Cancel(utcNow).Value;
+        payout.AdjustForCancellation(quote.RetainedStayAmount);
+        booking.MarkRefundSucceeded($"sim_re_seed_{booking.Id:N}", utcNow);
+    }
+
+    /// <summary>
+    /// Category ratings around the overall rating, varied a little per review.
+    /// </summary>
+    private static CategoryRatings SeedCategories(int rating, int index)
+    {
+        int Vary(int offset) => Math.Clamp(rating - ((index + offset) % 4 == 0 ? 1 : 0), 1, 5);
+
+        return CategoryRatings.Create(
+            Vary(0),
+            Vary(1),
+            rating,
+            Vary(2),
+            Math.Min(5, rating + 1),
+            Vary(3)).Value;
+    }
+
     /// <summary>
     /// Sam blocks a few nights of the cabin for himself and charges more for a few nights at the villa.
     /// </summary>
@@ -349,7 +495,7 @@ internal sealed partial class DemoDataSeeder(
             Math.Min(2, apartment.MaximumGuestCount),
             messageToHost,
             utcNow,
-            pricingService.CalculatePrice(apartment, duration)).Value;
+            bookingPricing.Calculate(apartment, duration)).Value;
 
         dbContext.Bookings.Add(booking);
 

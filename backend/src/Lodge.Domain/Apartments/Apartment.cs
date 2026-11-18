@@ -1,4 +1,4 @@
-﻿using Lodge.Domain.Apartments.Events;
+using Lodge.Domain.Apartments.Events;
 using Lodge.Domain.Bookings;
 using Lodge.Domain.Core.Abstractions;
 using Lodge.Domain.Core.Primitives;
@@ -108,6 +108,11 @@ public sealed class Apartment : Entity, IAuditableEntity, ISoftDeletableEntity
     /// </summary>
     public bool InstantBook { get; private set; }
 
+    /// <summary>
+    /// Gets the cancellation policy (snapshotted on every booking).
+    /// </summary>
+    public CancellationPolicy CancellationPolicy { get; private set; } = CancellationPolicy.Moderate;
+
     public int MinNights { get; private set; }
 
     public int MaxNights { get; private set; }
@@ -206,6 +211,7 @@ public sealed class Apartment : Entity, IAuditableEntity, ISoftDeletableEntity
         HouseRules = Normalize(details.HouseRules);
         CheckInInstructions = Normalize(details.CheckInInstructions);
         InstantBook = details.InstantBook;
+        CancellationPolicy = details.CancellationPolicy;
         MinNights = details.MinNights;
         MaxNights = details.MaxNights;
 
@@ -359,7 +365,13 @@ public sealed class Apartment : Entity, IAuditableEntity, ISoftDeletableEntity
             return Result.Failure(ApartmentErrors.InvalidStayLimits);
         }
 
+        if (!Enum.IsDefined(details.CancellationPolicy))
+        {
+            return Result.Failure(ApartmentErrors.InvalidCancellationPolicy);
+        }
+
         if (details.HouseRules?.Trim().Length > TextMaxLength)
+
         {
             return Result.Failure(ApartmentErrors.HouseRulesTooLong);
         }

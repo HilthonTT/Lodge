@@ -80,7 +80,8 @@ public class CalendarTests(FunctionalTestWebAppFactory factory) : HostingFunctio
         PriceDetailsResponse? week = await HttpClient.GetFromJsonAsync<PriceDetailsResponse>(
             $"api/v1/apartments/{listingId}/price?startDate={monday:yyyy-MM-dd}&endDate={monday.AddDays(7):yyyy-MM-dd}");
 
-        // Mon-Thu 4 x 100, Fri + Sat 2 x 150, Sun 100 = 800; 10% weekly discount.
+        // Mon-Thu 4 x 100, Fri + Sat 2 x 150, Sun 100 = 800; 10% weekly discount; 12% guest service fee; no taxes in
+        // Testland.
         week!.Should().BeEquivalentTo(new
         {
             Currency = "USD",
@@ -89,7 +90,10 @@ public class CalendarTests(FunctionalTestWebAppFactory factory) : HostingFunctio
             DiscountAmount = 80m,
             DiscountType = "weekly",
             AverageNightlyPrice = 114.29m,
-            TotalPrice = 720m,
+            ServiceFee = 86.40m,
+            Taxes = 0m,
+            TaxRatePercent = 0m,
+            TotalPrice = 806.40m,
         });
 
         PriceDetailsResponse? month = await HttpClient.GetFromJsonAsync<PriceDetailsResponse>(
@@ -100,7 +104,7 @@ public class CalendarTests(FunctionalTestWebAppFactory factory) : HostingFunctio
         PriceDetailsResponse? twoNights = await HttpClient.GetFromJsonAsync<PriceDetailsResponse>(
             $"api/v1/apartments/{listingId}/price?startDate={monday:yyyy-MM-dd}&endDate={monday.AddDays(2):yyyy-MM-dd}");
         twoNights!.DiscountType.Should().BeNull();
-        twoNights.TotalPrice.Should().Be(200);
+        twoNights.TotalPrice.Should().Be(224);
 
         // A custom price for Monday and Tuesday wins over the base price.
         (await host.PutAsJsonAsync(
@@ -110,7 +114,7 @@ public class CalendarTests(FunctionalTestWebAppFactory factory) : HostingFunctio
 
         (await HttpClient.GetFromJsonAsync<PriceDetailsResponse>(
                 $"api/v1/apartments/{listingId}/price?startDate={monday:yyyy-MM-dd}&endDate={monday.AddDays(2):yyyy-MM-dd}"))!
-            .TotalPrice.Should().Be(600);
+            .TotalPrice.Should().Be(672);
 
         List<ApartmentCalendarDayResponse>? calendar = await HttpClient.GetFromJsonAsync<List<ApartmentCalendarDayResponse>>(
             $"api/v1/apartments/{listingId}/calendar?from={monday:yyyy-MM-dd}&to={monday.AddDays(6):yyyy-MM-dd}");
@@ -122,7 +126,7 @@ public class CalendarTests(FunctionalTestWebAppFactory factory) : HostingFunctio
 
         // The booking stores the price with the override.
         (_, _, Guid bookingId) = await BookAsGuestAsync(listingId, monday, 2);
-        (await GetBookingAsync(host, bookingId)).TotalPriceAmount.Should().Be(600);
+        (await GetBookingAsync(host, bookingId)).TotalPriceAmount.Should().Be(672);
 
         (await host.PutAsJsonAsync(
                 $"api/v1/hosting/listings/{listingId}/calendar",

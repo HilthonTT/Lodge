@@ -49,6 +49,12 @@ namespace Lodge.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("beds");
 
+                    b.Property<string>("CancellationPolicy")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("cancellation_policy");
+
                     b.Property<string>("CheckInInstructions")
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)")
@@ -212,9 +218,27 @@ namespace Lodge.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<DateTime?>("AcceptedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("accepted_on_utc");
+
+                    b.Property<decimal?>("AmountPaid")
+                        .HasColumnType("numeric")
+                        .HasColumnName("amount_paid");
+
                     b.Property<Guid>("ApartmentId")
                         .HasColumnType("uuid")
                         .HasColumnName("apartment_id");
+
+                    b.Property<string>("CancellationPolicy")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("cancellation_policy");
+
+                    b.Property<bool>("CancelledByHost")
+                        .HasColumnType("boolean")
+                        .HasColumnName("cancelled_by_host");
 
                     b.Property<DateTime?>("CancelledOnUtc")
                         .HasColumnType("timestamp with time zone")
@@ -249,6 +273,34 @@ namespace Lodge.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("modified_on_utc");
 
+                    b.Property<DateTime?>("PaidOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("paid_on_utc");
+
+                    b.Property<string>("PaymentIntentId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("payment_intent_id");
+
+                    b.Property<decimal?>("RefundAmount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("refund_amount");
+
+                    b.Property<string>("RefundId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("refund_id");
+
+                    b.Property<string>("RefundStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("refund_status");
+
+                    b.Property<DateTime?>("RefundedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("refunded_on_utc");
+
                     b.Property<DateTime?>("RejectedOnUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("rejected_on_utc");
@@ -256,6 +308,11 @@ namespace Lodge.Persistence.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("integer")
                         .HasColumnName("status");
+
+                    b.Property<decimal>("TaxRatePercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)")
+                        .HasColumnName("tax_rate_percent");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
@@ -274,6 +331,778 @@ namespace Lodge.Persistence.Migrations
                         .HasDatabaseName("ix_bookings_status_created_on_utc");
 
                     b.ToTable("bookings", (string)null);
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Experiences.Experience", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("category");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("city");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("country");
+
+                    b.Property<DateTime>("CreatedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_on_utc");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("currency");
+
+                    b.Property<bool>("Deleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("deleted");
+
+                    b.Property<DateTime?>("DeletedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_on_utc");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("description");
+
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("duration_minutes");
+
+                    b.Property<Guid>("HostId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("host_id");
+
+                    b.PrimitiveCollection<List<Guid>>("ImageIds")
+                        .IsRequired()
+                        .HasColumnType("uuid[]")
+                        .HasColumnName("image_ids");
+
+                    b.PrimitiveCollection<List<string>>("Included")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("included");
+
+                    b.Property<bool>("IsListed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_listed");
+
+                    b.PrimitiveCollection<List<string>>("Languages")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("languages");
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("double precision")
+                        .HasColumnName("latitude");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("double precision")
+                        .HasColumnName("longitude");
+
+                    b.Property<int>("MaxGuests")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_guests");
+
+                    b.Property<string>("MeetingPoint")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("meeting_point");
+
+                    b.Property<DateTime?>("ModifiedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_on_utc");
+
+                    b.Property<decimal>("PricePerGuest")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("price_per_guest");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("title");
+
+                    b.HasKey("Id")
+                        .HasName("pk_experiences");
+
+                    b.HasIndex("HostId")
+                        .HasDatabaseName("ix_experiences_host_id");
+
+                    b.HasIndex("IsListed", "Category")
+                        .HasDatabaseName("ix_experiences_is_listed_category");
+
+                    b.ToTable("experiences", (string)null);
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Experiences.ExperienceBooking", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal?>("AmountPaid")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("amount_paid");
+
+                    b.Property<bool>("CancelledByHost")
+                        .HasColumnType("boolean")
+                        .HasColumnName("cancelled_by_host");
+
+                    b.Property<DateTime?>("CancelledOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("cancelled_on_utc");
+
+                    b.Property<DateTime?>("CompletedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_on_utc");
+
+                    b.Property<DateTime?>("ConfirmedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("confirmed_on_utc");
+
+                    b.Property<DateTime>("CreatedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_on_utc");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("currency");
+
+                    b.Property<Guid>("ExperienceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("experience_id");
+
+                    b.Property<int>("GuestCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("guest_count");
+
+                    b.Property<Guid>("GuestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("guest_id");
+
+                    b.Property<DateTime?>("ModifiedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_on_utc");
+
+                    b.Property<DateTime?>("PaidOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("paid_on_utc");
+
+                    b.Property<string>("PaymentIntentId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("payment_intent_id");
+
+                    b.Property<decimal>("PriceTotal")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("price_total");
+
+                    b.Property<decimal?>("RefundAmount")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("refund_amount");
+
+                    b.Property<string>("RefundId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("refund_id");
+
+                    b.Property<string>("RefundStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("refund_status");
+
+                    b.Property<DateTime?>("RefundedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("refunded_on_utc");
+
+                    b.Property<decimal>("ServiceFee")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("service_fee");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("session_id");
+
+                    b.Property<DateTime>("SessionStartsAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("session_starts_at_utc");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<decimal>("TotalPrice")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("total_price");
+
+                    b.HasKey("Id")
+                        .HasName("pk_experience_bookings");
+
+                    b.HasIndex("ExperienceId")
+                        .HasDatabaseName("ix_experience_bookings_experience_id");
+
+                    b.HasIndex("GuestId")
+                        .HasDatabaseName("ix_experience_bookings_guest_id");
+
+                    b.HasIndex("SessionId")
+                        .HasDatabaseName("ix_experience_bookings_session_id");
+
+                    b.HasIndex("Status", "SessionStartsAtUtc")
+                        .HasDatabaseName("ix_experience_bookings_status_session_starts_at_utc");
+
+                    b.ToTable("experience_bookings", (string)null);
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Experiences.ExperienceReview", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Comment")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("comment");
+
+                    b.Property<DateTime>("CreatedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_on_utc");
+
+                    b.Property<Guid>("ExperienceBookingId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("experience_booking_id");
+
+                    b.Property<Guid>("ExperienceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("experience_id");
+
+                    b.Property<Guid>("GuestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("guest_id");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("integer")
+                        .HasColumnName("rating");
+
+                    b.HasKey("Id")
+                        .HasName("pk_experience_reviews");
+
+                    b.HasIndex("ExperienceBookingId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_experience_reviews_experience_booking_id");
+
+                    b.HasIndex("GuestId")
+                        .HasDatabaseName("ix_experience_reviews_guest_id");
+
+                    b.HasIndex("ExperienceId", "CreatedOnUtc")
+                        .HasDatabaseName("ix_experience_reviews_experience_id_created_on_utc");
+
+                    b.ToTable("experience_reviews", (string)null);
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Experiences.ExperienceSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("BookedGuests")
+                        .HasColumnType("integer")
+                        .HasColumnName("booked_guests");
+
+                    b.Property<DateTime?>("CancelledOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("cancelled_on_utc");
+
+                    b.Property<int>("Capacity")
+                        .HasColumnType("integer")
+                        .HasColumnName("capacity");
+
+                    b.Property<DateTime>("CreatedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_on_utc");
+
+                    b.Property<Guid>("ExperienceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("experience_id");
+
+                    b.Property<DateTime>("StartsAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("starts_at_utc");
+
+                    b.HasKey("Id")
+                        .HasName("pk_experience_sessions");
+
+                    b.HasIndex("StartsAtUtc")
+                        .HasDatabaseName("ix_experience_sessions_starts_at_utc");
+
+                    b.HasIndex("ExperienceId", "StartsAtUtc")
+                        .HasDatabaseName("ix_experience_sessions_experience_id_starts_at_utc");
+
+                    b.ToTable("experience_sessions", (string)null);
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Messaging.Conversation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApartmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("apartment_id");
+
+                    b.Property<DateTime>("CreatedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_on_utc");
+
+                    b.Property<Guid>("GuestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("guest_id");
+
+                    b.Property<DateTime?>("GuestLastEmailedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("guest_last_emailed_on_utc");
+
+                    b.Property<DateTime?>("GuestLastReadOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("guest_last_read_on_utc");
+
+                    b.Property<Guid>("HostId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("host_id");
+
+                    b.Property<DateTime?>("HostLastEmailedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("host_last_emailed_on_utc");
+
+                    b.Property<DateTime?>("HostLastReadOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("host_last_read_on_utc");
+
+                    b.Property<DateTime>("LastMessageOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_message_on_utc");
+
+                    b.HasKey("Id")
+                        .HasName("pk_conversations");
+
+                    b.HasIndex("ApartmentId", "GuestId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_conversations_apartment_id_guest_id");
+
+                    b.HasIndex("GuestId", "LastMessageOnUtc")
+                        .HasDatabaseName("ix_conversations_guest_id_last_message_on_utc");
+
+                    b.HasIndex("HostId", "LastMessageOnUtc")
+                        .HasDatabaseName("ix_conversations_host_id_last_message_on_utc");
+
+                    b.ToTable("conversations", (string)null);
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Messaging.Message", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("body");
+
+                    b.Property<Guid?>("BookingId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("booking_id");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("conversation_id");
+
+                    b.Property<Guid?>("SenderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("sender_id");
+
+                    b.Property<DateTime>("SentOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("sent_on_utc");
+
+                    b.Property<string>("SystemEvent")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("system_event");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_messages");
+
+                    b.HasIndex("SenderId")
+                        .HasDatabaseName("ix_messages_sender_id");
+
+                    b.HasIndex("ConversationId", "SentOnUtc", "Id")
+                        .HasDatabaseName("ix_messages_conversation_id_sent_on_utc_id");
+
+                    b.ToTable("messages", (string)null);
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Notifications.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_on_utc");
+
+                    b.Property<string>("Data")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("data");
+
+                    b.Property<string>("DedupeKey")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("dedupe_key");
+
+                    b.Property<bool>("InApp")
+                        .HasColumnType("boolean")
+                        .HasColumnName("in_app");
+
+                    b.Property<string>("Link")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("link");
+
+                    b.Property<DateTime?>("ReadOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("read_on_utc");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("type");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_notifications");
+
+                    b.HasIndex("UserId", "CreatedOnUtc")
+                        .HasDatabaseName("ix_notifications_user_id_created_on_utc");
+
+                    b.HasIndex("UserId", "DedupeKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_notifications_user_id_dedupe_key");
+
+                    b.ToTable("notifications", (string)null);
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Notifications.NotificationPreferences", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<bool>("EmailMessages")
+                        .HasColumnType("boolean")
+                        .HasColumnName("email_messages");
+
+                    b.Property<bool>("EmailPayouts")
+                        .HasColumnType("boolean")
+                        .HasColumnName("email_payouts");
+
+                    b.Property<bool>("EmailReminders")
+                        .HasColumnType("boolean")
+                        .HasColumnName("email_reminders");
+
+                    b.Property<bool>("EmailReservations")
+                        .HasColumnType("boolean")
+                        .HasColumnName("email_reservations");
+
+                    b.Property<bool>("EmailReviews")
+                        .HasColumnType("boolean")
+                        .HasColumnName("email_reviews");
+
+                    b.Property<bool>("InAppMessages")
+                        .HasColumnType("boolean")
+                        .HasColumnName("in_app_messages");
+
+                    b.Property<bool>("InAppPayouts")
+                        .HasColumnType("boolean")
+                        .HasColumnName("in_app_payouts");
+
+                    b.Property<bool>("InAppReminders")
+                        .HasColumnType("boolean")
+                        .HasColumnName("in_app_reminders");
+
+                    b.Property<bool>("InAppReservations")
+                        .HasColumnType("boolean")
+                        .HasColumnName("in_app_reservations");
+
+                    b.Property<bool>("InAppReviews")
+                        .HasColumnType("boolean")
+                        .HasColumnName("in_app_reviews");
+
+                    b.Property<DateTime?>("ModifiedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_on_utc");
+
+                    b.HasKey("Id")
+                        .HasName("pk_notification_preferences");
+
+                    b.ToTable("notification_preferences", (string)null);
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Payouts.Payout", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("BookingId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("booking_id");
+
+                    b.Property<DateTime>("CreatedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_on_utc");
+
+                    b.Property<Guid?>("ExperienceBookingId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("experience_booking_id");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("failure_reason");
+
+                    b.Property<decimal>("HostFeePercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)")
+                        .HasColumnName("host_fee_percent");
+
+                    b.Property<Guid>("HostId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("host_id");
+
+                    b.Property<DateTime?>("ModifiedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_on_utc");
+
+                    b.Property<DateTime?>("PaidOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("paid_on_utc");
+
+                    b.Property<DateOnly>("ScheduledFor")
+                        .HasColumnType("date")
+                        .HasColumnName("scheduled_for");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("TransferId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("transfer_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_payouts");
+
+                    b.HasIndex("BookingId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_payouts_booking_id");
+
+                    b.HasIndex("ExperienceBookingId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_payouts_experience_booking_id");
+
+                    b.HasIndex("HostId")
+                        .HasDatabaseName("ix_payouts_host_id");
+
+                    b.HasIndex("Status", "ScheduledFor")
+                        .HasDatabaseName("ix_payouts_status_scheduled_for");
+
+                    b.ToTable("payouts", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_payouts_one_source", "(booking_id IS NULL) <> (experience_booking_id IS NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Payouts.PayoutAccount", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_on_utc");
+
+                    b.Property<string>("ExternalAccountId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("external_account_id");
+
+                    b.Property<DateTime?>("ModifiedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_on_utc");
+
+                    b.Property<bool>("PayoutsEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("payouts_enabled");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_payout_accounts");
+
+                    b.HasIndex("ExternalAccountId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_payout_accounts_external_account_id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_payout_accounts_user_id");
+
+                    b.ToTable("payout_accounts", (string)null);
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Reviews.GuestReview", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ApartmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("apartment_id");
+
+                    b.Property<Guid>("BookingId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("booking_id");
+
+                    b.Property<string>("Comment")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("comment");
+
+                    b.Property<DateTime>("CreatedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_on_utc");
+
+                    b.Property<Guid>("GuestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("guest_id");
+
+                    b.Property<Guid>("HostId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("host_id");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_published");
+
+                    b.Property<DateTime?>("ModifiedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_on_utc");
+
+                    b.Property<DateTime?>("PublishedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("published_on_utc");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Rating", "Lodge.Domain.Reviews.GuestReview.Rating#Rating", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<int>("Value")
+                                .HasColumnType("integer")
+                                .HasColumnName("rating");
+                        });
+
+                    b.HasKey("Id")
+                        .HasName("pk_guest_reviews");
+
+                    b.HasIndex("ApartmentId")
+                        .HasDatabaseName("ix_guest_reviews_apartment_id");
+
+                    b.HasIndex("BookingId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_guest_reviews_booking_id");
+
+                    b.HasIndex("HostId")
+                        .HasDatabaseName("ix_guest_reviews_host_id");
+
+                    b.HasIndex("GuestId", "IsPublished")
+                        .HasDatabaseName("ix_guest_reviews_guest_id_is_published");
+
+                    b.ToTable("guest_reviews", (string)null);
                 });
 
             modelBuilder.Entity("Lodge.Domain.Reviews.Review", b =>
@@ -301,13 +1130,63 @@ namespace Lodge.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_on_utc");
 
+                    b.Property<string>("HostReply")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("host_reply");
+
+                    b.Property<DateTime?>("HostReplyCreatedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("host_reply_created_on_utc");
+
+                    b.Property<DateTime?>("HostReplyModifiedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("host_reply_modified_on_utc");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_published");
+
                     b.Property<DateTime?>("ModifiedOnUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("modified_on_utc");
 
+                    b.Property<DateTime?>("PublishedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("published_on_utc");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Categories", "Lodge.Domain.Reviews.Review.Categories#CategoryRatings", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<int>("Accuracy")
+                                .HasColumnType("integer")
+                                .HasColumnName("accuracy_rating");
+
+                            b1.Property<int>("CheckIn")
+                                .HasColumnType("integer")
+                                .HasColumnName("check_in_rating");
+
+                            b1.Property<int>("Cleanliness")
+                                .HasColumnType("integer")
+                                .HasColumnName("cleanliness_rating");
+
+                            b1.Property<int>("Communication")
+                                .HasColumnType("integer")
+                                .HasColumnName("communication_rating");
+
+                            b1.Property<int>("Location")
+                                .HasColumnType("integer")
+                                .HasColumnName("location_rating");
+
+                            b1.Property<int>("Value")
+                                .HasColumnType("integer")
+                                .HasColumnName("value_rating");
+                        });
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Rating", "Lodge.Domain.Reviews.Review.Rating#Rating", b1 =>
                         {
@@ -321,14 +1200,15 @@ namespace Lodge.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("pk_reviews");
 
-                    b.HasIndex("ApartmentId")
-                        .HasDatabaseName("ix_reviews_apartment_id");
-
                     b.HasIndex("BookingId")
+                        .IsUnique()
                         .HasDatabaseName("ix_reviews_booking_id");
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_reviews_user_id");
+
+                    b.HasIndex("ApartmentId", "IsPublished")
+                        .HasDatabaseName("ix_reviews_apartment_id_is_published");
 
                     b.ToTable("reviews", (string)null);
                 });
@@ -576,6 +1456,10 @@ namespace Lodge.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("name");
+
+                    b.Property<string>("Response")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("response");
 
                     b.HasKey("Id")
                         .HasName("pk_idempotent_requests");
@@ -955,6 +1839,54 @@ namespace Lodge.Persistence.Migrations
                                 .HasConstraintName("fk_bookings_bookings_id");
                         });
 
+                    b.OwnsOne("Lodge.Domain.Shared.Money", "ServiceFee", b1 =>
+                        {
+                            b1.Property<Guid>("BookingId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("id");
+
+                            b1.Property<decimal>("Amount")
+                                .HasColumnType("numeric")
+                                .HasColumnName("service_fee_amount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasColumnName("service_fee_currency");
+
+                            b1.HasKey("BookingId");
+
+                            b1.ToTable("bookings");
+
+                            b1.WithOwner()
+                                .HasForeignKey("BookingId")
+                                .HasConstraintName("fk_bookings_bookings_id");
+                        });
+
+                    b.OwnsOne("Lodge.Domain.Shared.Money", "Taxes", b1 =>
+                        {
+                            b1.Property<Guid>("BookingId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("id");
+
+                            b1.Property<decimal>("Amount")
+                                .HasColumnType("numeric")
+                                .HasColumnName("taxes_amount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasColumnName("taxes_currency");
+
+                            b1.HasKey("BookingId");
+
+                            b1.ToTable("bookings");
+
+                            b1.WithOwner()
+                                .HasForeignKey("BookingId")
+                                .HasConstraintName("fk_bookings_bookings_id");
+                        });
+
                     b.OwnsOne("Lodge.Domain.Shared.Money", "TotalPrice", b1 =>
                         {
                             b1.Property<Guid>("BookingId")
@@ -1017,8 +1949,230 @@ namespace Lodge.Persistence.Migrations
                     b.Navigation("PriceForPeriod")
                         .IsRequired();
 
+                    b.Navigation("ServiceFee")
+                        .IsRequired();
+
+                    b.Navigation("Taxes")
+                        .IsRequired();
+
                     b.Navigation("TotalPrice")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Experiences.Experience", b =>
+                {
+                    b.HasOne("Lodge.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("HostId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_experiences_users_host_id");
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Experiences.ExperienceBooking", b =>
+                {
+                    b.HasOne("Lodge.Domain.Experiences.Experience", null)
+                        .WithMany()
+                        .HasForeignKey("ExperienceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_experience_bookings_experiences_experience_id");
+
+                    b.HasOne("Lodge.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("GuestId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_experience_bookings_users_guest_id");
+
+                    b.HasOne("Lodge.Domain.Experiences.ExperienceSession", null)
+                        .WithMany()
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_experience_bookings_experience_sessions_session_id");
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Experiences.ExperienceReview", b =>
+                {
+                    b.HasOne("Lodge.Domain.Experiences.ExperienceBooking", null)
+                        .WithMany()
+                        .HasForeignKey("ExperienceBookingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_experience_reviews_experience_bookings_experience_booking_id");
+
+                    b.HasOne("Lodge.Domain.Experiences.Experience", null)
+                        .WithMany()
+                        .HasForeignKey("ExperienceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_experience_reviews_experiences_experience_id");
+
+                    b.HasOne("Lodge.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("GuestId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_experience_reviews_users_guest_id");
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Experiences.ExperienceSession", b =>
+                {
+                    b.HasOne("Lodge.Domain.Experiences.Experience", null)
+                        .WithMany()
+                        .HasForeignKey("ExperienceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_experience_sessions_experiences_experience_id");
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Messaging.Conversation", b =>
+                {
+                    b.HasOne("Lodge.Domain.Apartments.Apartment", null)
+                        .WithMany()
+                        .HasForeignKey("ApartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_conversations_apartments_apartment_id");
+
+                    b.HasOne("Lodge.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("GuestId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_conversations_users_guest_id");
+
+                    b.HasOne("Lodge.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("HostId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_conversations_users_host_id");
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Messaging.Message", b =>
+                {
+                    b.HasOne("Lodge.Domain.Messaging.Conversation", null)
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_messages_conversations_conversation_id");
+
+                    b.HasOne("Lodge.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_messages_users_sender_id");
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Notifications.Notification", b =>
+                {
+                    b.HasOne("Lodge.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_notifications_users_user_id");
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Notifications.NotificationPreferences", b =>
+                {
+                    b.HasOne("Lodge.Domain.Users.User", null)
+                        .WithOne()
+                        .HasForeignKey("Lodge.Domain.Notifications.NotificationPreferences", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_notification_preferences_users_user_id");
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Payouts.Payout", b =>
+                {
+                    b.HasOne("Lodge.Domain.Bookings.Booking", null)
+                        .WithMany()
+                        .HasForeignKey("BookingId")
+                        .HasConstraintName("fk_payouts_bookings_booking_id");
+
+                    b.HasOne("Lodge.Domain.Experiences.ExperienceBooking", null)
+                        .WithMany()
+                        .HasForeignKey("ExperienceBookingId")
+                        .HasConstraintName("fk_payouts_experience_bookings_experience_booking_id");
+
+                    b.HasOne("Lodge.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("HostId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_payouts_users_host_id");
+
+                    b.OwnsOne("Lodge.Domain.Shared.Money", "Amount", b1 =>
+                        {
+                            b1.Property<Guid>("PayoutId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("id");
+
+                            b1.Property<decimal>("Amount")
+                                .HasColumnType("numeric")
+                                .HasColumnName("amount_amount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasColumnName("amount_currency");
+
+                            b1.HasKey("PayoutId");
+
+                            b1.ToTable("payouts");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PayoutId")
+                                .HasConstraintName("fk_payouts_payouts_id");
+                        });
+
+                    b.Navigation("Amount")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Payouts.PayoutAccount", b =>
+                {
+                    b.HasOne("Lodge.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_payout_accounts_users_user_id");
+                });
+
+            modelBuilder.Entity("Lodge.Domain.Reviews.GuestReview", b =>
+                {
+                    b.HasOne("Lodge.Domain.Apartments.Apartment", null)
+                        .WithMany()
+                        .HasForeignKey("ApartmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_guest_reviews_apartments_apartment_id");
+
+                    b.HasOne("Lodge.Domain.Bookings.Booking", null)
+                        .WithMany()
+                        .HasForeignKey("BookingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_guest_reviews_bookings_booking_id");
+
+                    b.HasOne("Lodge.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("GuestId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_guest_reviews_users_guest_id");
+
+                    b.HasOne("Lodge.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("HostId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_guest_reviews_users_host_id");
                 });
 
             modelBuilder.Entity("Lodge.Domain.Reviews.Review", b =>

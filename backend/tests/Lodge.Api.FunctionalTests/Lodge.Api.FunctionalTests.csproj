@@ -2,6 +2,9 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
+    <!-- Validates the gateway's YARP configuration (routes, clusters, session affinity, rate limiting). -->
+    <PackageReference Include="Yarp.ReverseProxy" />
     <PackageReference Include="Testcontainers.PostgreSql" />
     <PackageReference Include="Testcontainers.Redis" />
   </ItemGroup>

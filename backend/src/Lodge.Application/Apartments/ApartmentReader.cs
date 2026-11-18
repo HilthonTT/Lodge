@@ -21,7 +21,7 @@ internal sealed class ApartmentReader(IAssetUrlResolver assetUrlResolver, IOptio
 
     /// <summary>
     /// Selects every column of <see cref="ApartmentRow"/>. Callers append joins, conditions, ordering and paging.
-    /// The table alias is <c>a</c>, the host is <c>u</c> and the review statistics are <c>rs</c>.
+    /// The table alias is <c>a</c>, the host is <c>u</c> and the review statistics (published reviews only) are <c>rs</c>.
     /// </summary>
     public const string SelectApartment =
         """
@@ -52,6 +52,7 @@ internal sealed class ApartmentReader(IAssetUrlResolver assetUrlResolver, IOptio
             a.house_rules AS HouseRules,
             a.check_in_instructions AS CheckInInstructions,
             a.instant_book AS InstantBook,
+            a.cancellation_policy AS CancellationPolicy,
             a.min_nights AS MinNights,
             a.max_nights AS MaxNights,
             a.is_listed AS IsListed,
@@ -64,6 +65,12 @@ internal sealed class ApartmentReader(IAssetUrlResolver assetUrlResolver, IOptio
             a.address_street AS Street,
             rs.average_rating AS AverageRating,
             rs.review_count AS ReviewCount,
+            rs.cleanliness AS Cleanliness,
+            rs.accuracy AS Accuracy,
+            rs.check_in AS CheckIn,
+            rs.communication AS Communication,
+            rs.location AS Location,
+            rs.value AS Value,
             u.first_name AS HostFirstName,
             u.image_id AS HostImageId,
             u.is_superhost AS HostIsSuperhost,
@@ -73,9 +80,15 @@ internal sealed class ApartmentReader(IAssetUrlResolver assetUrlResolver, IOptio
         LEFT JOIN LATERAL (
             SELECT
                 ROUND(AVG(r.rating)::numeric, 1) AS average_rating,
-                COUNT(*)::int AS review_count
+                COUNT(*)::int AS review_count,
+                ROUND(AVG(r.cleanliness_rating)::numeric, 1) AS cleanliness,
+                ROUND(AVG(r.accuracy_rating)::numeric, 1) AS accuracy,
+                ROUND(AVG(r.check_in_rating)::numeric, 1) AS check_in,
+                ROUND(AVG(r.communication_rating)::numeric, 1) AS communication,
+                ROUND(AVG(r.location_rating)::numeric, 1) AS location,
+                ROUND(AVG(r.value_rating)::numeric, 1) AS value
             FROM reviews AS r
-            WHERE r.apartment_id = a.id
+            WHERE r.apartment_id = a.id AND r.is_published
         ) AS rs ON TRUE
         """;
 
@@ -115,6 +128,7 @@ internal sealed class ApartmentReader(IAssetUrlResolver assetUrlResolver, IOptio
             PartiesAllowed = row.PartiesAllowed,
             HouseRules = row.HouseRules,
             InstantBook = row.InstantBook,
+            CancellationPolicy = row.CancellationPolicy,
             MinNights = row.MinNights,
             MaxNights = row.MaxNights,
         }))];
@@ -164,6 +178,7 @@ internal sealed class ApartmentReader(IAssetUrlResolver assetUrlResolver, IOptio
             PartiesAllowed = row.PartiesAllowed,
             HouseRules = row.HouseRules,
             InstantBook = row.InstantBook,
+            CancellationPolicy = row.CancellationPolicy,
             MinNights = row.MinNights,
             MaxNights = row.MaxNights,
             CheckInInstructions = row.CheckInInstructions,
@@ -222,6 +237,15 @@ internal sealed class ApartmentReader(IAssetUrlResolver assetUrlResolver, IOptio
         response.ImageUrl = photos.Count > 0 ? photos[0].Url : string.Empty;
         response.AverageRating = row.AverageRating;
         response.ReviewCount = row.ReviewCount;
+        response.RatingBreakdown = row.ReviewCount == 0 || row.Cleanliness is null
+            ? null
+            : new RatingBreakdownResponse(
+                row.Cleanliness.Value,
+                row.Accuracy ?? 0,
+                row.CheckIn ?? 0,
+                row.Communication ?? 0,
+                row.Location ?? 0,
+                row.Value ?? 0);
         response.Address = new AddressResponse
         {
             Country = row.Country,
@@ -294,6 +318,8 @@ internal sealed class ApartmentReader(IAssetUrlResolver assetUrlResolver, IOptio
 
         public bool InstantBook { get; init; }
 
+        public string CancellationPolicy { get; init; } = string.Empty;
+
         public int MinNights { get; init; }
 
         public int MaxNights { get; init; }
@@ -317,6 +343,18 @@ internal sealed class ApartmentReader(IAssetUrlResolver assetUrlResolver, IOptio
         public decimal? AverageRating { get; init; }
 
         public int ReviewCount { get; init; }
+
+        public decimal? Cleanliness { get; init; }
+
+        public decimal? Accuracy { get; init; }
+
+        public decimal? CheckIn { get; init; }
+
+        public decimal? Communication { get; init; }
+
+        public decimal? Location { get; init; }
+
+        public decimal? Value { get; init; }
 
         public string HostFirstName { get; init; } = string.Empty;
 

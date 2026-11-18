@@ -74,7 +74,7 @@ internal sealed class GetHostListingsQueryHandler(
             LEFT JOIN LATERAL (
                 SELECT ROUND(AVG(r.rating)::numeric, 1) AS average_rating, COUNT(*)::int AS review_count
                 FROM reviews AS r
-                WHERE r.apartment_id = a.id
+                WHERE r.apartment_id = a.id AND r.is_published
             ) AS rs ON TRUE
             LEFT JOIN LATERAL (
                 SELECT

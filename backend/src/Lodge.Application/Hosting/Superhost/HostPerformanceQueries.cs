@@ -11,7 +11,7 @@ namespace Lodge.Application.Hosting.Superhost;
 internal static class HostPerformanceQueries
 {
     /// <summary>
-    /// Gets the performance of every host with at least one booking or review, or of one host.
+    /// Gets the performance of every host with at least one booking or published review, or of one host.
     /// </summary>
     public static async Task<Dictionary<Guid, HostPerformance>> GetAsync(IDbConnection connection, Guid? hostId = null)
     {
@@ -22,8 +22,11 @@ internal static class HostPerformanceQueries
             SELECT
                 a.owner_id AS HostId,
                 COUNT(*) FILTER (WHERE b.status = @Completed)::int AS CompletedStays,
-                COUNT(*) FILTER (WHERE b.status = @Rejected)::int AS HostCancellations,
-                COUNT(*) FILTER (WHERE b.status <> ALL(@Unanswered))::int AS TotalBookings
+                COUNT(*) FILTER (WHERE b.status = @Rejected OR (b.status = @Cancelled AND b.cancelled_by_host))::int
+                    AS HostCancellations,
+                COUNT(*) FILTER (
+                    WHERE b.status = ANY(@Answered) OR b.accepted_on_utc IS NOT NULL OR b.cancelled_by_host)::int
+                    AS TotalBookings
             FROM bookings AS b
             INNER JOIN apartments AS a ON a.id = b.apartment_id
             {hostFilter}
@@ -35,7 +38,7 @@ internal static class HostPerformanceQueries
                 COUNT(*)::int AS ReviewCount
             FROM reviews AS r
             INNER JOIN apartments AS a ON a.id = r.apartment_id
-            {hostFilter}
+            WHERE r.is_published {(hostId.HasValue ? "AND a.owner_id = @HostId" : string.Empty)}
             GROUP BY a.owner_id;
             """;
 
@@ -46,7 +49,16 @@ internal static class HostPerformanceQueries
                 HostId = hostId ?? Guid.Empty,
                 Completed = (int)BookingStatus.Completed,
                 Rejected = (int)BookingStatus.Rejected,
-                Unanswered = new[] { (int)BookingStatus.PendingApproval, (int)BookingStatus.Expired },
+                Cancelled = (int)BookingStatus.Cancelled,
+                // Bookings the host answered: accepted (still reserved, confirmed or completed) or declined/rejected.
+                // Cancelled bookings count only when they had been accepted (accepted_on_utc) or the host cancelled.
+                Answered = new[]
+                {
+                    (int)BookingStatus.Reserved,
+                    (int)BookingStatus.Confirmed,
+                    (int)BookingStatus.Completed,
+                    (int)BookingStatus.Rejected,
+                },
             });
 
         Dictionary<Guid, BookingStatsRow> bookings = (await grid.ReadAsync<BookingStatsRow>())

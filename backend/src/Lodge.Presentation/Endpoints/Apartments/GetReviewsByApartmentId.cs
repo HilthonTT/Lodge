@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Lodge.Application.Reviews.GetByApartmentId;
 using Lodge.Contracts.Common;
 using Lodge.Contracts.Reviews;
@@ -24,10 +25,15 @@ internal sealed class GetReviewsByApartmentId : IEndpoint
             Guid apartmentId,
             [FromQuery] int? page,
             [FromQuery] int? pageSize,
+            ClaimsPrincipal user,
             ISender sender,
             CancellationToken cancellationToken) =>
         {
-            var query = new GetReviewsByApartmentIdQuery(apartmentId, page ?? Paging.DefaultPage, pageSize ?? Paging.DefaultPageSize);
+            var query = new GetReviewsByApartmentIdQuery(
+                apartmentId,
+                page ?? Paging.DefaultPage,
+                pageSize ?? Paging.DefaultPageSize,
+                user.GetUserIdOrNull());
 
             Result<PagedList<ReviewResponse>> result = await sender.Send(query, cancellationToken);
 

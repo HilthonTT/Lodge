@@ -18,6 +18,9 @@ namespace Lodge.Contracts.Users;
 /// <param name="Listings">The user's listed apartments, newest first (at most 12).</param>
 /// <param name="HostReviewCount">The number of reviews of the user's listings.</param>
 /// <param name="HostAverageRating">The average rating of the user's listings (1 decimal), or null.</param>
+/// <param name="GuestReviewCount">The number of published reviews hosts wrote about the user as a guest.</param>
+/// <param name="GuestAverageRating">The average of those ratings (1 decimal), or null.</param>
+/// <param name="GuestReviews">The latest 10 of those reviews, newest first.</param>
 public sealed record UserProfileResponse(
     Guid Id,
     string FirstName,
@@ -31,4 +34,19 @@ public sealed record UserProfileResponse(
     DateTime? HostingSince,
     IReadOnlyList<ApartmentResponse> Listings,
     int HostReviewCount,
-    decimal? HostAverageRating);
+    decimal? HostAverageRating,
+    int GuestReviewCount,
+    decimal? GuestAverageRating,
+    IReadOnlyList<GuestReviewResponse> GuestReviews);
+
+/// <summary>
+/// A host's published review of a guest.
+/// </summary>
+public sealed record GuestReviewResponse(
+    Guid Id,
+    int Rating,
+    string Comment,
+    string HostFirstName,
+    string? HostAvatarUrl,
+    string ListingName,
+    DateTime CreatedOnUtc);

@@ -30,24 +30,24 @@ internal sealed class SetAvatarCommandHandler(
         }
 
         // Buffer the (at most 5 MB) file: the declared content type is not trusted, the bytes are checked.
-        using var buffer = new MemoryStream();
-        await request.Stream.CopyToAsync(buffer, cancellationToken);
+        Result<BufferedImage> image = await ImageFormats.BufferAsync(
+            request.Stream,
+            SetAvatarCommandValidator.MaxFileSizeInBytes,
+            UserErrors.InvalidAvatar,
+            UserErrors.AvatarTooLarge,
+            cancellationToken);
 
-        if (buffer.Length > SetAvatarCommandValidator.MaxFileSizeInBytes)
+        if (image.IsFailure)
         {
-            return Result.Failure<AvatarResponse>(UserErrors.AvatarTooLarge);
+            return Result.Failure<AvatarResponse>(image.Error);
         }
 
-        string? detectedContentType = ImageFormats.Detect(buffer.GetBuffer().AsSpan(0, (int)Math.Min(buffer.Length, 16)));
+        Guid fileId;
 
-        if (detectedContentType is null)
+        using (BufferedImage buffered = image.Value)
         {
-            return Result.Failure<AvatarResponse>(UserErrors.InvalidAvatar);
+            fileId = await blobService.UploadAsync(user.Id, buffered.Content, buffered.ContentType, cancellationToken);
         }
-
-        buffer.Position = 0;
-
-        Guid fileId = await blobService.UploadAsync(user.Id, buffer, detectedContentType, cancellationToken);
 
         Guid? previousImageId = user.ImageId;
 

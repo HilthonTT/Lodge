@@ -1,4 +1,4 @@
-﻿using Lodge.Domain.Reviews;
+using Lodge.Domain.Reviews;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lodge.Persistence.Repositories;
@@ -10,29 +10,23 @@ namespace Lodge.Persistence.Repositories;
 internal sealed class ReviewRepository(LodgeDbContext context) : IReviewRepository
 {
     /// <inheritdoc />
-    public Task<Review?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
-    {
-        return context.Reviews.FirstOrDefaultAsync(review =>  review.Id == id, cancellationToken);
-    }
+    public Task<Review?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        context.Reviews.FirstOrDefaultAsync(review => review.Id == id, cancellationToken);
 
     /// <inheritdoc />
-    public Task<bool> HasAlreadyReviewed(Guid apartmentId, Guid userId, CancellationToken cancellationToken = default)
-    {
-        return context.Reviews.AnyAsync(
-            review => review.ApartmentId == apartmentId &&
-            review.UserId == userId,
-            cancellationToken);
-    }
+    public Task<Review?> GetByBookingIdAsync(Guid bookingId, CancellationToken cancellationToken = default) =>
+        context.Reviews.FirstOrDefaultAsync(review => review.BookingId == bookingId, cancellationToken);
 
     /// <inheritdoc />
-    public void Insert(Review review)
-    {
-        context.Reviews.Add(review);
-    }
+    public Task<GuestReview?> GetGuestReviewByBookingIdAsync(Guid bookingId, CancellationToken cancellationToken = default) =>
+        context.GuestReviews.FirstOrDefaultAsync(review => review.BookingId == bookingId, cancellationToken);
 
     /// <inheritdoc />
-    public void Remove(Review review)
-    {
-        context.Reviews.Remove(review);
-    }
+    public void Insert(Review review) => context.Reviews.Add(review);
+
+    /// <inheritdoc />
+    public void Insert(GuestReview review) => context.GuestReviews.Add(review);
+
+    /// <inheritdoc />
+    public void Remove(Review review) => context.Reviews.Remove(review);
 }

@@ -1,4 +1,4 @@
-﻿using Lodge.Domain.Core.Primitives;
+using Lodge.Domain.Core.Primitives;
 
 namespace Lodge.Application.Core.Errors;
 
@@ -163,7 +163,7 @@ internal static class ValidationErrors
            "UploadFile.ContentTypeIsRequired", "The content type is required");
 
         internal static readonly Error InvalidContentType = Error.Validation(
-            "UploadFile.InvalidContentType", "The content type must be an image");
+            "UploadFile.InvalidContentType", "The file must be a JPEG, PNG or WebP image");
 
         internal static readonly Error FileIsRequired = Error.Validation(
             "UploadFile.FileIsRequired", "The file is required");
@@ -339,6 +339,13 @@ internal static class ValidationErrors
         internal static readonly Error InvalidAddress = Error.Validation(
             "Listing.InvalidAddress",
             "The country, city and street are required (at most 200 characters each)");
+    }
+
+    internal static class Payouts
+    {
+        internal static readonly Error InvalidStatus = Error.Validation(
+            "Payouts.InvalidStatus",
+            "The status must be Scheduled, OnHold, Paid, Failed or Cancelled");
     }
 
     internal static class Calendar

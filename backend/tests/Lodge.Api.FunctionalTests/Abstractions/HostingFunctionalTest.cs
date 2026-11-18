@@ -2,11 +2,15 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Lodge.Api.FunctionalTests.Extensions;
+using Lodge.Application.Payments;
 using Lodge.Contracts.Bookings;
 using Lodge.Contracts.Common;
 using Lodge.Contracts.Hosting;
+using Lodge.Contracts.Stripe;
+using Lodge.Domain.Apartments;
 using Lodge.Domain.Bookings;
 using Lodge.Persistence;
+using Lodge.Persistence.Outbox;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -159,6 +163,72 @@ public abstract class HostingFunctionalTest(FunctionalTestWebAppFactory factory)
         booking.ClearDomainEvents();
 
         await dbContext.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Pays a reserved booking through the simulated checkout, as the guest.
+    /// </summary>
+    protected static async Task PayAsync(HttpClient guest, Guid guestId, Guid bookingId)
+    {
+        HttpResponseMessage checkout = await guest.PostAsJsonAsync(
+            "api/v1/stripe/checkout",
+            new StripeCheckoutRequest(guestId, bookingId));
+        checkout.StatusCode.Should().Be(HttpStatusCode.OK, await checkout.Content.ReadAsStringAsync());
+
+        HttpResponseMessage completed = await guest.PostAsync($"api/v1/payments/simulated/{bookingId}/complete", null);
+        completed.StatusCode.Should().Be(HttpStatusCode.NoContent, await completed.Content.ReadAsStringAsync());
+    }
+
+    /// <summary>
+    /// Adds a completed (unpaid, confirmed before payment tracking) stay of the listing that checked out
+    /// <paramref name="checkedOutDaysAgo"/> days ago, directly in the database.
+    /// </summary>
+    protected async Task<Guid> CreateCompletedStayAsync(Guid listingId, Guid guestId, int checkedOutDaysAgo, int nights = 2)
+    {
+        await using AsyncServiceScope scope = Factory.Services.CreateAsyncScope();
+        LodgeDbContext dbContext = scope.ServiceProvider.GetRequiredService<LodgeDbContext>();
+        BookingPricing pricing = scope.ServiceProvider.GetRequiredService<BookingPricing>();
+
+        Apartment apartment = await dbContext.Apartments.SingleAsync(a => a.Id == listingId);
+        DateOnly checkOut = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-checkedOutDaysAgo);
+        DateRange duration = DateRange.Create(checkOut.AddDays(-nights), checkOut).Value;
+        DateTime bookedOn = checkOut.AddDays(-30).ToDateTime(new TimeOnly(9, 0), DateTimeKind.Utc);
+
+        Booking booking = Booking.Reserve(
+            apartment, guestId, duration, 1, null, bookedOn, pricing.Calculate(apartment, duration)).Value;
+        booking.Confirm(bookedOn).IsSuccess.Should().BeTrue();
+        booking.Complete(DateTime.UtcNow).IsSuccess.Should().BeTrue();
+        booking.ClearDomainEvents();
+        apartment.ClearDomainEvents();
+
+        dbContext.Bookings.Add(booking);
+        await dbContext.SaveChangesAsync();
+
+        return booking.Id;
+    }
+
+    /// <summary>
+    /// Runs the outbox job until every pending domain event has been dispatched (integration events are handled
+    /// in-process, see <see cref="InProcessIntegrationEventPublisher"/>).
+    /// </summary>
+    protected async Task ProcessOutboxAsync()
+    {
+        for (int round = 0; round < 5; round++)
+        {
+            await using AsyncServiceScope scope = Factory.Services.CreateAsyncScope();
+            await scope.ServiceProvider.GetRequiredService<IProcessOutboxMessagesJob>().ProcessAsync();
+        }
+    }
+
+    /// <summary>
+    /// Runs a scoped service (e.g. a background job) once.
+    /// </summary>
+    protected async Task<TResult> RunAsync<TService, TResult>(Func<TService, Task<TResult>> action)
+        where TService : notnull
+    {
+        await using AsyncServiceScope scope = Factory.Services.CreateAsyncScope();
+
+        return await action(scope.ServiceProvider.GetRequiredService<TService>());
     }
 
     protected async Task ExecuteSqlAsync(FormattableString sql)

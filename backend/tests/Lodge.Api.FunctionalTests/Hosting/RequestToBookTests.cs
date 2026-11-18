@@ -69,6 +69,7 @@ public class RequestToBookTests(FunctionalTestWebAppFactory factory) : HostingFu
         request.Status.Should().Be(PendingApproval);
         request.ListingHostId.Should().Be(hostId);
         request.MessageToHost.Should().Be("We are two quiet hikers.");
+        request.RequestExpiresOnUtc.Should().BeCloseTo(request.CreatedOnUtc.AddHours(24), TimeSpan.FromSeconds(1));
 
         // The pending request holds the dates.
         (HttpClient someoneElse, Guid someoneElseId) = await CreateAuthenticatedUserAsync();
@@ -130,7 +131,10 @@ public class RequestToBookTests(FunctionalTestWebAppFactory factory) : HostingFu
         }
 
         (await GetBookingAsync(host, oldRequestId)).Status.Should().Be(Expired);
-        (await GetBookingAsync(host, freshRequestId)).Status.Should().Be(PendingApproval);
+        BookingResponse fresh = await GetBookingAsync(host, freshRequestId);
+        fresh.Status.Should().Be(PendingApproval);
+        fresh.RequestExpiresOnUtc.Should().BeAfter(DateTime.UtcNow);
+        (await GetBookingAsync(host, oldRequestId)).RequestExpiresOnUtc.Should().BeNull();
 
         // Expired requests no longer hold the dates.
         await ShouldFailWithAsync(
@@ -183,7 +187,8 @@ public class RequestToBookTests(FunctionalTestWebAppFactory factory) : HostingFu
         BookingResponse booking = await GetBookingAsync(guest, bookingId);
         DateOnly.FromDateTime(booking.DurationStart).Should().Be(start.AddDays(1));
         DateOnly.FromDateTime(booking.DurationEnd).Should().Be(start.AddDays(5));
-        booking.TotalPriceAmount.Should().Be(400);
+        booking.TotalPriceAmount.Should().Be(448);
+        booking.ServiceFeeAmount.Should().Be(48);
 
         await ShouldFailWithAsync(
             await guest.PutAsJsonAsync($"api/v1/bookings/{bookingId}/dates", new ChangeBookingDatesRequest(start.AddDays(9), start.AddDays(12))),

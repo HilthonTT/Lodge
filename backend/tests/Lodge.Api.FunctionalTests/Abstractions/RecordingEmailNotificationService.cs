@@ -17,6 +17,11 @@ public sealed class RecordingEmailNotificationService : IEmailNotificationServic
     public IReadOnlyList<PasswordResetEmail> PasswordResetEmails(string emailTo) =>
         _emails.OfType<PasswordResetEmail>().Where(e => e.EmailTo == emailTo).ToList();
 
+    /// <summary>
+    /// Gets every recorded e-mail of a type.
+    /// </summary>
+    public IReadOnlyList<TEmail> Sent<TEmail>() => _emails.OfType<TEmail>().ToList();
+
     public Task SendEmailVerificationEmailAsync(EmailVerificationEmail emailVerificationEmail, CancellationToken cancellationToken = default) =>
         Record(emailVerificationEmail);
 
@@ -45,6 +50,15 @@ public sealed class RecordingEmailNotificationService : IEmailNotificationServic
 
     public Task SendBookingCancelledEmailAsync(BookingCancelledEmail bookingCancelledEmail, CancellationToken cancellationToken = default) =>
         Record(bookingCancelledEmail);
+
+    public Task SendNewMessageEmailAsync(NewMessageEmail newMessageEmail, CancellationToken cancellationToken = default) =>
+        Record(newMessageEmail);
+
+    public Task SendTripReminderEmailAsync(TripReminderEmail tripReminderEmail, CancellationToken cancellationToken = default) =>
+        Record(tripReminderEmail);
+
+    public Task SendReviewReminderEmailAsync(ReviewReminderEmail reviewReminderEmail, CancellationToken cancellationToken = default) =>
+        Record(reviewReminderEmail);
 
     /// <summary>
     /// Extracts the <c>token</c> query parameter of an e-mailed link.

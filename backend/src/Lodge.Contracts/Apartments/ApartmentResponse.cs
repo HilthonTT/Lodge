@@ -1,4 +1,4 @@
-﻿namespace Lodge.Contracts.Apartments;
+namespace Lodge.Contracts.Apartments;
 
 /// <summary>
 /// Represents a listing as guests see it.
@@ -90,6 +90,11 @@ public class ApartmentResponse
 
     public bool InstantBook { get; init; }
 
+    /// <summary>
+    /// Gets the cancellation policy: <c>Flexible</c>, <c>Moderate</c> or <c>Strict</c>.
+    /// </summary>
+    public string CancellationPolicy { get; init; } = string.Empty;
+
     public int MinNights { get; init; }
 
     public int MaxNights { get; init; }
@@ -100,6 +105,11 @@ public class ApartmentResponse
     public decimal? AverageRating { get; set; }
 
     public int ReviewCount { get; set; }
+
+    /// <summary>
+    /// Gets or sets the average category ratings of the published reviews (1 decimal), or null without reviews.
+    /// </summary>
+    public RatingBreakdownResponse? RatingBreakdown { get; set; }
 
     public AddressResponse Address { get; set; } = new();
 
@@ -119,6 +129,17 @@ public sealed class HostListingResponse : ApartmentResponse
 
     public DateTime? ModifiedOnUtc { get; init; }
 }
+
+/// <summary>
+/// The average category ratings of a listing.
+/// </summary>
+public sealed record RatingBreakdownResponse(
+    decimal Cleanliness,
+    decimal Accuracy,
+    decimal CheckIn,
+    decimal Communication,
+    decimal Location,
+    decimal Value);
 
 /// <summary>
 /// A photo of a listing.

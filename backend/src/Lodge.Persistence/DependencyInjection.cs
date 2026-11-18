@@ -1,7 +1,10 @@
-﻿using Lodge.Application.Abstractions.Data;
+using Lodge.Application.Abstractions.Data;
 using Lodge.Application.Abstractions.Idempotency;
 using Lodge.Domain.Apartments;
 using Lodge.Domain.Bookings;
+using Lodge.Domain.Experiences;
+using Lodge.Domain.Messaging;
+using Lodge.Domain.Payouts;
 using Lodge.Domain.Reviews;
 using Lodge.Domain.Users;
 using Lodge.Domain.Wishlists;
@@ -64,8 +67,11 @@ public static class DependencyInjection
         services.AddScoped<IApartmentRepository, ApartmentRepository>();
         services.AddScoped<IBookingRepository, BookingRepository>();
         services.AddScoped<IReviewRepository, ReviewRepository>();
+        services.AddScoped<IPayoutRepository, PayoutRepository>();
         services.AddScoped<ICalendarDayRepository, CalendarDayRepository>();
         services.AddScoped<IWishlistRepository, WishlistRepository>();
+        services.AddScoped<IConversationRepository, ConversationRepository>();
+        services.AddScoped<IExperienceRepository, ExperienceRepository>();
         services.AddScoped<IIdempotencyService, IdempotencyService>();
 
         services.AddOptions<OutboxOptions>()

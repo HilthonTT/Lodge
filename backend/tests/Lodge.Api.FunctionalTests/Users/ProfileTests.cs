@@ -26,7 +26,8 @@ public class ProfileTests(FunctionalTestWebAppFactory factory) : BaseFunctionalT
 
         profile.EnumerateObject().Select(p => p.Name).Should().BeEquivalentTo(
             "id", "firstName", "lastInitial", "avatarUrl", "bio", "joinedOnUtc", "emailVerified", "reviewsWrittenCount",
-            "isSuperhost", "hostingSince", "listings", "hostReviewCount", "hostAverageRating");
+            "isSuperhost", "hostingSince", "listings", "hostReviewCount", "hostAverageRating", "guestReviewCount",
+            "guestAverageRating", "guestReviews");
         profile.GetProperty("firstName").GetString().Should().Be("Alex");
         profile.GetProperty("lastInitial").GetString().Should().Be("M");
         profile.GetProperty("bio").GetString().Should().NotBeNullOrWhiteSpace();
