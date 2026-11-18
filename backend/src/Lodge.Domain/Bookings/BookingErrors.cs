@@ -1,4 +1,4 @@
-﻿using Lodge.Domain.Core.Primitives;
+using Lodge.Domain.Core.Primitives;
 
 namespace Lodge.Domain.Bookings;
 
@@ -13,7 +13,7 @@ public static class BookingErrors
 
     public static readonly Error Overlap = Error.Conflict(
         "Booking.Overlap",
-        "The current booking is overlapping with an existing one");
+        "The selected dates are not available");
 
     public static readonly Error NotReserved = Error.Problem(
         "Booking.NotReserved",
@@ -25,7 +25,7 @@ public static class BookingErrors
 
     public static readonly Error NotCancellable = Error.Problem(
         "Booking.NotCancellable",
-        "Only reserved or confirmed bookings can be cancelled");
+        "Only pending, reserved or confirmed bookings can be cancelled");
 
     public static readonly Error AlreadyStarted = Error.Problem(
         "Booking.AlreadyStarted",
@@ -38,4 +38,45 @@ public static class BookingErrors
     public static readonly Error StartDateInPast = Error.Problem(
         "Booking.StartDateInPast",
         "The booking cannot start in the past");
+
+    public static readonly Error NotPendingApproval = Error.Problem(
+        "Booking.NotPendingApproval",
+        "Only booking requests that are waiting for the host's approval can be accepted or declined");
+
+    public static readonly Error ChangeRequiresCancellation = Error.Conflict(
+        "Booking.ChangeRequiresCancellation",
+        "The dates of a confirmed booking cannot be changed. Cancel it and book again instead");
+
+    public static readonly Error NotModifiable = Error.Problem(
+        "Booking.NotModifiable",
+        "Only pending or reserved bookings can be changed");
+
+    public static Error StayTooShort(int minNights) => Error.Problem(
+        "Booking.StayTooShort",
+        $"This listing requires a stay of at least {minNights} night(s)");
+
+    public static Error StayTooLong(int maxNights) => Error.Problem(
+        "Booking.StayTooLong",
+        $"This listing allows a stay of at most {maxNights} night(s)");
+
+    public static Error InvalidGuestCount(int maximumGuestCount) => Error.Problem(
+        "Booking.InvalidGuestCount",
+        $"The number of guests must be between 1 and {maximumGuestCount}");
+
+    public static readonly Error NotCompleted = Error.Problem(
+        "Booking.NotCompleted",
+        "Only completed stays can be reviewed");
+
+    public static readonly Error ReviewWindowClosed = Error.Problem(
+        "Booking.ReviewWindowClosed",
+        $"Stays can only be reviewed up to {Booking.ReviewWindowDays} days after check-out");
+
+    public static readonly Error OwnListing
+ = Error.Problem(
+        "Booking.OwnListing",
+        "Hosts cannot book their own listing");
+
+    public static readonly Error MessageTooLong = Error.Validation(
+        "Booking.MessageTooLong",
+        $"The message to the host must not be longer than {Booking.MessageToHostMaxLength} characters");
 }

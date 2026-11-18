@@ -18,4 +18,24 @@ public static class ReviewErrors
     public static readonly Error AlreadyReviewed = Error.Problem(
         "Review.AlreadyReviewed",
         "You have already reviewed this.");
+
+    public static readonly Error InvalidCategoryRating = Error.Validation(
+        "Review.InvalidCategoryRating",
+        "Every category rating (cleanliness, accuracy, checkIn, communication, location, value) must be between 1 and 5");
+
+    public static readonly Error AlreadyPublished = Error.Conflict(
+        "Review.AlreadyPublished",
+        "Published reviews can no longer be changed");
+
+    public static readonly Error NotPublished = Error.Problem(
+        "Review.NotPublished",
+        "Hosts can only reply to published reviews");
+
+    public static readonly Error ReplyEmpty = Error.Validation(
+        "Review.ReplyEmpty",
+        "The reply cannot be empty");
+
+    public static readonly Error ReplyTooLong = Error.Validation(
+        "Review.ReplyTooLong",
+        $"The reply must not be longer than {Review.ReplyMaxLength} characters");
 }

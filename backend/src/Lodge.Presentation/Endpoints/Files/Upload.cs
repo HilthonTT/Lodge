@@ -19,11 +19,16 @@ internal sealed class Upload : IEndpoint
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("files", async (
-            [FromHeader(Name = "X-Idempotency-Key")] Guid requestId,
+            [FromHeader(Name = IdempotencyKey.HeaderName)] string? idempotencyKey,
             [FromForm] UploadFileRequest request,
             ISender sender,
             CancellationToken cancellationToken) =>
         {
+            if (!IdempotencyKey.TryParse(idempotencyKey, out Guid requestId))
+            {
+                return IdempotencyKey.Invalid();
+            }
+
             using Stream stream = request.File.OpenReadStream();
 
             var command = new UploadFileCommand(

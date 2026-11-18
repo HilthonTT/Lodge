@@ -1,5 +1,4 @@
-﻿using System.Data;
-using Lodge.Application.Abstractions.Assets;
+using System.Data;
 using Lodge.Application.Abstractions.Data;
 using Lodge.Application.Abstractions.Messaging;
 using Lodge.Contracts.Apartments;
@@ -8,24 +7,24 @@ using Lodge.Domain.Core.Primitives;
 
 namespace Lodge.Application.Apartments.GetById;
 
-internal sealed class GetApartmentByIdQueryHandler(
-    IDbConnectionFactory factory,
-    IAssetUrlResolver assetUrlResolver)
+/// <summary>
+/// Returns listed apartments only; unlisted and deleted ones are "not found" (hosts preview theirs through
+/// the hosting endpoints).
+/// </summary>
+internal sealed class GetApartmentByIdQueryHandler(IDbConnectionFactory factory, ApartmentReader apartmentReader)
     : IQueryHandler<GetApartmentByIdQuery, ApartmentResponse>
 {
     public async Task<Result<ApartmentResponse>> Handle(GetApartmentByIdQuery request, CancellationToken cancellationToken)
     {
         using IDbConnection connection = await factory.GetOpenConnectionAsync(cancellationToken);
 
-        ApartmentResponse? apartment = await ApartmentQueries.GetByIdAsync(connection, request.ApartmentId);
+        List<ApartmentResponse> apartments = await apartmentReader.QueryAsync(
+            connection,
+            $"WHERE a.id = @ApartmentId AND {ApartmentReader.ListedCondition}",
+            new { request.ApartmentId });
 
-        if (apartment is null)
-        {
-            return Result.Failure<ApartmentResponse>(ApartmentErrors.NotFound(request.ApartmentId));
-        }
-
-        apartment.ImageUrl = assetUrlResolver.Resolve(apartment.ImageUrl);
-
-        return apartment;
+        return apartments.Count == 0
+            ? Result.Failure<ApartmentResponse>(ApartmentErrors.NotFound(request.ApartmentId))
+            : apartments[0];
     }
 }

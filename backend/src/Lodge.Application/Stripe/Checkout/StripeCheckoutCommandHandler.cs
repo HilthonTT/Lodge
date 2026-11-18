@@ -1,6 +1,9 @@
-﻿using Lodge.Application.Abstractions.Authentication;
+﻿using Lodge.Application.Abstractions.App;
+using Lodge.Application.Abstractions.Authentication;
 using Lodge.Application.Abstractions.Messaging;
 using Lodge.Application.Core.Errors;
+using Lodge.Application.Payments;
+using Lodge.Contracts.Payments;
 using Lodge.Domain.Apartments;
 using Lodge.Domain.Bookings;
 using Lodge.Domain.Core.Primitives;
@@ -11,7 +14,8 @@ using Stripe.Checkout;
 namespace Lodge.Application.Stripe.Checkout;
 
 /// <summary>
-/// Creates a Stripe Checkout session for a reserved booking and returns its URL.
+/// Starts the payment of a reserved booking: a Stripe Checkout session in Stripe mode, or the frontend's simulated
+/// checkout page (<c>{FrontendBaseUrl}/checkout/simulated?bookingId=...</c>) in simulated mode.
 /// </summary>
 internal sealed class StripeCheckoutCommandHandler(
     IUserIdentifierProvider userIdentifierProvider,
@@ -19,52 +23,61 @@ internal sealed class StripeCheckoutCommandHandler(
     IBookingRepository bookingRepository,
     IApartmentRepository apartmentRepository,
     StripeClientProvider stripeClientProvider,
-    IOptions<StripeOptions> stripeOptions) : ICommandHandler<StripeCheckoutCommand, string>
+    IPaymentModeProvider paymentModeProvider,
+    IOptions<StripeOptions> stripeOptions,
+    IOptions<AppOptions> appOptions) : ICommandHandler<StripeCheckoutCommand, CheckoutResponse>
 {
     internal const string UserIdMetadataKey = "userId";
     internal const string BookingIdMetadataKey = "bookingId";
 
-    public async Task<Result<string>> Handle(StripeCheckoutCommand request, CancellationToken cancellationToken)
+    public async Task<Result<CheckoutResponse>> Handle(StripeCheckoutCommand request, CancellationToken cancellationToken)
     {
         if (request.UserId != userIdentifierProvider.UserId)
         {
-            return Result.Failure<string>(UserErrors.InvalidPermissions);
+            return Result.Failure<CheckoutResponse>(UserErrors.InvalidPermissions);
         }
 
-        if (!stripeClientProvider.IsConfigured)
+        bool simulated = paymentModeProvider.Mode == PaymentMode.Simulated;
+
+        if (!simulated && !stripeClientProvider.IsConfigured)
         {
-            return Result.Failure<string>(StripeErrors.NotConfigured);
+            return Result.Failure<CheckoutResponse>(StripeErrors.NotConfigured);
         }
 
         User? user = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
 
         if (user is null)
         {
-            return Result.Failure<string>(UserErrors.NotFound(request.UserId));
+            return Result.Failure<CheckoutResponse>(UserErrors.NotFound(request.UserId));
         }
 
         Booking? booking = await bookingRepository.GetByIdAsync(request.BookingId, cancellationToken);
 
         if (booking is null)
         {
-            return Result.Failure<string>(BookingErrors.NotFound(request.BookingId));
+            return Result.Failure<CheckoutResponse>(BookingErrors.NotFound(request.BookingId));
         }
 
         if (booking.UserId != user.Id)
         {
-            return Result.Failure<string>(UserErrors.InvalidPermissions);
+            return Result.Failure<CheckoutResponse>(UserErrors.InvalidPermissions);
         }
 
         if (booking.Status != BookingStatus.Reserved)
         {
-            return Result.Failure<string>(StripeErrors.BookingNotPayable);
+            return Result.Failure<CheckoutResponse>(StripeErrors.BookingNotPayable);
+        }
+
+        if (simulated)
+        {
+            return new CheckoutResponse(appOptions.Value.FrontendUrl($"checkout/simulated?bookingId={booking.Id}"));
         }
 
         Apartment? apartment = await apartmentRepository.GetByIdAsync(booking.ApartmentId, cancellationToken);
 
         if (apartment is null)
         {
-            return Result.Failure<string>(ApartmentErrors.NotFound(booking.ApartmentId));
+            return Result.Failure<CheckoutResponse>(ApartmentErrors.NotFound(booking.ApartmentId));
         }
 
         string returnUrl = stripeOptions.Value.ReturnUrl;
@@ -86,7 +99,7 @@ internal sealed class StripeCheckoutCommandHandler(
                     {
                         Currency = booking.TotalPrice.Currency.Code.ToLowerInvariant(),
                         // Stripe expects the amount in the smallest currency unit (cents for USD/EUR).
-                        UnitAmount = (long)Math.Round(booking.TotalPrice.Amount * 100m, MidpointRounding.AwayFromZero),
+                        UnitAmount = StripePaymentGateway.ToMinorUnits(booking.TotalPrice.Amount),
                         ProductData = new SessionLineItemPriceDataProductDataOptions
                         {
                             Name = apartment.Name.Value,
@@ -106,6 +119,6 @@ internal sealed class StripeCheckoutCommandHandler(
 
         Session session = await sessionService.CreateAsync(sessionOptions, cancellationToken: cancellationToken);
 
-        return session.Url;
+        return new CheckoutResponse(session.Url);
     }
 }

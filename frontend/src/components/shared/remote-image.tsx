@@ -2,6 +2,7 @@
 
 import { ImageOff } from "lucide-react";
 import Image, { type ImageProps } from "next/image";
+import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 
 import { env } from "@/lib/env";
@@ -15,6 +16,7 @@ type RemoteImageProps = Omit<ImageProps, "src"> & { src: string | null | undefin
  * unoptimized instead of throwing, and broken images show a neutral placeholder.
  */
 export function RemoteImage({ src, alt, className, ...props }: RemoteImageProps) {
+  const t = useTranslations("common");
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
 
   // A server-rendered <img> can fail before React hydrates and attaches
@@ -30,7 +32,7 @@ export function RemoteImage({ src, alt, className, ...props }: RemoteImageProps)
     return (
       <div
         role="img"
-        aria-label={alt || "Image unavailable"}
+        aria-label={alt || t("imageUnavailable")}
         className={cn(
           "grid size-full place-items-center bg-muted text-muted-foreground",
           props.fill && "absolute inset-0",

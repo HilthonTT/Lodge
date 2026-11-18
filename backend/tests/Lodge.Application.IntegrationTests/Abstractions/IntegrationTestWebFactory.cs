@@ -1,4 +1,4 @@
-using Hangfire;
+﻿using Hangfire;
 using Lodge.Application.Abstractions.Authentication;
 using Lodge.BackgroundTasks.Tasks;
 using Microsoft.AspNetCore.Hosting;
@@ -52,6 +52,8 @@ public sealed class IntegrationTestWebFactory : WebApplicationFactory<Program>, 
                 ["ConnectionStrings:Cache"] = _redisContainer.GetConnectionString(),
                 ["Database:ApplyMigrationsOnStartup"] = "true",
                 ["Database:SeedDemoData"] = "true",
+                // Never talk to a local SMTP server: e-mails are only logged.
+                ["Mail:SmtpServer"] = "",
                 ["Serilog:WriteTo:1:Name"] = "Console",
             }));
 

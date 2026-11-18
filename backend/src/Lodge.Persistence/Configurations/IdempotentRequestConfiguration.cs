@@ -16,5 +16,8 @@ internal sealed class IdempotentRequestConfiguration : IEntityTypeConfiguration<
         builder.HasKey(idempotentRequest => idempotentRequest.Id);
 
         builder.Property(idempotentRequest => idempotentRequest.Name).IsRequired();
+
+        // The serialized (JSON) result replayed for retries; null for keys recorded before results were stored.
+        builder.Property(idempotentRequest => idempotentRequest.Response).HasColumnType("jsonb");
     }
 }

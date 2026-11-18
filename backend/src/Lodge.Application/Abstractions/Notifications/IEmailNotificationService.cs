@@ -70,4 +70,35 @@ public interface IEmailNotificationService
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The completed task.</returns>
     Task SendBookingCancelledEmailAsync(BookingCancelledEmail bookingCancelledEmail, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sends the e-mail with the e-mail verification link.
+    /// </summary>
+    /// <param name="emailVerificationEmail">The e-mail verification email.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The completed task.</returns>
+    Task SendEmailVerificationEmailAsync(EmailVerificationEmail emailVerificationEmail, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sends the e-mail with the password reset link.
+    /// </summary>
+    /// <param name="passwordResetEmail">The password reset email.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The completed task.</returns>
+    Task SendPasswordResetEmailAsync(PasswordResetEmail passwordResetEmail, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sends the "new message" e-mail.
+    /// </summary>
+    Task SendNewMessageEmailAsync(NewMessageEmail newMessageEmail, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sends the trip reminder (two days before check-in).
+    /// </summary>
+    Task SendTripReminderEmailAsync(TripReminderEmail tripReminderEmail, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sends the review reminder (the day after check-out).
+    /// </summary>
+    Task SendReviewReminderEmailAsync(ReviewReminderEmail reviewReminderEmail, CancellationToken cancellationToken = default);
 }

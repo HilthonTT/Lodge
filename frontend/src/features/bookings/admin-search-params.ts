@@ -4,15 +4,20 @@ import { BookingStatus } from "@/types/api";
 
 export const ADMIN_PAGE_SIZE = 20;
 
-/** Status filter chips for /admin/bookings, keyed by their URL slug (`?status=reserved`). */
+/**
+ * Status filter chips for /admin/bookings, keyed by their URL slug (`?status=reserved`).
+ * Labels: `admin.filterAll` and `bookings.status.<slug>` in messages/*.json.
+ */
 export const ADMIN_STATUS_FILTERS = {
-  all: { label: "All", status: undefined },
-  reserved: { label: "Awaiting payment", status: BookingStatus.Reserved },
-  confirmed: { label: "Confirmed", status: BookingStatus.Confirmed },
-  completed: { label: "Completed", status: BookingStatus.Completed },
-  cancelled: { label: "Cancelled", status: BookingStatus.Cancelled },
-  rejected: { label: "Rejected", status: BookingStatus.Rejected },
-} as const satisfies Record<string, { label: string; status: BookingStatus | undefined }>;
+  all: { status: undefined },
+  pendingApproval: { status: BookingStatus.PendingApproval },
+  reserved: { status: BookingStatus.Reserved },
+  confirmed: { status: BookingStatus.Confirmed },
+  completed: { status: BookingStatus.Completed },
+  cancelled: { status: BookingStatus.Cancelled },
+  rejected: { status: BookingStatus.Rejected },
+  expired: { status: BookingStatus.Expired },
+} as const satisfies Record<string, { status: BookingStatus | undefined }>;
 
 export type AdminStatusFilter = keyof typeof ADMIN_STATUS_FILTERS;
 

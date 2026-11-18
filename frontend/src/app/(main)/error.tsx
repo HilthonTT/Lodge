@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 
 import { Container } from "@/components/shared/container";
@@ -14,6 +15,8 @@ export default function MainError({
   /** Re-fetches and re-renders the segment (stable since Next 16.3). */
   retry: () => void;
 }) {
+  const t = useTranslations();
+
   useEffect(() => {
     console.error(error);
   }, [error]);
@@ -21,9 +24,9 @@ export default function MainError({
   return (
     <Container className="py-10">
       <ErrorState
-        title="Something went wrong"
-        description="An unexpected error occurred while loading this page. Please try again."
-        action={<Button onClick={() => retry()}>Try again</Button>}
+        title={t("errors.page.title")}
+        description={t("errors.page.description")}
+        action={<Button onClick={() => retry()}>{t("common.tryAgain")}</Button>}
       />
     </Container>
   );

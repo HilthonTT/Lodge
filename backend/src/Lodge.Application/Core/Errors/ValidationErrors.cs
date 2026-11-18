@@ -1,4 +1,4 @@
-﻿using Lodge.Domain.Core.Primitives;
+using Lodge.Domain.Core.Primitives;
 
 namespace Lodge.Application.Core.Errors;
 
@@ -71,6 +71,27 @@ internal static class ValidationErrors
     }
 
     /// <summary>
+    /// Contains the two-factor login errors.
+    /// </summary>
+    internal static class LoginTwoFactor
+    {
+        internal static readonly Error TwoFactorTokenIsRequired = Error.Validation(
+            "LoginTwoFactor.TwoFactorTokenIsRequired", "The two-factor token is required");
+
+        internal static readonly Error CodeIsRequired = Error.Validation(
+            "LoginTwoFactor.CodeIsRequired", "Either a verification code or a recovery code is required");
+    }
+
+    /// <summary>
+    /// Contains the forgot password errors.
+    /// </summary>
+    internal static class ForgotPassword
+    {
+        internal static readonly Error EmailIsRequired = Error.Validation(
+            "ForgotPassword.EmailIsRequired", "The email is required");
+    }
+
+    /// <summary>
     /// Contains the reserve booking errors.
     /// </summary>
     internal static class ReserveBooking
@@ -83,6 +104,20 @@ internal static class ValidationErrors
 
         internal static readonly Error StartDateMustBeLessThanEndDate = Error.Validation(
             "ReserveBooking.StartDateMustBeLessThanEndDate",
+            "The start date must be less than the end date");
+
+        internal static readonly Error GuestCountIsRequired = Error.Validation(
+            "ReserveBooking.GuestCountIsRequired",
+            "The number of guests is required and must be at least 1");
+    }
+
+    /// <summary>
+    /// Contains the change booking dates errors.
+    /// </summary>
+    internal static class ChangeBookingDates
+    {
+        internal static readonly Error StartDateMustBeLessThanEndDate = Error.Validation(
+            "ChangeBookingDates.StartDateMustBeLessThanEndDate",
             "The start date must be less than the end date");
     }
 
@@ -128,7 +163,7 @@ internal static class ValidationErrors
            "UploadFile.ContentTypeIsRequired", "The content type is required");
 
         internal static readonly Error InvalidContentType = Error.Validation(
-            "UploadFile.InvalidContentType", "The content type must be an image");
+            "UploadFile.InvalidContentType", "The file must be a JPEG, PNG or WebP image");
 
         internal static readonly Error FileIsRequired = Error.Validation(
             "UploadFile.FileIsRequired", "The file is required");
@@ -204,6 +239,10 @@ internal static class ValidationErrors
         internal static readonly Error StartDateMustBeLessThanEndDate = Error.Validation(
             "CalculatePrice.StartDateMustBeLessThanEndDate",
             "The start date must be less than the end date");
+
+        internal static readonly Error TooManyNights = Error.Validation(
+            "CalculatePrice.TooManyNights",
+            "The price can be calculated for at most 365 nights");
     }
 
     internal static class StripeCheckout
@@ -218,7 +257,7 @@ internal static class ValidationErrors
     internal static class GetBookings
     {
         internal static readonly Error InvalidStatus = Error.Validation(
-            "GetBookings.InvalidStatus", "The status must be between 1 and 5");
+            "GetBookings.InvalidStatus", "The status must be between 1 and 7");
     }
 
     internal static class Paging
@@ -241,5 +280,89 @@ internal static class ValidationErrors
         internal static readonly Error BothDatesRequired = Error.Validation(
             "SearchApartments.BothDatesRequired",
             "Both the start date and the end date must be provided");
+
+        internal static readonly Error InvalidAmenity = Error.Validation(
+            "SearchApartments.InvalidAmenity",
+            "Unknown amenity");
+
+        internal static readonly Error InvalidPropertyType = Error.Validation(
+            "SearchApartments.InvalidPropertyType",
+            "Unknown property type");
+
+        internal static readonly Error NegativeFilter = Error.Validation(
+            "SearchApartments.NegativeFilter",
+            "Guest count must be at least 1; bedrooms, beds, bathrooms and prices must not be negative");
+
+        internal static readonly Error InvalidPriceRange = Error.Validation(
+            "SearchApartments.InvalidPriceRange",
+            "The minimum price must not be greater than the maximum price");
+
+        internal static readonly Error InvalidBounds = Error.Validation(
+            "SearchApartments.InvalidBounds",
+            "Latitudes must be between -90 and 90 (minimum first) and longitudes between -180 and 180");
+
+        internal static readonly Error InvalidFlexible = Error.Validation(
+            "SearchApartments.InvalidFlexible",
+            "Flexible must be 'weekend', 'week' or 'month'");
+
+        internal static readonly Error FlexibleWithExactDates = Error.Validation(
+            "SearchApartments.FlexibleWithExactDates",
+            "Flexible dates cannot be combined with a start or end date");
+
+        internal static readonly Error InvalidMonths = Error.Validation(
+            "SearchApartments.InvalidMonths",
+            "Flexible dates need 1 to 12 months written as yyyy-MM");
+
+        internal static readonly Error MonthsRequireFlexible = Error.Validation(
+            "SearchApartments.MonthsRequireFlexible",
+            "Months can only be used with flexible dates");
+    }
+
+    internal static class Listing
+    {
+        internal static readonly Error InvalidPropertyType = Error.Validation(
+            "Listing.InvalidPropertyType",
+            "Unknown property type");
+
+        internal static readonly Error InvalidAmenity = Error.Validation(
+            "Listing.InvalidAmenity",
+            "Unknown amenity");
+
+        internal static readonly Error InvalidCurrency = Error.Validation(
+            "Listing.InvalidCurrency",
+            "The currency must be USD or EUR");
+
+        internal static readonly Error InvalidTime = Error.Validation(
+            "Listing.InvalidTime",
+            "Check-in and check-out times must be written as HH:mm");
+
+        internal static readonly Error InvalidAddress = Error.Validation(
+            "Listing.InvalidAddress",
+            "The country, city and street are required (at most 200 characters each)");
+    }
+
+    internal static class Payouts
+    {
+        internal static readonly Error InvalidStatus = Error.Validation(
+            "Payouts.InvalidStatus",
+            "The status must be Scheduled, OnHold, Paid, Failed or Cancelled");
+    }
+
+    internal static class Calendar
+    {
+        internal static readonly Error NothingToChange = Error.Validation(
+            "Calendar.NothingToChange",
+            "Set 'blocked', 'price' or 'clearPrice'");
+
+        internal static readonly Error PriceAndClearPrice = Error.Validation(
+            "Calendar.PriceAndClearPrice",
+            "'price' and 'clearPrice' cannot be combined");
+    }
+
+    internal static class Locations
+    {
+        internal static readonly Error InvalidQuery = Error.Validation(
+            "Locations.InvalidQuery",
+            "The search text must be between 2 and 100 characters");
     }
 }

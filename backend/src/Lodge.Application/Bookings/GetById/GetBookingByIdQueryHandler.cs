@@ -1,4 +1,6 @@
-﻿using System.Data;
+using Lodge.Application.Bookings.Expire;
+using Microsoft.Extensions.Options;
+using System.Data;
 using Lodge.Application.Abstractions.Assets;
 using Lodge.Application.Abstractions.Authentication;
 using Lodge.Application.Abstractions.Data;
@@ -13,7 +15,9 @@ namespace Lodge.Application.Bookings.GetById;
 internal sealed class GetBookingByIdQueryHandler(
     IDbConnectionFactory factory,
     IUserIdentifierProvider userIdentifierProvider,
-    IAssetUrlResolver assetUrlResolver) : IQueryHandler<GetBookingByIdQuery, BookingResponse>
+    IAssetUrlResolver assetUrlResolver,
+    IDateTimeProvider dateTimeProvider,
+    IOptions<ExpireBookingRequestsOptions> expiryOptions) : IQueryHandler<GetBookingByIdQuery, BookingResponse>
 {
     public async Task<Result<BookingResponse>> Handle(GetBookingByIdQuery request, CancellationToken cancellationToken)
     {
@@ -26,13 +30,14 @@ internal sealed class GetBookingByIdQueryHandler(
             return Result.Failure<BookingResponse>(BookingErrors.NotFound(request.BookingId));
         }
 
-        if (booking.UserId != userIdentifierProvider.UserId)
+        Guid callerId = userIdentifierProvider.UserId;
+
+        // The guest and the listing's host can see the booking.
+        if (booking.UserId != callerId && booking.ListingHostId != callerId)
         {
             return Result.Failure<BookingResponse>(UserErrors.InvalidPermissions);
         }
 
-        booking.ApartmentImageUrl = assetUrlResolver.Resolve(booking.ApartmentImageUrl);
-
-        return booking;
+        return BookingQueries.Present(booking, callerId, assetUrlResolver, DateOnly.FromDateTime(dateTimeProvider.UtcNow), expiryOptions.Value.ExpiryHours);
     }
 }

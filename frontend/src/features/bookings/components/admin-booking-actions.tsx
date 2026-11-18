@@ -1,6 +1,7 @@
 "use client";
 
 import { Ban, CircleCheckBig, Loader2 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -15,6 +16,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { useApiErrorMessage } from "@/i18n/api-errors";
 import { formatDateRange, parseDateOnly, today } from "@/lib/dates";
 import { type Booking, BookingStatus } from "@/types/api";
 
@@ -24,12 +26,15 @@ import { useAdminBookingAction } from "../hooks/use-admin-bookings";
 export function getAdminActions(booking: Booking) {
   const end = parseDateOnly(booking.durationEnd);
   return {
-    canReject: booking.status === BookingStatus.Reserved,
+    canReject: booking.status === BookingStatus.Reserved || booking.status === BookingStatus.PendingApproval,
     canComplete: booking.status === BookingStatus.Confirmed && !!end && end <= today(),
   };
 }
 
 export function AdminBookingActions({ booking }: { booking: Booking }) {
+  const t = useTranslations("admin");
+  const locale = useLocale();
+  const errorMessage = useApiErrorMessage();
   const { canReject, canComplete } = getAdminActions(booking);
   const reject = useAdminBookingAction("reject");
   const complete = useAdminBookingAction("complete");
@@ -40,20 +45,22 @@ export function AdminBookingActions({ booking }: { booking: Booking }) {
 
   const start = parseDateOnly(booking.durationStart);
   const end = parseDateOnly(booking.durationEnd);
-  const stay = `${booking.guestName || booking.guestEmail}'s stay at ${booking.apartmentName}${
-    start && end ? ` (${formatDateRange(start, end)})` : ""
-  }`;
+  const guest = booking.guestName || booking.guestEmail;
+  const stay =
+    start && end
+      ? t("stayWithDates", { guest, apartment: booking.apartmentName, dates: formatDateRange(start, end, locale) })
+      : t("stay", { guest, apartment: booking.apartmentName });
 
   const onReject = () =>
     reject.mutate(booking.id, {
-      onSuccess: () => toast.success("Booking rejected", { description: stay }),
-      onError: (error) => toast.error("Couldn't reject this booking", { description: error.message }),
+      onSuccess: () => toast.success(t("rejected"), { description: stay }),
+      onError: (error) => toast.error(t("rejectError"), { description: errorMessage(error) }),
     });
 
   const onComplete = () =>
     complete.mutate(booking.id, {
-      onSuccess: () => toast.success("Stay marked as completed", { description: stay }),
-      onError: (error) => toast.error("Couldn't complete this booking", { description: error.message }),
+      onSuccess: () => toast.success(t("completed"), { description: stay }),
+      onError: (error) => toast.error(t("completeError"), { description: errorMessage(error) }),
     });
 
   return (
@@ -63,21 +70,20 @@ export function AdminBookingActions({ booking }: { booking: Booking }) {
           <AlertDialogTrigger asChild>
             <Button variant="outline" size="sm" disabled={reject.isPending}>
               {reject.isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Ban aria-hidden="true" />}
-              Reject
+              {t("reject")}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Reject this booking?</AlertDialogTitle>
+              <AlertDialogTitle>{t("rejectTitle")}</AlertDialogTitle>
               <AlertDialogDescription>
-                {stay} will be rejected and the dates released. The guest hasn&apos;t paid yet. This
-                can&apos;t be undone.
+                {t("rejectDescription", { stay })}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Keep booking</AlertDialogCancel>
+              <AlertDialogCancel>{t("keep")}</AlertDialogCancel>
               <AlertDialogAction variant="destructive" onClick={onReject}>
-                Reject booking
+                {t("rejectConfirm")}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -93,19 +99,19 @@ export function AdminBookingActions({ booking }: { booking: Booking }) {
               ) : (
                 <CircleCheckBig aria-hidden="true" />
               )}
-              Mark completed
+              {t("markCompleted")}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Mark this stay as completed?</AlertDialogTitle>
+              <AlertDialogTitle>{t("completeTitle")}</AlertDialogTitle>
               <AlertDialogDescription>
-                {stay} will be marked as completed, and the guest will be able to leave a review.
+                {t("completeDescription", { stay })}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Not yet</AlertDialogCancel>
-              <AlertDialogAction onClick={onComplete}>Mark completed</AlertDialogAction>
+              <AlertDialogCancel>{t("notYet")}</AlertDialogCancel>
+              <AlertDialogAction onClick={onComplete}>{t("markCompleted")}</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

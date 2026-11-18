@@ -10,6 +10,8 @@ type LodgeJwtClaims = {
   email?: string;
   name?: string;
   imageId?: string;
+  /** "true" / "false": a snapshot taken when the token was issued. */
+  emailVerified?: string;
   /** "Guest" or "Admin". A string, or an array if several roles are issued. */
   role?: string | string[];
   /** Long-form claim name some .NET token handlers emit instead of `role`. */
@@ -31,6 +33,8 @@ export type Session = {
   name: string;
   imageId: string | null;
   role: UserRole;
+  /** From the token, so it can lag behind the account until the session is refreshed. */
+  emailVerified: boolean;
   /** Expiry as epoch milliseconds. */
   expiresAt: number;
 };
@@ -52,6 +56,8 @@ export function decodeSession(token: string | null | undefined, now = Date.now()
       name: claims.name?.trim() || claims.email || "Guest",
       imageId: claims.imageId || null,
       role: readRole(claims),
+      // Tokens issued before the claim existed belong to verified (seeded) accounts.
+      emailVerified: claims.emailVerified?.toLowerCase() !== "false",
       expiresAt,
     };
   } catch {

@@ -1,4 +1,5 @@
 ﻿using Lodge.Application.Abstractions.Idempotency;
+using Lodge.Contracts.Reviews;
 
 namespace Lodge.Application.Reviews.Create;
 
@@ -8,11 +9,13 @@ namespace Lodge.Application.Reviews.Create;
 /// <param name="RequestId">The request identifier.</param>
 /// <param name="UserId">The user identifier.</param>
 /// <param name="BookingId">The booking identifier.</param>
-/// <param name="Rating">The rating out of 5.</param>
+/// <param name="Rating">The overall rating out of 5.</param>
 /// <param name="Comment">The comment.</param>
+/// <param name="Categories">The category ratings (required, each 1 to 5).</param>
 public sealed record CreateReviewCommand(
     Guid RequestId,
     Guid UserId,
-    Guid BookingId, 
-    int Rating, 
-    string Comment) : IdempotentCommand<Guid>(RequestId);
+    Guid BookingId,
+    int Rating,
+    string Comment,
+    CategoryRatingsDto? Categories) : IdempotentCommand<Guid>(RequestId);

@@ -1,41 +1,32 @@
-import { CalendarCheck, ChevronRight, type LucideIcon, ShieldCheck, UserRound } from "lucide-react";
+import { Bell, CalendarCheck, ChevronRight, type LucideIcon, ShieldCheck, UserRound } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { Container } from "@/components/shared/container";
 import { PageHeader } from "@/components/shared/page-header";
 import { getServerSession } from "@/lib/auth/session.server";
 
-export const metadata: Metadata = { title: "Account" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("settings");
+  return { title: t("title") };
+}
 
-const SECTIONS: { title: string; description: string; href: string; icon: LucideIcon }[] = [
-  {
-    title: "Personal info",
-    description: "Your legal name and contact details.",
-    href: "/settings/personal-info",
-    icon: UserRound,
-  },
-  {
-    title: "Login & security",
-    description: "Update your password and manage your session.",
-    href: "/settings/login-and-security",
-    icon: ShieldCheck,
-  },
-  {
-    title: "My bookings",
-    description: "Pay for, cancel or review your stays.",
-    href: "/bookings",
-    icon: CalendarCheck,
-  },
-];
+const SECTIONS = [
+  { key: "personalInfo", href: "/settings/personal-info", icon: UserRound },
+  { key: "loginSecurity", href: "/settings/login-and-security", icon: ShieldCheck },
+  { key: "notifications", href: "/settings/notifications", icon: Bell },
+  { key: "bookings", href: "/bookings", icon: CalendarCheck },
+] as const satisfies readonly { key: string; href: string; icon: LucideIcon }[];
 
 export default async function SettingsPage() {
-  const session = await getServerSession();
+  const [session, t] = await Promise.all([getServerSession(), getTranslations("settings.sections")]);
+  const tSettings = await getTranslations("settings");
 
   return (
     <Container className="grid max-w-5xl gap-8">
       <PageHeader
-        title="Account"
+        title={tSettings("title")}
         description={
           session ? (
             <>
@@ -45,7 +36,7 @@ export default async function SettingsPage() {
         }
       />
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {SECTIONS.map(({ title, description, href, icon: Icon }) => (
+        {SECTIONS.map(({ key, href, icon: Icon }) => (
           <li key={href}>
             <Link
               href={href}
@@ -56,13 +47,13 @@ export default async function SettingsPage() {
               </span>
               <span className="grid gap-1">
                 <span className="flex items-center justify-between font-semibold">
-                  {title}
+                  {t(key)}
                   <ChevronRight
                     className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5"
                     aria-hidden="true"
                   />
                 </span>
-                <span className="text-sm text-muted-foreground">{description}</span>
+                <span className="text-sm text-muted-foreground">{t(`${key}Description`)}</span>
               </span>
             </Link>
           </li>

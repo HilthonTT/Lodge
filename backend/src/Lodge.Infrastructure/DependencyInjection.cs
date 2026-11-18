@@ -11,6 +11,7 @@ using Lodge.Application.Abstractions.Storage;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Domain.Users;
 using Lodge.Infrastructure.Authentication;
+using Lodge.Infrastructure.Authentication.External;
 using Lodge.Infrastructure.Caching;
 using Lodge.Infrastructure.Cryptography;
 using Lodge.Infrastructure.Emails;
@@ -86,6 +87,21 @@ public static class DependencyInjection
         services.AddSingleton<IPasswordHashChecker>(sp => sp.GetRequiredService<PasswordHasher>());
         services.AddSingleton<IJwtProvider, JwtProvider>();
         services.AddScoped<IUserIdentifierProvider, UserIdentifierProvider>();
+
+        // Two-factor authentication. The Data Protection key ring is persisted by the persistence layer.
+        services.AddSingleton<ITotpProvider, TotpProvider>();
+        services.AddSingleton<ISecretProtector, DataProtectionSecretProtector>();
+
+        // Social login (Google, GitHub). Providers without credentials are simply not offered.
+        services.AddOptions<ExternalAuthenticationOptions>().BindConfiguration(ExternalAuthenticationOptions.SectionName);
+        services.AddSingleton<IExternalLoginProvider, GoogleLoginProvider>();
+        services.AddSingleton<IExternalLoginProvider, GitHubLoginProvider>();
+        services.AddHttpClient(ExternalAuthenticationService.HttpClientName, client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(15);
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("Lodge/1.0");
+        });
+        services.AddScoped<IExternalAuthenticationService, ExternalAuthenticationService>();
 
         return services;
     }

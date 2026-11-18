@@ -3,6 +3,8 @@ using Asp.Versioning;
 using Lodge.Presentation.Extensions;
 using Lodge.Presentation.Infrastructure;
 using Lodge.Presentation.OpenApi;
+using Lodge.Presentation.Realtime;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lodge.Presentation;
@@ -33,7 +35,17 @@ public static class DependencyInjection
         // The versioned API explorer puts every v1 endpoint in the "v1" group, which is exactly the
         // document name below, so the built-in generator renders the substituted /api/v1/... routes.
         services.AddOpenApi(OpenApiDocumentName, options =>
-            options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
+        {
+            options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
+            options.AddOperationTransformer<IdempotencyKeyOperationTransformer>();
+        });
+
+        services.AddRealtime();
+
+        // Binding failures (malformed JSON, wrongly typed route/query/header values) throw BadHttpRequestException in
+        // every environment, so GlobalExceptionHandler answers them with a 400 problem and a stable code instead of
+        // an empty 400 (the production default) or a 500.
+        services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = true);
 
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();

@@ -1,13 +1,18 @@
-﻿using Lodge.Application.Abstractions.Data;
+using Lodge.Application.Abstractions.Data;
 using Lodge.Application.Abstractions.Idempotency;
 using Lodge.Domain.Apartments;
 using Lodge.Domain.Bookings;
+using Lodge.Domain.Experiences;
+using Lodge.Domain.Messaging;
+using Lodge.Domain.Payouts;
 using Lodge.Domain.Reviews;
 using Lodge.Domain.Users;
+using Lodge.Domain.Wishlists;
 using Lodge.Persistence.Idempotency;
 using Lodge.Persistence.Interceptors;
 using Lodge.Persistence.Outbox;
 using Lodge.Persistence.Repositories;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -56,9 +61,17 @@ public static class DependencyInjection
         services.AddScoped<IDbContext>(sp => sp.GetRequiredService<LodgeDbContext>());
 
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IUserTokenRepository, UserTokenRepository>();
+        services.AddScoped<IExternalLoginRepository, ExternalLoginRepository>();
+        services.AddScoped<IRecoveryCodeRepository, RecoveryCodeRepository>();
         services.AddScoped<IApartmentRepository, ApartmentRepository>();
         services.AddScoped<IBookingRepository, BookingRepository>();
         services.AddScoped<IReviewRepository, ReviewRepository>();
+        services.AddScoped<IPayoutRepository, PayoutRepository>();
+        services.AddScoped<ICalendarDayRepository, CalendarDayRepository>();
+        services.AddScoped<IWishlistRepository, WishlistRepository>();
+        services.AddScoped<IConversationRepository, ConversationRepository>();
+        services.AddScoped<IExperienceRepository, ExperienceRepository>();
         services.AddScoped<IIdempotencyService, IdempotencyService>();
 
         services.AddOptions<OutboxOptions>()
@@ -68,6 +81,12 @@ public static class DependencyInjection
         services.AddScoped<IProcessOutboxMessagesJob, ProcessOutboxMessagesJob>();
 
         services.AddHealthChecks().AddNpgSql(name: "postgres");
+
+        // Data Protection keys (used to encrypt TOTP secrets and the social login correlation cookie) are stored
+        // in PostgreSQL, so they survive restarts and are shared by every API instance.
+        services.AddDataProtection()
+            .SetApplicationName("Lodge")
+            .PersistKeysToDbContext<LodgeDbContext>();
 
         return services;
     }

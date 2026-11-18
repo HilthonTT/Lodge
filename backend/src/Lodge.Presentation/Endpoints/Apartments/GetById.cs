@@ -1,4 +1,5 @@
 ﻿using Lodge.Application.Apartments.GetById;
+using Lodge.Application.Hosting.Listings;
 using Lodge.Contracts.Apartments;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Presentation.Extensions;
@@ -11,21 +12,32 @@ using Microsoft.AspNetCore.Routing;
 namespace Lodge.Presentation.Endpoints.Apartments;
 
 /// <summary>
-/// Represents the endpoint for fetching the apartment by its identifier.
+/// Gets a listed apartment. Unlisted listings are only returned to their host (with the private fields of
+/// <see cref="HostListingResponse"/>); everyone else gets 404.
 /// </summary>
 internal sealed class GetById : IEndpoint
 {
     /// <inheritdoc />
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("apartments/{apartmentId}", async (
+        app.MapGet("apartments/{apartmentId:guid}", async (
             Guid apartmentId,
+            HttpContext httpContext,
             ISender sender,
             CancellationToken cancellationToken) =>
         {
-            var query = new GetApartmentByIdQuery(apartmentId);
+            Result<ApartmentResponse> result = await sender.Send(new GetApartmentByIdQuery(apartmentId), cancellationToken);
 
-            Result<ApartmentResponse> result = await sender.Send(query, cancellationToken);
+            if (result.IsFailure && httpContext.User.Identity?.IsAuthenticated == true)
+            {
+                Result<HostListingResponse> ownListing =
+                    await sender.Send(new GetHostListingQuery(apartmentId), cancellationToken);
+
+                if (ownListing.IsSuccess)
+                {
+                    return Results.Ok(ownListing.Value);
+                }
+            }
 
             return result.Match(Results.Ok, CustomResults.Problem);
         })

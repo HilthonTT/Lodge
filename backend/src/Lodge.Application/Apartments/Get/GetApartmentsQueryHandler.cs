@@ -1,5 +1,5 @@
-﻿using System.Data;
-using Lodge.Application.Abstractions.Assets;
+using System.Data;
+using Dapper;
 using Lodge.Application.Abstractions.Data;
 using Lodge.Application.Abstractions.Messaging;
 using Lodge.Contracts.Apartments;
@@ -8,9 +8,7 @@ using Lodge.Domain.Core.Primitives;
 
 namespace Lodge.Application.Apartments.Get;
 
-internal sealed class GetApartmentsQueryHandler(
-    IDbConnectionFactory factory,
-    IAssetUrlResolver assetUrlResolver)
+internal sealed class GetApartmentsQueryHandler(IDbConnectionFactory factory, ApartmentReader apartmentReader)
     : IQueryHandler<GetApartmentsQuery, PagedList<ApartmentResponse>>
 {
     public async Task<Result<PagedList<ApartmentResponse>>> Handle(
@@ -19,13 +17,17 @@ internal sealed class GetApartmentsQueryHandler(
     {
         using IDbConnection connection = await factory.GetOpenConnectionAsync(cancellationToken);
 
-        (List<ApartmentResponse> items, int totalCount) =
-            await ApartmentQueries.GetPageAsync(connection, request.Page, request.PageSize);
+        int totalCount = await connection.ExecuteScalarAsync<int>(
+            $"SELECT COUNT(*) FROM apartments AS a WHERE {ApartmentReader.ListedCondition}");
 
-        foreach (ApartmentResponse apartment in items)
-        {
-            apartment.ImageUrl = assetUrlResolver.Resolve(apartment.ImageUrl);
-        }
+        List<ApartmentResponse> items = await apartmentReader.QueryAsync(
+            connection,
+            $"""
+            WHERE {ApartmentReader.ListedCondition}
+            ORDER BY a.name, a.id
+            LIMIT @PageSize OFFSET @Offset
+            """,
+            new { request.PageSize, Offset = (request.Page - 1) * request.PageSize });
 
         return new PagedList<ApartmentResponse>(items, request.Page, request.PageSize, totalCount);
     }

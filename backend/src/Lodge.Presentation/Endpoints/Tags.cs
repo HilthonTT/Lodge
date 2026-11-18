@@ -1,4 +1,4 @@
-﻿namespace Lodge.Presentation.Endpoints;
+namespace Lodge.Presentation.Endpoints;
 
 /// <summary>
 /// Contains all of the endpoint tags.
@@ -18,4 +18,18 @@ internal static class Tags
     internal const string Reviews = "Reviews";
 
     internal const string Stripe = "Stripe";
+
+    internal const string Payments = "Payments";
+
+    internal const string Hosting = "Hosting";
+
+    internal const string Wishlists = "Wishlists";
+
+    internal const string Locations = "Locations";
+
+    internal const string Messaging = "Messaging";
+
+    internal const string Notifications = "Notifications";
+
+    internal const string Experiences = "Experiences";
 }

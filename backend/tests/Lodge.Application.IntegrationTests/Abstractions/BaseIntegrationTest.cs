@@ -1,9 +1,11 @@
-using Bogus;
+﻿using Bogus;
 using Lodge.Application.Users.Create;
 using Lodge.Contracts.Authentication;
 using Lodge.Domain.Core.Primitives;
+using Lodge.Domain.Users;
 using Lodge.Persistence;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.JsonWebTokens;
 
@@ -36,9 +38,10 @@ public abstract class BaseIntegrationTest : IDisposable
     protected LodgeDbContext DbContext { get; }
 
     /// <summary>
-    /// Registers a new user and makes it the current user of the test.
+    /// Registers a new user and makes it the current user of the test. By default the e-mail address is marked as
+    /// verified (bookings require a verified e-mail).
     /// </summary>
-    protected async Task<Guid> CreateAndSignInUserAsync()
+    protected async Task<Guid> CreateAndSignInUserAsync(bool verifyEmail = true)
     {
         Result<TokenResponse> result = await Sender.Send(new CreateUserCommand(
             Faker.Name.FirstName(),
@@ -50,6 +53,13 @@ public abstract class BaseIntegrationTest : IDisposable
 
         Guid userId = Guid.Parse(new JsonWebToken(result.Value.Token).GetClaim("userId").Value);
         Factory.CurrentUser.UserId = userId;
+
+        if (verifyEmail)
+        {
+            User user = await DbContext.Users.SingleAsync(u => u.Id == userId);
+            user.VerifyEmail(DateTime.UtcNow);
+            await DbContext.SaveChangesAsync();
+        }
 
         return userId;
     }

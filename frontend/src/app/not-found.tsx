@@ -1,13 +1,19 @@
 import { Compass } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { Logo } from "@/components/shared/logo";
 import { Button } from "@/components/ui/button";
 
-export const metadata: Metadata = { title: "Page not found" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("errors.notFound");
+  return { title: t("metaTitle") };
+}
 
-export default function NotFound() {
+export default async function NotFound() {
+  const t = await getTranslations("errors.notFound");
+
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="p-6">
@@ -26,17 +32,15 @@ export default function NotFound() {
             </span>
           </div>
           <div className="grid gap-2">
-            <h1 className="text-2xl font-semibold sm:text-3xl">This path leads nowhere</h1>
-            <p className="text-muted-foreground">
-              The page you&apos;re looking for doesn&apos;t exist or has moved. Let&apos;s get you back on the map.
-            </p>
+            <h1 className="text-2xl font-semibold sm:text-3xl">{t("title")}</h1>
+            <p className="text-muted-foreground">{t("description")}</p>
           </div>
           <div className="flex flex-wrap justify-center gap-2">
             <Button asChild size="lg">
-              <Link href="/">Explore stays</Link>
+              <Link href="/">{t("explore")}</Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link href="/search">Search</Link>
+              <Link href="/search">{t("search")}</Link>
             </Button>
           </div>
         </div>

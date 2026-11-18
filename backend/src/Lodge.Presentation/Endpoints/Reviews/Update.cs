@@ -1,4 +1,4 @@
-﻿using Lodge.Application.Reviews.Update;
+using Lodge.Application.Reviews.Update;
 using Lodge.Contracts.Reviews;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Presentation.Extensions;
@@ -24,7 +24,12 @@ internal sealed class Update : IEndpoint
             ISender sender,
             CancellationToken cancellationToken) =>
         {
-            var command = new UpdateReviewCommand(request.UserId, reviewId, request.Rating, request.Comment);
+            var command = new UpdateReviewCommand(
+                request.UserId,
+                reviewId,
+                request.Rating,
+                request.Comment,
+                request.Categories);
 
             Result result = await sender.Send(command, cancellationToken);
 

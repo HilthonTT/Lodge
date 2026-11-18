@@ -20,17 +20,24 @@ internal sealed class Reserve : IEndpoint
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("bookings", async (
-            [FromHeader(Name = "X-Idempotency-Key")] Guid requestId,
+            [FromHeader(Name = IdempotencyKey.HeaderName)] string? idempotencyKey,
             ReserveBookingRequest request,
             ISender sender,
             CancellationToken cancellationToken) =>
         {
+            if (!IdempotencyKey.TryParse(idempotencyKey, out Guid requestId))
+            {
+                return IdempotencyKey.Invalid();
+            }
+
             var command = new ReserveBookingCommand(
                 requestId, 
                 request.ApartmentId, 
                 request.UserId,
-                request.StartDate, 
-                request.EndDate);
+                request.StartDate,
+                request.EndDate,
+                request.GuestCount,
+                request.MessageToHost);
 
             Result<Guid> result = await sender.Send(command, cancellationToken);
 

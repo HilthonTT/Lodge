@@ -1,10 +1,23 @@
 "use client";
 
-import { CalendarCheck, ClipboardList, LogOut, Settings, ShieldCheck, UserRound } from "lucide-react";
+import {
+  CalendarCheck,
+  CircleUserRound,
+  Bell,
+  ClipboardList,
+  Heart,
+  House,
+  LogOut,
+  MessageCircle,
+  Settings,
+  ShieldCheck,
+  UserRound,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/shared/user-avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,10 +29,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useSession } from "@/features/auth/session-provider";
+import { fileUrl } from "@/lib/auth/avatar";
 import { loginUrl } from "@/lib/auth/routes";
-import { initials } from "@/lib/utils";
 
 export function UserMenu() {
+  const t = useTranslations("nav");
   const { session, isAdmin, signOut } = useSession();
   const pathname = usePathname();
 
@@ -28,10 +42,10 @@ export function UserMenu() {
     return (
       <div className="flex items-center gap-1">
         <Button asChild variant="ghost" className="hidden rounded-full sm:inline-flex">
-          <Link href={loginUrl(next)}>Sign in</Link>
+          <Link href={loginUrl(next)}>{t("signIn")}</Link>
         </Button>
         <Button asChild className="rounded-full">
-          <Link href="/register">Sign up</Link>
+          <Link href="/register">{t("signUp")}</Link>
         </Button>
       </div>
     );
@@ -43,14 +57,12 @@ export function UserMenu() {
         <Button
           variant="outline"
           className="h-11 gap-2 rounded-full pr-1.5 pl-3.5 shadow-xs"
-          aria-label={`Account menu for ${session.name}`}
+          aria-label={t("accountMenu", { name: session.name })}
         >
           <span className="hidden max-w-28 truncate text-sm font-medium lg:inline">
             {session.name.split(" ")[0]}
           </span>
-          <Avatar className="size-8">
-            <AvatarFallback>{initials(session.name)}</AvatarFallback>
-          </Avatar>
+          <UserAvatar name={session.name} src={fileUrl(session.imageId)} className="size-8" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
@@ -64,7 +76,7 @@ export function UserMenu() {
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
                 <Link href="/admin/bookings">
-                  <ClipboardList /> Manage bookings
+                  <ClipboardList /> {t("manageBookings")}
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
@@ -73,29 +85,54 @@ export function UserMenu() {
         )}
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
+            <Link href={`/users/${session.userId}`}>
+              <CircleUserRound /> {t("profile")}
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
             <Link href="/bookings">
-              <CalendarCheck /> My bookings
+              <CalendarCheck /> {t("myBookings")}
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/messages">
+              <MessageCircle /> {t("messages")}
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/notifications">
+              <Bell /> {t("notifications")}
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/wishlists">
+              <Heart /> {t("wishlists")}
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/hosting">
+              <House /> {t("hosting")}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href="/settings/personal-info">
-              <UserRound /> Personal info
+              <UserRound /> {t("personalInfo")}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href="/settings/login-and-security">
-              <ShieldCheck /> Login &amp; security
+              <ShieldCheck /> {t("loginSecurity")}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href="/settings">
-              <Settings /> Account settings
+              <Settings /> {t("accountSettings")}
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" onSelect={() => signOut({ redirectTo: "/" })}>
-          <LogOut /> Sign out
+          <LogOut /> {t("signOut")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

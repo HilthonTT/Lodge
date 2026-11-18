@@ -1,4 +1,4 @@
-using Lodge.Domain.Apartments;
+﻿using Lodge.Domain.Apartments;
 using Lodge.Domain.Bookings;
 using Lodge.Domain.Bookings.Events;
 using Lodge.Domain.Core.Primitives;
@@ -101,27 +101,7 @@ public class BookingTests
     private static Booking CreateBooking(DateOnly start, int nights)
     {
         Apartment apartment = TestData.CreateApartment(price: 100, cleaningFee: 0);
-        DateRange duration = DateRange.Create(start, start.AddDays(nights)).Value;
 
-        return Booking.Reserve(apartment, Guid.NewGuid(), duration, UtcNow, new PricingService());
-    }
-}
-
-internal static class TestData
-{
-    public static Apartment CreateApartment(decimal price, decimal cleaningFee, params Amenity[] amenities)
-    {
-        Currency usd = Currency.FromCode("USD");
-
-        return Apartment.Create(
-            Name.Create("Test apartment").Value,
-            Description.Create("A test apartment").Value,
-            new Address("Country", "State", "1000", "City", "Street 1"),
-            new Money(price, usd),
-            new Money(cleaningFee, usd),
-            maximumRoomCount: 2,
-            maximumGuestCount: 4,
-            imageUrl: "/images/cabin.png",
-            amenities: [.. amenities]);
+        return TestData.Reserve(apartment, start, nights, UtcNow);
     }
 }

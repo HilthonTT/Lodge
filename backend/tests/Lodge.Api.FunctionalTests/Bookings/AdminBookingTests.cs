@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Lodge.Api.FunctionalTests.Abstractions;
@@ -128,7 +128,7 @@ public class AdminBookingTests(FunctionalTestWebAppFactory factory) : BaseFuncti
 
     [Theory]
     [InlineData("status=0")]
-    [InlineData("status=6")]
+    [InlineData("status=8")]
     [InlineData("pageSize=101")]
     [InlineData("page=0")]
     public async Task Admin_List_Should_ReturnBadRequest_ForInvalidParameters(string queryString)
@@ -163,29 +163,17 @@ public class AdminBookingTests(FunctionalTestWebAppFactory factory) : BaseFuncti
 
         (HttpClient client, Guid userId) = Authenticate(await response.GetTokenAsync());
 
+        await VerifyEmailAsync(email);
+
         return (client, userId, email);
     }
 
     private async Task<Guid> ReserveAsync(HttpClient client, Guid userId)
     {
-        PagedList<ApartmentResponse>? apartments =
-            await HttpClient.GetFromJsonAsync<PagedList<ApartmentResponse>>(
-                "api/v1/apartments?pageSize=1");
-
         int offset = Interlocked.Add(ref _offset, 10);
         DateOnly start = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(offset);
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, "api/v1/bookings")
-        {
-            Content = JsonContent.Create(new ReserveBookingRequest(
-                apartments!.Items[0].Id,
-                userId,
-                start,
-                start.AddDays(3))),
-        };
-        request.Headers.Add("X-Idempotency-Key", Guid.NewGuid().ToString());
-
-        HttpResponseMessage response = await client.SendAsync(request);
+        HttpResponseMessage response = await PostBookingAsync(client, userId, await GetInstantBookApartmentIdAsync(), start, 3);
         response.EnsureSuccessStatusCode();
 
         return await response.Content.ReadFromJsonAsync<Guid>();

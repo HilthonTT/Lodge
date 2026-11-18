@@ -15,4 +15,10 @@ public static class AuthorizationPolicies
     /// The access-token claim that carries the user's role (<c>"Guest"</c> or <c>"Admin"</c>).
     /// </summary>
     public const string RoleClaimType = "role";
+
+    /// <summary>
+    /// The access-token claim that tells whether the e-mail address was verified when the token was issued
+    /// (<c>"true"</c> or <c>"false"</c>).
+    /// </summary>
+    public const string EmailVerifiedClaimType = "emailVerified";
 }

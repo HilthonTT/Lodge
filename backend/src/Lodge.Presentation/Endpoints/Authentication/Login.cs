@@ -1,4 +1,4 @@
-﻿using Lodge.Application.Authentication.Login;
+using Lodge.Application.Authentication.Login;
 using Lodge.Contracts.Authentication;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Presentation.Extensions;
@@ -11,7 +11,8 @@ using Microsoft.AspNetCore.Routing;
 namespace Lodge.Presentation.Endpoints.Authentication;
 
 /// <summary>
-/// Represents the endpoint for logging in a user.
+/// Represents the endpoint for logging in a user. Returns <c>{ token }</c>, or
+/// <c>{ requiresTwoFactor: true, twoFactorToken }</c> when two-factor authentication is enabled.
 /// </summary>
 internal sealed class Login : IEndpoint
 {
@@ -25,7 +26,7 @@ internal sealed class Login : IEndpoint
         {
             var command = new LoginCommand(request.Email, request.Password);
 
-            Result<TokenResponse> result = await sender.Send(command, cancellationToken);
+            Result<LoginResponse> result = await sender.Send(command, cancellationToken);
 
             return result.Match(Results.Ok, CustomResults.Problem);
         })

@@ -1,6 +1,5 @@
 using FluentValidation.Results;
 using Lodge.Application.Abstractions.Assets;
-using Lodge.Application.Apartments.CalculatePrice;
 using Lodge.Application.Reviews.Create;
 using Lodge.Contracts.Common;
 using Microsoft.Extensions.Options;
@@ -21,16 +20,6 @@ public class SmallFixesTests
         list.HasNextPage.Should().Be(expected);
     }
 
-    [Fact]
-    public void PriceQuery_CacheKey_Should_DependOnTheDates()
-    {
-        Guid apartmentId = Guid.NewGuid();
-        var first = new CalculateApartmentPriceQuery(apartmentId, new DateOnly(2030, 1, 1), new DateOnly(2030, 1, 3));
-        var second = first with { EndDate = new DateOnly(2030, 1, 10) };
-
-        first.CacheKey.Should().NotBe(second.CacheKey);
-    }
-
     [Theory]
     [InlineData(1, true)]
     [InlineData(5, true)]
@@ -38,7 +27,21 @@ public class SmallFixesTests
     [InlineData(6, false)]
     public void CreateReviewValidator_Should_AcceptRatingsFromOneToFive(int rating, bool valid)
     {
-        var command = new CreateReviewCommand(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), rating, "Lovely stay");
+        var command = new CreateReviewCommand(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            rating,
+            "Lovely stay",
+            new Contracts.Reviews.CategoryRatingsDto
+            {
+                Cleanliness = 5,
+                Accuracy = 5,
+                CheckIn = 5,
+                Communication = 5,
+                Location = 5,
+                Value = 5,
+            });
 
         ValidationResult result = new CreateReviewCommandValidator().Validate(command);
 

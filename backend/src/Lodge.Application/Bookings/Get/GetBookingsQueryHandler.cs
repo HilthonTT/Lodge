@@ -1,5 +1,8 @@
+using Lodge.Application.Bookings.Expire;
+using Microsoft.Extensions.Options;
 using System.Data;
 using Lodge.Application.Abstractions.Assets;
+using Lodge.Application.Abstractions.Authentication;
 using Lodge.Application.Abstractions.Data;
 using Lodge.Application.Abstractions.Messaging;
 using Lodge.Contracts.Bookings;
@@ -10,7 +13,10 @@ namespace Lodge.Application.Bookings.Get;
 
 internal sealed class GetBookingsQueryHandler(
     IDbConnectionFactory factory,
-    IAssetUrlResolver assetUrlResolver)
+    IAssetUrlResolver assetUrlResolver,
+    IUserIdentifierProvider userIdentifierProvider,
+    IDateTimeProvider dateTimeProvider,
+    IOptions<ExpireBookingRequestsOptions> expiryOptions)
     : IQueryHandler<GetBookingsQuery, PagedList<BookingResponse>>
 {
     public async Task<Result<PagedList<BookingResponse>>> Handle(
@@ -25,9 +31,11 @@ internal sealed class GetBookingsQueryHandler(
             request.Page,
             request.PageSize);
 
+        DateOnly today = DateOnly.FromDateTime(dateTimeProvider.UtcNow);
+
         foreach (BookingResponse booking in items)
         {
-            booking.ApartmentImageUrl = assetUrlResolver.Resolve(booking.ApartmentImageUrl);
+            BookingQueries.Present(booking, userIdentifierProvider.UserId, assetUrlResolver, today, expiryOptions.Value.ExpiryHours);
         }
 
         return new PagedList<BookingResponse>(items, request.Page, request.PageSize, totalCount);

@@ -14,6 +14,7 @@ The frontend is a Next.js 16 App Router app with React 19, in [`frontend/`](../f
 | Dates | date-fns 4, react-day-picker 10 |
 | Feedback | sonner toasts, skeleton loading states |
 | Theming | next-themes (light / dark / system) |
+| Localization | next-intl 4 (en, nl, fr), cookie-based, no URL prefix |
 | Maps | react-leaflet, loaded lazily when the map scrolls into view |
 
 ## Folder layout
@@ -33,9 +34,12 @@ frontend/src/
 │  ├─ ui/                   design-system primitives (button, dialog, calendar, …)
 │  ├─ layout/               navbar, footer, user menu
 │  └─ shared/               cross-feature building blocks (empty/error states, …)
+├─ i18n/                    next-intl: locale config, request config, language action, typed messages
 ├─ lib/                     env (zod-validated), api clients, auth/session, dates, formatting, query keys
 ├─ types/api.ts             mirrors backend/src/Lodge.Contracts
 └─ proxy.ts                 route protection (Next 16's replacement for middleware)
+
+frontend/messages/          en.json (source of truth), nl.json, fr.json
 ```
 
 Rule of thumb: `app/` decides *what* is on a page, `features/` decides *how*, and `components/ui` must never import from `features/`.
@@ -73,6 +77,20 @@ Signing in as an admin (`admin@lodge.dev` / `Admin123!` in the demo data) adds *
 * has status filter chips and pagination, both kept in the URL (`?status=reserved&page=2`);
 * offers **Reject** for reserved bookings and **Mark completed** for confirmed stays that have ended, each behind a confirmation dialog, with optimistic updates that roll back on error.
 
+## Localization
+
+The UI ships in English (default), Dutch and French with [next-intl](https://next-intl.dev), set up *without* i18n routing:
+
+* URLs carry no locale prefix. `src/i18n/request.ts` reads the `NEXT_LOCALE` cookie and falls back to the browser's `Accept-Language`, then to English. The auth proxy doesn't take part, so its redirects are unchanged.
+* The globe button in the navbar (and a compact one in the footer) opens a dialog listing the languages in their own names. Picking one calls a server action that sets the cookie for a year, then refreshes the route.
+* Strings live in `frontend/messages/{en,nl,fr}.json`, grouped by feature namespace (`common`, `nav`, `search`, `apartment`, `checkout`, `auth`, `validation`, `bookings`, `admin`, `settings`, `errors`, …). Counts use ICU plurals (`{count, plural, one {# night} other {# nights}}`).
+* Server components use `getTranslations`/`getLocale` from `next-intl/server`; client components and non-async server components use `useTranslations`/`useLocale`. zod schemas are factories that take the `validation` translator.
+* Dates use date-fns locales (`enUS`, `nl`, `fr`) through `src/lib/dates.ts`, and the calendar uses react-day-picker's matching locales (month names, Monday week start for nl/fr). Prices and numbers use `Intl.NumberFormat` with the active locale through `src/lib/format.ts`, and keep the currency the API returns.
+* API error messages are shown as the server returns them. Only the frontend's own fallbacks (network down, bare status codes) are translated, via `ApiError.messageKey` and `useApiErrorMessage()`.
+
+> [!IMPORTANT]
+> Every new string must be added to **all three** locale files with the same key. `npm run lint` runs `scripts/check-messages.mjs`, which fails on missing, extra or empty keys and on mismatched ICU arguments. `npm run typecheck` fails on unknown keys, because messages are typed from `en.json`. The [frontend README](../frontend/README.md#localization) has the step-by-step guide.
+
 ## Design tokens
 
 Colours, radii and fonts are CSS variables in `src/app/globals.css`, defined for `:root` and `.dark` in the OKLCH colour space. The primary colour is a pine green. To re-theme the app, change the variables; components only use semantic classes like `bg-primary` and `text-muted-foreground`.
@@ -83,4 +101,5 @@ Colours, radii and fonts are CSS variables in `src/app/globals.css`, defined for
 2. Add endpoint functions in `src/features/<feature>/api/`.
 3. Wrap them in query or mutation hooks in `hooks/`, with keys from `lib/query-keys.ts`.
 4. Build UI in `features/<feature>/components/`, then compose it in a route under `app/`.
-5. Run `npm run check`.
+5. Add every new string to `messages/en.json`, `nl.json` and `fr.json` (see [Localization](#localization)).
+6. Run `npm run check`.

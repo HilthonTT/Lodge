@@ -1,4 +1,4 @@
-﻿using Lodge.Application.Abstractions.Messaging;
+using Lodge.Application.Abstractions.Messaging;
 using Lodge.Contracts.Authentication;
 
 namespace Lodge.Application.Authentication.Login;
@@ -8,4 +8,4 @@ namespace Lodge.Application.Authentication.Login;
 /// </summary>
 /// <param name="Email">The email.</param>
 /// <param name="Password">The password.</param>
-public sealed record LoginCommand(string Email, string Password) : ICommand<TokenResponse>;
+public sealed record LoginCommand(string Email, string Password) : ICommand<LoginResponse>;

@@ -1,4 +1,4 @@
-using Lodge.Application.Bookings.Complete;
+﻿using Lodge.Application.Bookings.Complete;
 using Lodge.Application.IntegrationTests.Abstractions;
 using Lodge.Domain.Apartments;
 using Lodge.Domain.Bookings;
@@ -13,18 +13,24 @@ public class CompleteBookingsJobTests(IntegrationTestWebFactory factory) : BaseI
     public async Task Job_Should_CompleteOnlyConfirmedBookings_ThatEndedBeforeToday()
     {
         Guid userId = await CreateAndSignInUserAsync();
-        Apartment apartment = await DbContext.Apartments.OrderByDescending(a => a.Id).FirstAsync();
+        Apartment apartment = await DbContext.Apartments
+            .Where(a => a.InstantBook && a.MinNights <= 2)
+            .OrderByDescending(a => a.Id)
+            .FirstAsync();
         PricingService pricingService = Factory.Services.GetRequiredService<PricingService>();
         DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
 
         Booking AddBooking(DateOnly start, DateOnly end, bool confirm)
         {
-            var booking = Booking.Reserve(
+            DateRange duration = DateRange.Create(start, end).Value;
+            Booking booking = Booking.Reserve(
                 apartment,
                 userId,
-                DateRange.Create(start, end).Value,
+                duration,
+                1,
+                null,
                 DateTime.UtcNow,
-                pricingService);
+                pricingService.CalculatePrice(apartment, duration)).Value;
 
             if (confirm)
             {

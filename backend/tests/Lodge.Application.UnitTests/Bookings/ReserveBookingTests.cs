@@ -1,12 +1,16 @@
 using Lodge.Application.Abstractions.Authentication;
 using Lodge.Application.Abstractions.Data;
+using Lodge.Application.Abstractions.Realtime;
+using Lodge.Application.Messaging;
 using Lodge.Application.Bookings.Reserve;
+using Lodge.Application.Payments;
 using Lodge.Application.Core.Exceptions;
 using Lodge.Domain.Apartments;
 using Lodge.Domain.Bookings;
 using Lodge.Domain.Core.Primitives;
-using Lodge.Domain.Shared;
+using Lodge.Domain.Messaging;
 using Lodge.Domain.Users;
+using Microsoft.Extensions.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using NSubstitute.ReturnsExtensions;
@@ -23,23 +27,23 @@ public class ReserveBookingTests
         Guid.NewGuid(),
         Guid.NewGuid(),
         Today.AddDays(7),
-        Today.AddDays(10));
+        Today.AddDays(10),
+        GuestCount: 2);
 
-    private readonly Apartment _apartment = Apartment.Create(
-        Name.Create("Name").Value,
-        Description.Create("Description").Value,
-        new Address("Country", "State", "ZipCode", "City", "Street"),
-        new Money(100, Currency.FromCode("USD")),
-        Money.Zero(Currency.FromCode("USD")),
-        5,
-        5,
-        "/images/cabin.png",
-        []);
+    private readonly Apartment _apartment = TestApartments.Create(price: 100);
 
     private readonly IUserIdentifierProvider _userIdentifierProvider = Substitute.For<IUserIdentifierProvider>();
+    private readonly IUserRepository _userRepository = Substitute.For<IUserRepository>();
+    private readonly User _user = User.Create(
+        FirstName.Create("First").Value,
+        LastName.Create("Last").Value,
+        Email.Create("guest@lodge.dev").Value,
+        "hash");
     private readonly IApartmentRepository _apartmentRepository = Substitute.For<IApartmentRepository>();
     private readonly IBookingRepository _bookingRepository = Substitute.For<IBookingRepository>();
+    private readonly ICalendarDayRepository _calendarDayRepository = Substitute.For<ICalendarDayRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
+    private readonly IConversationRepository _conversationRepository = Substitute.For<IConversationRepository>();
     private readonly IDateTimeProvider _dateTimeProvider = Substitute.For<IDateTimeProvider>();
     private readonly ReserveBookingCommandHandler _handler;
 
@@ -47,17 +51,28 @@ public class ReserveBookingTests
     {
         _dateTimeProvider.UtcNow.Returns(UtcNow);
         _userIdentifierProvider.UserId.Returns(Command.UserId);
+        _user.VerifyEmail(UtcNow);
+        _userRepository.GetByIdAsync(Command.UserId, Arg.Any<CancellationToken>()).Returns(_user);
         _apartmentRepository.GetByIdAsync(Command.ApartmentId, Arg.Any<CancellationToken>()).Returns(_apartment);
+        _calendarDayRepository
+            .GetPriceOverridesAsync(Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<DateOnly, decimal>());
         _bookingRepository
-            .IsOverlappingAsync(Arg.Any<Apartment>(), Arg.Any<DateRange>(), Arg.Any<CancellationToken>())
+            .IsOverlappingAsync(Arg.Any<Apartment>(), Arg.Any<DateRange>(), Arg.Any<Guid?>(), Arg.Any<CancellationToken>())
             .Returns(false);
 
         _handler = new ReserveBookingCommandHandler(
             _userIdentifierProvider,
+            _userRepository,
             _apartmentRepository,
             _bookingRepository,
+            _calendarDayRepository,
             _unitOfWork,
-            new PricingService(),
+            // No service fee and no taxes, so totals are the stay subtotal.
+            new BookingPricing(
+                new PricingService(),
+                Options.Create(new PaymentsOptions { GuestServiceFeePercent = 0, DefaultTaxRatePercent = 0, TaxRates = [] })),
+            new ConversationService(Substitute.For<IDbContext>(), _conversationRepository, Substitute.For<IRealtimeOutbox>()),
             _dateTimeProvider);
     }
 
@@ -69,6 +84,23 @@ public class ReserveBookingTests
         Result<Guid> result = await _handler.Handle(Command, default);
 
         result.Error.Should().Be(UserErrors.InvalidPermissions);
+    }
+
+    [Fact]
+    public async Task Handle_Should_ReturnForbidden_WhenEmailIsNotVerified()
+    {
+        var unverified = User.Create(
+            FirstName.Create("First").Value,
+            LastName.Create("Last").Value,
+            Email.Create("unverified@lodge.dev").Value,
+            "hash");
+        _userRepository.GetByIdAsync(Command.UserId, Arg.Any<CancellationToken>()).Returns(unverified);
+
+        Result<Guid> result = await _handler.Handle(Command, default);
+
+        result.Error.Should().Be(UserErrors.EmailNotVerified);
+        result.Error.Type.Should().Be(ErrorType.Permission);
+        _bookingRepository.DidNotReceive().Insert(Arg.Any<Booking>());
     }
 
     [Fact]
@@ -106,7 +138,7 @@ public class ReserveBookingTests
     public async Task Handle_Should_ReturnFailure_WhenOverlapping()
     {
         _bookingRepository
-            .IsOverlappingAsync(Arg.Any<Apartment>(), Arg.Any<DateRange>(), Arg.Any<CancellationToken>())
+            .IsOverlappingAsync(Arg.Any<Apartment>(), Arg.Any<DateRange>(), Arg.Any<Guid?>(), Arg.Any<CancellationToken>())
             .Returns(true);
 
         Result<Guid> result = await _handler.Handle(Command, default);

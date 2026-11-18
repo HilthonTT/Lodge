@@ -22,6 +22,8 @@ internal sealed class UpdateReviewCommandValidator : AbstractValidator<UpdateRev
         RuleFor(x => x.Rating)
             .InclusiveBetween(1, 5).WithError(ValidationErrors.UpdateReview.RatingMustBeBetweenOneAndFive);
 
+        RuleFor(x => x.Categories).ValidCategories();
+
         RuleFor(x => x.Comment)
             .NotEmpty().WithError(ValidationErrors.UpdateReview.CommentIsRequired)
             .MaximumLength(Comment.MaxLength).WithError(ValidationErrors.UpdateReview.CommentMustNotBeAbove(Comment.MaxLength));

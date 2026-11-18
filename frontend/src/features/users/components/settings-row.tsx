@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import type * as React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -20,10 +21,11 @@ export function SettingsRow({
   editing,
   onEdit,
   onCancel,
-  editLabel = "Edit",
+  editLabel,
   disabled,
   children,
 }: SettingsRowProps) {
+  const t = useTranslations("common");
   return (
     <section className="grid gap-4 border-b py-6 first:pt-0">
       <div className="flex items-start justify-between gap-4">
@@ -38,7 +40,7 @@ export function SettingsRow({
           disabled={disabled}
           aria-expanded={editing}
         >
-          {editing ? "Cancel" : editLabel}
+          {editing ? t("cancel") : (editLabel ?? t("edit"))}
         </Button>
       </div>
       {editing && children}

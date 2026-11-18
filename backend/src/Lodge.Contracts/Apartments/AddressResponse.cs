@@ -5,23 +5,13 @@
 /// </summary>
 public sealed class AddressResponse
 {
-    /// <summary>
-    /// Gets the country.
-    /// </summary>
     public string Country { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Gets the state.
-    /// </summary>
     public string State { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Gets the city.
-    /// </summary>
+    public string ZipCode { get; set; } = string.Empty;
+
     public string City { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Gets the street.
-    /// </summary>
     public string Street { get; set; } = string.Empty;
 }

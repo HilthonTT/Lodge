@@ -1,4 +1,4 @@
-﻿using Lodge.Application.Abstractions.Authentication;
+using Lodge.Application.Abstractions.Authentication;
 using Lodge.Application.Abstractions.Caching;
 using Lodge.Application.Abstractions.Data;
 using Lodge.Application.Abstractions.Messaging;
@@ -42,14 +42,19 @@ internal sealed class UpdateReviewCommandHandler(
 
         Result<Comment> commentResult = Comment.Create(request.Comment);
         Result<Rating> ratingResult = Rating.Create(request.Rating);
+        Result<CategoryRatings> categoriesResult = ReviewMapping.ToCategories(request.Categories);
 
-        Result firstFailureOrSuccess = Result.FirstFailureOrSuccess(commentResult, ratingResult);
+        Result firstFailureOrSuccess = Result.FirstFailureOrSuccess(commentResult, ratingResult, categoriesResult);
         if (firstFailureOrSuccess.IsFailure)
         {
             return Result.Failure(firstFailureOrSuccess.Error);
         }
 
-        review.Update(ratingResult.Value, commentResult.Value);
+        Result updated = review.Update(ratingResult.Value, categoriesResult.Value, commentResult.Value);
+        if (updated.IsFailure)
+        {
+            return updated;
+        }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 

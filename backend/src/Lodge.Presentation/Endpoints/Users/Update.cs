@@ -28,7 +28,8 @@ internal sealed class Update : IEndpoint
                 userId,
                 request.FirstName,
                 request.LastName,
-                request.ImageId);
+                request.ImageId,
+                request.Bio);
 
             Result result = await sender.Send(command, cancellationToken);
 

@@ -14,18 +14,27 @@ public interface IBookingRepository
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The instance that may contain the booking with the specified identifier.</returns>
     Task<Booking?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-        
+
     /// <summary>
-    /// Checks if a booking is overlapping with the specified apartment and duration.
+    /// Checks whether an active booking (see <see cref="BookingStatuses.Active"/>) of the apartment overlaps the
+    /// specified stay. Overlaps are night-based: a stay may start on the day another one checks out.
     /// </summary>
     /// <param name="apartment">The apartment to check for overlapping bookings.</param>
     /// <param name="duration">The duration of the booking.</param>
+    /// <param name="excludedBookingId">A booking to ignore (when changing its own dates).</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>A task representing the asynchronous operation that returns true if there is an overlap, otherwise false.</returns>
+    /// <returns>True if there is an overlap, otherwise false.</returns>
     Task<bool> IsOverlappingAsync(
         Apartment apartment,
         DateRange duration,
+        Guid? excludedBookingId = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Checks whether the apartment has upcoming bookings (see <see cref="BookingStatuses.Upcoming"/>) that end
+    /// after <paramref name="today"/>.
+    /// </summary>
+    Task<bool> HasUpcomingBookingsAsync(Guid apartmentId, DateOnly today, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Inserts the specified booking to the database.

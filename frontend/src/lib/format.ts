@@ -1,43 +1,53 @@
+import { DEFAULT_LOCALE, INTL_LOCALES, isLocale } from "@/i18n/config";
+
 const formatterCache = new Map<string, Intl.NumberFormat>();
 
-function getCurrencyFormatter(currency: string, fractionDigits: number) {
-  const key = `${currency}:${fractionDigits}`;
-  let formatter = formatterCache.get(key);
+function intlLocale(locale: string) {
+  return INTL_LOCALES[isLocale(locale) ? locale : DEFAULT_LOCALE];
+}
+
+function getFormatter(locale: string, key: string, options: Intl.NumberFormatOptions, fallback?: Intl.NumberFormatOptions) {
+  const cacheKey = `${locale}:${key}`;
+  let formatter = formatterCache.get(cacheKey);
   if (!formatter) {
     try {
-      formatter = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency,
-        minimumFractionDigits: fractionDigits,
-        maximumFractionDigits: fractionDigits,
-      });
+      formatter = new Intl.NumberFormat(intlLocale(locale), options);
     } catch {
-      // Unknown/empty ISO code from the API: fall back to a plain number.
-      formatter = new Intl.NumberFormat("en-US", {
-        minimumFractionDigits: fractionDigits,
-        maximumFractionDigits: fractionDigits,
-      });
+      formatter = new Intl.NumberFormat(intlLocale(locale), fallback);
     }
-    formatterCache.set(key, formatter);
+    formatterCache.set(cacheKey, formatter);
   }
   return formatter;
 }
 
+function getCurrencyFormatter(locale: string, currency: string, fractionDigits: number) {
+  const digits = { minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits };
+  // Unknown/empty ISO code from the API: fall back to a plain number.
+  return getFormatter(locale, `cur:${currency}:${fractionDigits}`, { style: "currency", currency, ...digits }, digits);
+}
+
 /**
- * Formats a money amount exactly: whole amounts drop the cents, anything else
- * keeps 2 decimals (the API returns decimals such as 412.37).
+ * Formats a money amount exactly, in the API's currency and the UI locale's
+ * conventions: whole amounts drop the cents, anything else keeps 2 decimals
+ * (the API returns decimals such as 412.37). `$1,234.50` / `€ 1.234,50` / `1 234,50 €`.
  */
-export function formatPrice(amount: number, currency = "USD") {
+export function formatPrice(amount: number, currency: string, locale: string) {
   const value = Number.isFinite(amount) ? Math.round(amount * 100) / 100 : 0;
   const digits = Number.isInteger(value) ? 0 : 2;
-  return getCurrencyFormatter(currency || "USD", digits).format(value);
+  return getCurrencyFormatter(locale, currency || "USD", digits).format(value);
 }
 
 /** Price rounded to whole units, for compact display (cards, headlines). */
-export function formatPriceCompact(amount: number, currency = "USD") {
-  return getCurrencyFormatter(currency || "USD", 0).format(Math.round(amount));
+export function formatPriceCompact(amount: number, currency: string, locale: string) {
+  return getCurrencyFormatter(locale, currency || "USD", 0).format(Math.round(amount));
 }
 
-export function pluralize(count: number, singular: string, plural = `${singular}s`) {
-  return `${count} ${count === 1 ? singular : plural}`;
+/** Plain number with locale grouping, e.g. `1,234` / `1.234` / `1 234`. */
+export function formatNumber(value: number, locale: string) {
+  return getFormatter(locale, "int", {}).format(value);
+}
+
+/** Average rating with one decimal: `4.8` / `4,8`. */
+export function formatRating(value: number, locale: string) {
+  return getFormatter(locale, "rating", { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value);
 }

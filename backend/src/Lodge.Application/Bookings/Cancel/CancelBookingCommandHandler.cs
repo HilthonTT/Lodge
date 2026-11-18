@@ -1,14 +1,20 @@
 using Lodge.Application.Abstractions.Authentication;
 using Lodge.Application.Abstractions.Messaging;
+using Lodge.Application.Payments;
 using Lodge.Domain.Bookings;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Domain.Users;
 
 namespace Lodge.Application.Bookings.Cancel;
 
+/// <summary>
+/// The guest cancels their booking. For a paid booking the refund follows the cancellation policy: it is stored on the
+/// booking and sent asynchronously (outbox → integration event → refund processor), and the host payout is adjusted.
+/// </summary>
 internal sealed class CancelBookingCommandHandler(
     IUserIdentifierProvider userIdentifierProvider,
     IBookingRepository bookingRepository,
+    BookingPayments bookingPayments,
     IDateTimeProvider dateTimeProvider) : ICommandHandler<CancelBookingCommand>
 {
     public async Task<Result> Handle(CancelBookingCommand request, CancellationToken cancellationToken)
@@ -30,6 +36,15 @@ internal sealed class CancelBookingCommandHandler(
             return Result.Failure(UserErrors.InvalidPermissions);
         }
 
-        return booking.Cancel(dateTimeProvider.UtcNow);
+        Result<RefundQuote> cancelled = booking.Cancel(dateTimeProvider.UtcNow);
+
+        if (cancelled.IsFailure)
+        {
+            return cancelled;
+        }
+
+        await bookingPayments.AdjustPayoutAsync(booking, cancelled.Value, cancellationToken);
+
+        return Result.Success();
     }
 }

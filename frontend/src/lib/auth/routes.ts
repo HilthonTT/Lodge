@@ -1,5 +1,16 @@
 /** Route prefixes that require a signed-in user (enforced in `src/proxy.ts`). */
-export const PROTECTED_PREFIXES = ["/bookings", "/settings", "/stays", "/admin"] as const;
+export const PROTECTED_PREFIXES = [
+  "/bookings",
+  "/settings",
+  "/stays",
+  "/checkout",
+  "/admin",
+  "/hosting",
+  "/wishlists",
+  "/messages",
+  "/notifications",
+  "/experience-bookings",
+] as const;
 
 /** Route prefixes that additionally require the Admin role. */
 export const ADMIN_PREFIXES = ["/admin"] as const;

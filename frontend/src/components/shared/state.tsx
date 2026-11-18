@@ -1,4 +1,5 @@
 import { CloudOff, type LucideIcon, SearchX } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type * as React from "react";
 
 import { cn } from "@/lib/utils";
@@ -50,9 +51,7 @@ export function EmptyState(props: Omit<StateProps, "tone">) {
   return <StatePanel {...props} />;
 }
 
-export function ErrorState({
-  title = "We couldn't load this",
-  ...props
-}: Omit<StateProps, "tone" | "title"> & { title?: string }) {
-  return <StatePanel icon={CloudOff} tone="error" title={title} {...props} />;
+export function ErrorState({ title, ...props }: Omit<StateProps, "tone" | "title"> & { title?: string }) {
+  const t = useTranslations("common");
+  return <StatePanel icon={CloudOff} tone="error" title={title ?? t("couldNotLoad")} {...props} />;
 }
