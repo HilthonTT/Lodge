@@ -1,92 +1,172 @@
-version: '3.4'
+# Full local stack: `docker compose up -d --build`
+# Backend only (e.g. while running `npm run dev` in frontend/): `docker compose up -d --build gateway`
+#
+#   Web app (Next.js)                              http://localhost:3000
+#   Gateway (frontend's NEXT_PUBLIC_API_BASE_URL)  http://localhost:8000
+#   API (direct, Scalar UI at /scalar)             http://localhost:5000
+#   Seq (logs)                                     http://localhost:8081
+#   Mailpit (captured e-mails)                     http://localhost:8025
+#   RabbitMQ management (guest/guest)              http://localhost:15672
+#
+# Optional secrets are read from the environment or a .env file next to this file:
+#   STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, JWT_SECURITY_KEY, LODGE_PUBLIC_URL
+name: lodge
+
+x-healthcheck-defaults: &healthcheck-defaults
+  interval: 5s
+  timeout: 5s
+  retries: 20
+  start_period: 10s
 
 services:
-  lodge-api:
-    image: ${DOCKER_REGISTRY-}lodgeapi
-    container_name: lodge.api
-    build:
-      context: .
-      dockerfile: src/backend/Lodge.Api/Dockerfile
-    ports:
-      - 5000:5000
-      - 5001:5001 
-
-  lodge-api1:
-    image: ${DOCKER_REGISTRY-}lodgeapi
-    container_name: lodge.api1
-    build:
-      context: .
-      dockerfile: src/backend/Lodge.Api/Dockerfile
-    ports:
-      - 6000:6000
-      - 6001:6001 
-
-  lodge-api2:
-    image: ${DOCKER_REGISTRY-}lodgeapi
-    container_name: lodge.api2
-    build:
-      context: .
-      dockerfile: src/backend/Lodge.Api/Dockerfile
-    ports:
-      - 7000:7000
-      - 7001:7001 
-
-  yarp.balancer:
-    image: ${DOCKER_REGISTRY-}yarpbalancer
-    build:
-      context: .
-      dockerfile: src/backend/Yarp.Balancer/Dockerfile
-    ports:
-      - 8000:8000
-      - 8001:8001 
-
-  lodge-database:
-    image: postgres:latest
-    container_name: lodge.database
+  postgres:
+    image: postgres:18-alpine
     environment:
-      - POSTGRES_DB=lodge
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    volumes:
-      - ./.containers/db:/var/lib/postgresql/data
+      POSTGRES_DB: lodge
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
-      - 5432:5432
-
-  lodge-queue:
-    image: rabbitmq:management
-    container_name: lodge.queue
-    hostname: lodge-mq
+      - "5432:5432"
     volumes:
-      - ./.containers/queue/data/:/var/lib/rabbitmq
-      - ./.containers/queue/log/:/var/log/rabbitmq
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD-SHELL", "pg_isready -U postgres -d lodge"]
+
+  redis:
+    image: redis:8-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "redis-cli", "ping"]
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    hostname: lodge-rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
-
-  lodge-redis:
-    image: redis:latest
-    container_name: lodge.redis
-    restart: always
     ports:
-      - 6379:6379
-
-  lodge-blob-storage:
-    image: mcr.microsoft.com/azure-storage/azurite:latest
-    container_name: lodge.blob-storage
+      - "5672:5672"
+      - "15672:15672"
     volumes:
-      - ./.containers/blob_storage/data:/data
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      start_period: 30s
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:3.35.0
+    command: azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --location /data --skipApiVersionCheck --loose
     ports:
       - "10000:10000"
-    command: "azurite-blob --blobHost 0.0.0.0 -l /data"
+    volumes:
+      - azurite-data:/data
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "node", "-e", "require('net').connect(10000,'127.0.0.1').on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))"]
 
-  lodge-seq:
-    image: datalust/seq:latest
-    container_name: lodge.seq
+  seq:
+    image: datalust/seq:2025.2
     environment:
-      - ACCEPT_EULA=Y
+      ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_NOAUTHENTICATION: "true"
     ports:
-      - 5341:5341
-      - 8081:80
+      - "5341:5341"
+      - "8081:80"
+    volumes:
+      - seq-data:/data
 
-  
+  mailpit:
+    image: axllent/mailpit:v1.27
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+    ports:
+      - "1025:1025"
+      - "8025:8025"
 
+  api:
+    image: lodge-api:dev
+    build:
+      context: .
+      dockerfile: backend/src/Lodge.Api/Dockerfile
+    environment:
+      # Development: applies EF migrations and seeds the demo data on startup; enables Scalar and /hangfire.
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: "8080"
+      ConnectionStrings__Database: "Host=postgres;Port=5432;Database=lodge;Username=postgres;Password=postgres;Include Error Detail=true"
+      ConnectionStrings__Cache: "redis:6379"
+      ConnectionStrings__BlobStorage: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
+      MessageBroker__HostName: rabbitmq
+      Mail__SmtpServer: mailpit
+      Mail__SmtpPort: "1025"
+      Serilog__WriteTo__1__Args__serverUrl: "http://seq:5341"
+      # Browser-reachable base URL for /images/... (the gateway, i.e. what the frontend uses).
+      Assets__PublicBaseUrl: "${LODGE_PUBLIC_URL:-http://localhost:8000}"
+      Cors__AllowedOrigins__0: "http://localhost:3000"
+      Jwt__SecurityKey: "${JWT_SECURITY_KEY:-development-only-signing-key-change-me-0123456789}"
+      Stripe__SecretKey: "${STRIPE_SECRET_KEY:-}"
+      Stripe__WebhookSecret: "${STRIPE_WEBHOOK_SECRET:-}"
+      Stripe__ReturnUrl: "http://localhost:3000/bookings"
+    ports:
+      - "5000:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      azurite:
+        condition: service_healthy
+      seq:
+        condition: service_started
+      mailpit:
+        condition: service_started
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/health/live"]
+      start_period: 30s
+
+  gateway:
+    image: lodge-gateway:dev
+    build:
+      context: .
+      dockerfile: backend/src/Lodge.Gateway/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: "8080"
+      ReverseProxy__Clusters__lodge-api__Destinations__api-1__Address: "http://api:8080"
+    ports:
+      - "8000:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/gateway/health"]
+
+  web:
+    image: lodge-web:dev
+    build:
+      context: frontend
+      args:
+        # Inlined into the browser bundle: must be reachable from the host's browser.
+        NEXT_PUBLIC_API_BASE_URL: "${LODGE_PUBLIC_URL:-http://localhost:8000}"
+    environment:
+      # Server-side rendering talks to the gateway over the compose network.
+      API_INTERNAL_BASE_URL: "http://gateway:8080"
+    ports:
+      - "3000:3000"
+    depends_on:
+      gateway:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  rabbitmq-data:
+  azurite-data:
+  seq-data:

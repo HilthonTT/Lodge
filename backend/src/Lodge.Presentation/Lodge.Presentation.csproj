@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!--
+      AV0029 recommends Asp.Versioning.OpenApi, but its current release (10.2.x) requires Microsoft.OpenApi 2.x
+      while Microsoft.AspNetCore.OpenApi 11 requires 3.x. The built-in generator is used with the "v1" API
+      explorer group instead (see DependencyInjection.AddPresentation).
+    -->
+    <NoWarn>$(NoWarn);AV0029</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Asp.Versioning.Http" />
+    <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Lodge.Application\Lodge.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lodge.Api.FunctionalTests" />
+  </ItemGroup>
+
+</Project>

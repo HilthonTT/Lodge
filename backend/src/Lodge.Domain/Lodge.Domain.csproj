@@ -1,0 +1,8 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <!-- Domain events are MediatR notifications (INotification). -->
+    <PackageReference Include="MediatR" />
+  </ItemGroup>
+
+</Project>

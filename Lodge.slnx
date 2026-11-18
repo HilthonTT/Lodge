@@ -1,0 +1,32 @@
+<Solution>
+  <Folder Name="/backend/" />
+  <Folder Name="/backend/src/">
+    <Project Path="backend/src/Lodge.Api/Lodge.Api.csproj" />
+    <Project Path="backend/src/Lodge.Application/Lodge.Application.csproj" />
+    <Project Path="backend/src/Lodge.BackgroundTasks/Lodge.BackgroundTasks.csproj" />
+    <Project Path="backend/src/Lodge.Contracts/Lodge.Contracts.csproj" />
+    <Project Path="backend/src/Lodge.Domain/Lodge.Domain.csproj" />
+    <Project Path="backend/src/Lodge.Gateway/Lodge.Gateway.csproj" />
+    <Project Path="backend/src/Lodge.Infrastructure/Lodge.Infrastructure.csproj" />
+    <Project Path="backend/src/Lodge.Persistence/Lodge.Persistence.csproj" />
+    <Project Path="backend/src/Lodge.Presentation/Lodge.Presentation.csproj" />
+  </Folder>
+  <Folder Name="/backend/tests/">
+    <File Path="backend/tests/Directory.Build.props" />
+    <Project Path="backend/tests/Lodge.Api.FunctionalTests/Lodge.Api.FunctionalTests.csproj" />
+    <Project Path="backend/tests/Lodge.Application.IntegrationTests/Lodge.Application.IntegrationTests.csproj" />
+    <Project Path="backend/tests/Lodge.Application.UnitTests/Lodge.Application.UnitTests.csproj" />
+    <Project Path="backend/tests/Lodge.ArchitectureTests/Lodge.ArchitectureTests.csproj" />
+    <Project Path="backend/tests/Lodge.Domain.UnitTests/Lodge.Domain.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".dockerignore" />
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="docker-compose.yml" />
+    <File Path="global.json" />
+    <File Path="README.md" />
+  </Folder>
+</Solution>
