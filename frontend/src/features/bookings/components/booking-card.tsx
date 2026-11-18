@@ -2,6 +2,7 @@
 
 import { CalendarDays, CircleCheck, CreditCard, Loader2, Star, XCircle } from "lucide-react";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -19,7 +20,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { formatDateRange, nightsBetween, parseDateOnly, today } from "@/lib/dates";
-import { formatPrice, pluralize } from "@/lib/format";
+import { useApiErrorMessage } from "@/i18n/api-errors";
+import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { type Booking, BookingStatus } from "@/types/api";
 
@@ -36,6 +38,10 @@ export function BookingCard({
   highlighted?: boolean;
   priority?: boolean;
 }) {
+  const t = useTranslations("bookings");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
+  const errorMessage = useApiErrorMessage();
   const start = parseDateOnly(booking.durationStart);
   const end = parseDateOnly(booking.durationEnd);
   const nights = start && end ? nightsBetween(start, end) : 0;
@@ -50,13 +56,13 @@ export function BookingCard({
 
   const onPay = () =>
     checkout.mutate(booking.id, {
-      onError: (error) => toast.error("Couldn't start checkout", { description: error.message }),
+      onError: (error) => toast.error(t("checkoutError"), { description: errorMessage(error) }),
     });
 
   const onCancel = () =>
     cancel.mutate(booking.id, {
-      onSuccess: () => toast.success("Booking cancelled"),
-      onError: (error) => toast.error("Couldn't cancel this booking", { description: error.message }),
+      onSuccess: () => toast.success(t("cancelled")),
+      onError: (error) => toast.error(t("cancelError"), { description: errorMessage(error) }),
     });
 
   return (
@@ -87,17 +93,17 @@ export function BookingCard({
 
         <dl className="grid gap-1.5 text-sm sm:grid-cols-2">
           <div className="flex items-center gap-2 text-muted-foreground">
-            <dt className="sr-only">Dates</dt>
+            <dt className="sr-only">{t("dates")}</dt>
             <CalendarDays className="size-4 shrink-0" aria-hidden="true" />
             <dd>
-              {start && end ? formatDateRange(start, end) : "—"}
-              {nights > 0 && <span className="ml-1">· {pluralize(nights, "night")}</span>}
+              {start && end ? formatDateRange(start, end, locale) : "—"}
+              {nights > 0 && <span className="ml-1">· {tCommon("nights", { count: nights })}</span>}
             </dd>
           </div>
           <div className="flex items-center gap-2 sm:justify-end">
-            <dt className="text-muted-foreground">Total</dt>
+            <dt className="text-muted-foreground">{t("total")}</dt>
             <dd className="font-semibold tabular-nums">
-              {formatPrice(booking.totalPriceAmount, booking.totalPriceCurrency)}
+              {formatPrice(booking.totalPriceAmount, booking.totalPriceCurrency, locale)}
             </dd>
           </div>
         </dl>
@@ -111,9 +117,9 @@ export function BookingCard({
                 ) : (
                   <CreditCard aria-hidden="true" />
                 )}
-                Pay &amp; confirm
+                {t("pay")}
               </Button>
-              <p className="text-xs text-muted-foreground">Complete payment to confirm your stay.</p>
+              <p className="text-xs text-muted-foreground">{t("payHint")}</p>
             </>
           )}
 
@@ -122,22 +128,25 @@ export function BookingCard({
               <AlertDialogTrigger asChild>
                 <Button variant="outline" disabled={cancel.isPending}>
                   {cancel.isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : <XCircle aria-hidden="true" />}
-                  Cancel booking
+                  {t("cancel")}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
+                  <AlertDialogTitle>{t("cancelTitle")}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Your stay at {booking.apartmentName}
-                    {start && end ? ` (${formatDateRange(start, end)})` : ""} will be cancelled. This can&apos;t
-                    be undone.
+                    {t("cancelDescription", {
+                      stay:
+                        start && end
+                          ? t("stayWithDates", { name: booking.apartmentName, dates: formatDateRange(start, end, locale) })
+                          : booking.apartmentName,
+                    })}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Keep booking</AlertDialogCancel>
+                  <AlertDialogCancel>{t("keep")}</AlertDialogCancel>
                   <AlertDialogAction variant="destructive" onClick={onCancel}>
-                    Cancel booking
+                    {t("cancel")}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -146,14 +155,14 @@ export function BookingCard({
 
           {booking.status === BookingStatus.Completed && booking.hasReview && (
             <p className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
-              <CircleCheck className="size-4 text-success" aria-hidden="true" /> Reviewed
+              <CircleCheck className="size-4 text-success" aria-hidden="true" /> {t("reviewed")}
             </p>
           )}
 
           {booking.status === BookingStatus.Completed && !booking.hasReview && (
             <>
               <Button variant="outline" onClick={() => setReviewOpen(true)}>
-                <Star aria-hidden="true" /> Write a review
+                <Star aria-hidden="true" /> {t("writeReview")}
               </Button>
               <ReviewDialog
                 bookingId={booking.id}

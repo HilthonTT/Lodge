@@ -1,23 +1,33 @@
 "use client";
 
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { useLocale } from "next-intl";
 import type * as React from "react";
-import { DayPicker } from "react-day-picker";
+import { DayPicker, type Locale as DayPickerLocale } from "react-day-picker";
+import { enUS, fr, nl } from "react-day-picker/locale";
 
 import { cn } from "@/lib/utils";
 
 import { buttonVariants } from "./button";
 
-/** shadcn-style Calendar built on react-day-picker v10. */
+// react-day-picker's locales extend date-fns' with translated aria labels.
+const DAY_PICKER_LOCALES: Record<string, DayPickerLocale> = { en: enUS, nl, fr };
+
+/**
+ * shadcn-style Calendar built on react-day-picker v10. Month and weekday names,
+ * week start (Sunday for en, Monday for nl/fr) and aria labels follow the UI locale.
+ */
 function Calendar({
   className,
   classNames,
   showOutsideDays = false,
   ...props
 }: React.ComponentProps<typeof DayPicker>) {
+  const locale = useLocale();
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
+      locale={DAY_PICKER_LOCALES[locale] ?? enUS}
       className={cn("p-1 [--cell-size:2.5rem]", className)}
       classNames={{
         root: "relative w-fit",

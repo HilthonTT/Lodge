@@ -88,6 +88,8 @@ export type Booking = {
 
 export type UserRole = "Guest" | "Admin";
 
+export type ExternalProviderName = "google" | "github";
+
 export type User = {
   id: string;
   email: string;
@@ -96,11 +98,57 @@ export type User = {
   imageId: string | null;
   role: UserRole;
   createdOnUtc: string;
+  emailVerified: boolean;
+  twoFactorEnabled: boolean;
+  /** False for accounts that only sign in with Google/GitHub. */
+  hasPassword: boolean;
+  externalLogins: ExternalProviderName[];
+  /** Absolute URL of the profile picture, or null. */
+  avatarUrl: string | null;
+  bio: string | null;
+};
+
+/** GET /users/{userId}/profile (anonymous). */
+export type PublicProfile = {
+  id: string;
+  firstName: string;
+  lastInitial: string;
+  avatarUrl: string | null;
+  bio: string | null;
+  joinedOnUtc: string;
+  emailVerified: boolean;
+  reviewsWrittenCount: number;
 };
 
 export type TokenResponse = { token: string };
 
 export type LoginRequest = { email: string; password: string };
+
+/** Without 2FA `token` is set; with 2FA `token` is null and `twoFactorToken` is set (valid 5 minutes). */
+export type LoginResponse = {
+  token: string | null;
+  requiresTwoFactor: boolean;
+  twoFactorToken: string | null;
+};
+
+/** Send either `code` (authenticator app) or `recoveryCode`. */
+export type TwoFactorLoginRequest = {
+  twoFactorToken: string;
+  code?: string | null;
+  recoveryCode?: string | null;
+};
+
+export type ResetPasswordRequest = { token: string; password: string };
+
+export type ExternalProvider = { name: ExternalProviderName; displayName: string };
+
+export type TwoFactorSetupResponse = { secret: string; otpauthUri: string };
+
+export type RecoveryCodesResponse = { recoveryCodes: string[] };
+
+export type DisableTwoFactorRequest = { password: string | null; code: string };
+
+export type AvatarResponse = { avatarUrl: string };
 
 export type RegisterRequest = {
   firstName: string;
@@ -122,6 +170,8 @@ export type UpdateUserRequest = {
   firstName: string;
   lastName: string;
   imageId: string | null;
+  /** null leaves the bio unchanged, "" clears it (max 500 characters). */
+  bio?: string | null;
 };
 
 export type CreateReviewRequest = {

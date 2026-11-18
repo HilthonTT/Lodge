@@ -3,23 +3,26 @@
 import { CalendarX2 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
 import { EmptyState, ErrorState } from "@/components/shared/state";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useApiErrorMessage } from "@/i18n/api-errors";
 import { cn } from "@/lib/utils";
 import { type Booking, BookingStatus } from "@/types/api";
 
 import { useUserBookings } from "../hooks/use-bookings";
 import { BookingCard } from "./booking-card";
 
+// `labelKey` lives under `bookings` in messages/*.json.
 const FILTERS = [
-  { key: "all", label: "All", statuses: null },
-  { key: "pending", label: "Awaiting payment", statuses: [BookingStatus.Reserved] },
-  { key: "confirmed", label: "Confirmed", statuses: [BookingStatus.Confirmed] },
-  { key: "completed", label: "Completed", statuses: [BookingStatus.Completed] },
-  { key: "cancelled", label: "Cancelled", statuses: [BookingStatus.Cancelled, BookingStatus.Rejected] },
+  { key: "all", labelKey: "filterAll", statuses: null },
+  { key: "pending", labelKey: "status.reserved", statuses: [BookingStatus.Reserved] },
+  { key: "confirmed", labelKey: "status.confirmed", statuses: [BookingStatus.Confirmed] },
+  { key: "completed", labelKey: "status.completed", statuses: [BookingStatus.Completed] },
+  { key: "cancelled", labelKey: "status.cancelled", statuses: [BookingStatus.Cancelled, BookingStatus.Rejected] },
 ] as const;
 
 type FilterKey = (typeof FILTERS)[number]["key"];
@@ -41,6 +44,9 @@ function sortBookings(bookings: Booking[]) {
 }
 
 export function BookingsView() {
+  const t = useTranslations("bookings");
+  const tCommon = useTranslations("common");
+  const errorMessage = useApiErrorMessage();
   const { data, isPending, isError, error, refetch, isRefetching } = useUserBookings();
   const [filter, setFilter] = useState<FilterKey>("all");
   const highlight = useSearchParams().get("highlight");
@@ -68,11 +74,11 @@ export function BookingsView() {
   if (isError) {
     return (
       <ErrorState
-        title="We couldn't load your bookings"
-        description={error.message}
+        title={t("loadError")}
+        description={errorMessage(error)}
         action={
           <Button variant="outline" onClick={() => refetch()} disabled={isRefetching}>
-            Try again
+            {tCommon("tryAgain")}
           </Button>
         }
       />
@@ -83,11 +89,11 @@ export function BookingsView() {
     return (
       <EmptyState
         icon={CalendarX2}
-        title="No trips booked… yet"
-        description="When you reserve a stay, it will show up here so you can pay, cancel or review it."
+        title={t("emptyTitle")}
+        description={t("emptyDescription")}
         action={
           <Button asChild>
-            <Link href="/">Start exploring</Link>
+            <Link href="/">{t("startExploring")}</Link>
           </Button>
         }
       />
@@ -96,7 +102,7 @@ export function BookingsView() {
 
   return (
     <div className="grid gap-6">
-      <div role="group" aria-label="Filter bookings" className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+      <div role="group" aria-label={t("filterLabel")} className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
         {FILTERS.map((f) => (
           <button
             key={f.key}
@@ -110,7 +116,7 @@ export function BookingsView() {
                 : "bg-card hover:bg-muted",
             )}
           >
-            {f.label}
+            {t(f.labelKey)}
             <span
               className={cn(
                 "rounded-full px-1.5 text-xs tabular-nums",
@@ -124,7 +130,7 @@ export function BookingsView() {
       </div>
 
       {visible.length === 0 ? (
-        <EmptyState icon={CalendarX2} title="Nothing here" description="No bookings match this filter." />
+        <EmptyState icon={CalendarX2} title={t("filterEmptyTitle")} description={t("filterEmptyDescription")} />
       ) : (
         <ul className="grid gap-4">
           {visible.map((booking, index) => (
@@ -139,8 +145,9 @@ export function BookingsView() {
 }
 
 export function BookingsSkeleton() {
+  const t = useTranslations("bookings");
   return (
-    <div className="grid gap-6" role="status" aria-label="Loading bookings">
+    <div className="grid gap-6" role="status" aria-label={t("loading")}>
       <div className="flex gap-2">
         {Array.from({ length: 4 }, (_, i) => (
           <Skeleton key={i} className="h-9 w-28 rounded-full" />

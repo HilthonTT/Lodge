@@ -1,4 +1,9 @@
-import { addDays, differenceInCalendarDays, format, isValid, startOfDay } from "date-fns";
+import { addDays, differenceInCalendarDays, format, isValid, type Locale as DateFnsLocale, startOfDay } from "date-fns";
+import { enUS } from "date-fns/locale/en-US";
+import { fr } from "date-fns/locale/fr";
+import { nl } from "date-fns/locale/nl";
+
+import { DEFAULT_LOCALE, isLocale, type Locale } from "@/i18n/config";
 
 /** API date format for `DateOnly` parameters. */
 export const API_DATE_FORMAT = "yyyy-MM-dd";
@@ -17,7 +22,7 @@ export function parseDateOnly(value: string | null | undefined): Date | undefine
   return isValid(date) ? date : undefined;
 }
 
-/** Formats a local date as an API `DateOnly` string. */
+/** Formats a local date as an API `DateOnly` string (never localized). */
 export function toDateOnly(date: Date): string {
   return format(date, API_DATE_FORMAT);
 }
@@ -30,16 +35,69 @@ export function nightsBetween(start: Date, end: Date): number {
   return Math.max(0, differenceInCalendarDays(end, start));
 }
 
-export function formatDateRange(start: Date, end: Date): string {
-  const sameYear = start.getFullYear() === end.getFullYear();
-  const sameMonth = sameYear && start.getMonth() === end.getMonth();
-  if (sameMonth) return `${format(start, "MMM d")} – ${format(end, "d, yyyy")}`;
-  if (sameYear) return `${format(start, "MMM d")} – ${format(end, "MMM d, yyyy")}`;
-  return `${format(start, "MMM d, yyyy")} – ${format(end, "MMM d, yyyy")}`;
+const DATE_FNS_LOCALES: Record<Locale, DateFnsLocale> = { en: enUS, nl, fr };
+
+/** date-fns locale for a UI locale (month names, week start). */
+export function getDateFnsLocale(locale: string): DateFnsLocale {
+  return DATE_FNS_LOCALES[isLocale(locale) ? locale : DEFAULT_LOCALE];
 }
 
-export function formatShortDate(date: Date): string {
-  return format(date, "MMM d");
+/**
+ * Per-locale patterns. English puts the month first ("Nov 20 – 25, 2026"), Dutch
+ * and French put the day first ("20 – 25 nov. 2026").
+ */
+const PATTERNS = {
+  monthFirst: {
+    short: "MMM d",
+    full: "MMM d, yyyy",
+    sameMonth: ["MMM d", "d, yyyy"],
+    sameYear: ["MMM d", "MMM d, yyyy"],
+  },
+  dayFirst: {
+    short: "d MMM",
+    full: "d MMM yyyy",
+    sameMonth: ["d", "d MMM yyyy"],
+    sameYear: ["d MMM", "d MMM yyyy"],
+  },
+} as const;
+
+function patternsFor(locale: string) {
+  return locale === "nl" || locale === "fr" ? PATTERNS.dayFirst : PATTERNS.monthFirst;
+}
+
+/** "Nov 20 – 25, 2026" / "20 – 25 nov. 2026" */
+export function formatDateRange(start: Date, end: Date, locale: string): string {
+  const options = { locale: getDateFnsLocale(locale) };
+  const patterns = patternsFor(locale);
+  const sameYear = start.getFullYear() === end.getFullYear();
+  const sameMonth = sameYear && start.getMonth() === end.getMonth();
+  const [from, to] = sameMonth ? patterns.sameMonth : sameYear ? patterns.sameYear : [patterns.full, patterns.full];
+  return `${format(start, from, options)} – ${format(end, to, options)}`;
+}
+
+/** "Nov 20" / "20 nov." */
+export function formatShortDate(date: Date, locale: string): string {
+  return format(date, patternsFor(locale).short, { locale: getDateFnsLocale(locale) });
+}
+
+/** "Nov 20, 2026" / "20 nov. 2026" */
+export function formatMediumDate(date: Date, locale: string): string {
+  return format(date, patternsFor(locale).full, { locale: getDateFnsLocale(locale) });
+}
+
+/** "November 2026" / "november 2026" / "novembre 2026" */
+export function formatMonthYear(date: Date, locale: string): string {
+  return format(date, "LLLL yyyy", { locale: getDateFnsLocale(locale) });
+}
+
+/** Long date and time for tooltips, e.g. "Nov 20, 2026, 3:04:05 PM". */
+export function formatDateTime(date: Date, locale: string): string {
+  return format(date, "PPpp", { locale: getDateFnsLocale(locale) });
+}
+
+/** Hours and minutes, e.g. "3:04 PM" / "15:04". */
+export function formatTime(date: Date, locale: string): string {
+  return format(date, "p", { locale: getDateFnsLocale(locale) });
 }
 
 export type StayRange = { from: Date; to: Date };

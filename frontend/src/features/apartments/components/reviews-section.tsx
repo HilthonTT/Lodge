@@ -1,15 +1,18 @@
-import { format } from "date-fns";
 import { MessageSquareText, Star } from "lucide-react";
+import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { formatMonthYear } from "@/lib/dates";
 import { cn, initials } from "@/lib/utils";
 import type { PagedList, Review } from "@/types/api";
 
 import { RatingSummary } from "./rating-summary";
 
 export function StarRating({ value, className }: { value: number; className?: string }) {
+  const t = useTranslations("apartment.reviews");
   return (
-    <span className={cn("inline-flex items-center gap-0.5", className)} aria-label={`${value} out of 5 stars`}>
+    <span className={cn("inline-flex items-center gap-0.5", className)} aria-label={t("stars", { value })}>
       {Array.from({ length: 5 }, (_, i) => (
         <Star
           key={i}
@@ -29,13 +32,15 @@ type ReviewsSectionProps = {
 };
 
 export function ReviewsSection({ reviews, averageRating, reviewCount }: ReviewsSectionProps) {
+  const t = useTranslations();
+  const locale = useLocale();
   const items = reviews?.items ?? [];
 
   return (
     <section aria-labelledby="reviews-heading" className="grid scroll-mt-28 gap-6">
       <div className="flex flex-wrap items-center gap-3">
         <h2 id="reviews-heading" className="scroll-mt-28 text-xl font-semibold">
-          Reviews
+          {t("apartment.reviews.heading")}
         </h2>
         {reviewCount > 0 && (
           <RatingSummary averageRating={averageRating} reviewCount={reviewCount} variant="full" />
@@ -43,11 +48,11 @@ export function ReviewsSection({ reviews, averageRating, reviewCount }: ReviewsS
       </div>
 
       {reviews === null ? (
-        <p className="text-sm text-muted-foreground">Reviews are unavailable right now.</p>
+        <p className="text-sm text-muted-foreground">{t("apartment.reviews.unavailable")}</p>
       ) : items.length === 0 ? (
         <div className="flex items-center gap-3 rounded-2xl border border-dashed p-5 text-sm text-muted-foreground">
           <MessageSquareText className="size-5 shrink-0" aria-hidden="true" />
-          No reviews yet. Guests can review this place after a completed stay.
+          {t("apartment.reviews.empty")}
         </div>
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2">
@@ -60,9 +65,14 @@ export function ReviewsSection({ reviews, averageRating, reviewCount }: ReviewsS
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid min-w-0 gap-0.5">
-                  <p className="truncate text-sm font-semibold">{review.authorName || "Guest"}</p>
+                  <Link
+                    href={`/users/${review.userId}`}
+                    className="truncate text-sm font-semibold underline-offset-4 hover:underline focus-visible:underline"
+                  >
+                    {review.authorName || t("common.guestFallback")}
+                  </Link>
                   <time dateTime={review.createdOnUtc} className="text-xs text-muted-foreground">
-                    {format(new Date(review.createdOnUtc), "MMMM yyyy")}
+                    {formatMonthYear(new Date(review.createdOnUtc), locale)}
                   </time>
                 </div>
               </div>

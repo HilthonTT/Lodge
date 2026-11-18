@@ -1,20 +1,23 @@
 import { SearchX } from "lucide-react";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { Container } from "@/components/shared/container";
 import { EmptyState } from "@/components/shared/state";
 import { Button } from "@/components/ui/button";
 
-export default function ApartmentNotFound() {
+export default async function ApartmentNotFound() {
+  const t = await getTranslations("apartment.notFound");
+
   return (
     <Container>
       <EmptyState
         icon={SearchX}
-        title="This stay isn't available"
-        description="It may have been removed, or the link is incorrect."
+        title={t("title")}
+        description={t("description")}
         action={
           <Button asChild>
-            <Link href="/">Browse all stays</Link>
+            <Link href="/">{t("browse")}</Link>
           </Button>
         }
       />

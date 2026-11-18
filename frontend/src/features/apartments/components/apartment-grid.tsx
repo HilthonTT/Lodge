@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import type { Apartment } from "@/types/api";
 
 import { ApartmentCard, ApartmentCardSkeleton } from "./apartment-card";
@@ -17,8 +19,9 @@ export function ApartmentGrid({ apartments, query }: { apartments: Apartment[]; 
 }
 
 export function ApartmentGridSkeleton({ count = 8 }: { count?: number }) {
+  const t = useTranslations("search");
   return (
-    <div className={gridClass} role="status" aria-label="Loading stays">
+    <div className={gridClass} role="status" aria-label={t("loading")}>
       {Array.from({ length: count }, (_, i) => (
         <ApartmentCardSkeleton key={i} />
       ))}

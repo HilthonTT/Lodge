@@ -2,6 +2,7 @@
 
 import { ArrowUpDown } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 
 import { cn } from "@/lib/utils";
@@ -9,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { SORT_OPTIONS, type SortKey } from "../search-params";
 
 export function SortSelect({ value }: { value: SortKey }) {
+  const t = useTranslations("search.sort");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -26,7 +28,7 @@ export function SortSelect({ value }: { value: SortKey }) {
   return (
     <div className="relative">
       <label htmlFor="sort" className="sr-only">
-        Sort stays
+        {t("label")}
       </label>
       <ArrowUpDown
         className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground"
@@ -43,7 +45,7 @@ export function SortSelect({ value }: { value: SortKey }) {
       >
         {(Object.keys(SORT_OPTIONS) as SortKey[]).map((key) => (
           <option key={key} value={key}>
-            {SORT_OPTIONS[key].label}
+            {t(SORT_OPTIONS[key].labelKey)}
           </option>
         ))}
       </select>

@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,8 @@ export function getPageWindow(page: number, totalPages: number): (number | null)
 
 /** Link-based pagination: works without JS, preserves filters, scrolls to top. */
 export function Pagination({ page, totalPages, pathname, searchParams = {} }: PaginationProps) {
+  const t = useTranslations("pagination");
+
   if (totalPages <= 1) return null;
 
   const href = (target: number) => {
@@ -46,7 +49,7 @@ export function Pagination({ page, totalPages, pathname, searchParams = {} }: Pa
   const item = "min-w-10 rounded-full";
 
   return (
-    <nav aria-label="Pagination" className="flex items-center justify-center gap-1">
+    <nav aria-label={t("label")} className="flex items-center justify-center gap-1">
       {page > 1 ? (
         <Link
           href={href(page - 1)}
@@ -54,13 +57,13 @@ export function Pagination({ page, totalPages, pathname, searchParams = {} }: Pa
           rel="prev"
         >
           <ChevronLeft aria-hidden="true" />
-          <span className="hidden sm:inline">Previous</span>
-          <span className="sr-only sm:hidden">Previous page</span>
+          <span className="hidden sm:inline">{t("previous")}</span>
+          <span className="sr-only sm:hidden">{t("previousPage")}</span>
         </Link>
       ) : (
         <span className={cn(buttonVariants({ variant: "ghost" }), "pointer-events-none rounded-full opacity-40")} aria-hidden="true">
           <ChevronLeft />
-          <span className="hidden sm:inline">Previous</span>
+          <span className="hidden sm:inline">{t("previous")}</span>
         </span>
       )}
 
@@ -74,7 +77,7 @@ export function Pagination({ page, totalPages, pathname, searchParams = {} }: Pa
             <li key={p}>
               <Link
                 href={href(p)}
-                aria-label={`Page ${p}`}
+                aria-label={t("page", { page: String(p) })}
                 aria-current={p === page ? "page" : undefined}
                 className={cn(
                   buttonVariants({ variant: p === page ? "default" : "ghost", size: "icon" }),
@@ -88,7 +91,7 @@ export function Pagination({ page, totalPages, pathname, searchParams = {} }: Pa
         )}
       </ul>
       <p className="px-3 text-sm text-muted-foreground sm:hidden">
-        Page {page} of {totalPages}
+        {t("pageOf", { page: String(page), total: String(totalPages) })}
       </p>
 
       {page < totalPages ? (
@@ -97,13 +100,13 @@ export function Pagination({ page, totalPages, pathname, searchParams = {} }: Pa
           className={cn(buttonVariants({ variant: "ghost" }), "rounded-full")}
           rel="next"
         >
-          <span className="hidden sm:inline">Next</span>
-          <span className="sr-only sm:hidden">Next page</span>
+          <span className="hidden sm:inline">{t("next")}</span>
+          <span className="sr-only sm:hidden">{t("nextPage")}</span>
           <ChevronRight aria-hidden="true" />
         </Link>
       ) : (
         <span className={cn(buttonVariants({ variant: "ghost" }), "pointer-events-none rounded-full opacity-40")} aria-hidden="true">
-          <span className="hidden sm:inline">Next</span>
+          <span className="hidden sm:inline">{t("next")}</span>
           <ChevronRight />
         </span>
       )}

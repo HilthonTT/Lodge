@@ -2,6 +2,7 @@
 
 import { CalendarDays, MapPin, Search, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import type { DateRange } from "react-day-picker";
 
@@ -19,7 +20,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { formatDateRange, nightsBetween, today } from "@/lib/dates";
-import { pluralize } from "@/lib/format";
 
 import {
   type ApartmentSearch,
@@ -58,6 +58,9 @@ function SearchForm({
   focus: SearchSection;
   onDone: () => void;
 }) {
+  const t = useTranslations("search.dialog");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
   const router = useRouter();
   const [where, setWhere] = useState(initial.q ?? "");
   const [range, setRange] = useState<DateRange | undefined>(initial.range);
@@ -92,20 +95,20 @@ function SearchForm({
   return (
     <form onSubmit={onSubmit} className="flex flex-col">
       <DialogHeader className="px-6 pt-6 pb-4">
-        <DialogTitle>Find a stay</DialogTitle>
-        <DialogDescription>Search by destination, dates and party size.</DialogDescription>
+        <DialogTitle>{t("title")}</DialogTitle>
+        <DialogDescription>{t("description")}</DialogDescription>
       </DialogHeader>
 
       <div className="grid gap-6 px-6 pb-6">
         <section className="grid gap-2">
           <Label htmlFor="search-where" className="gap-1.5">
-            <MapPin className="size-4 text-muted-foreground" aria-hidden="true" /> Where
+            <MapPin className="size-4 text-muted-foreground" aria-hidden="true" /> {t("where")}
           </Label>
           <Input
             id="search-where"
             value={where}
             onChange={(e) => setWhere(e.target.value)}
-            placeholder="Country, city or stay name"
+            placeholder={t("wherePlaceholder")}
             autoComplete="off"
             autoFocus={focus === "where"}
             maxLength={100}
@@ -117,14 +120,14 @@ function SearchForm({
         <section className="grid gap-3" aria-labelledby="search-when-label">
           <div className="flex items-center justify-between gap-2">
             <span id="search-when-label" className="inline-flex items-center gap-1.5 text-sm font-medium">
-              <CalendarDays className="size-4 text-muted-foreground" aria-hidden="true" /> When
+              <CalendarDays className="size-4 text-muted-foreground" aria-hidden="true" /> {t("when")}
             </span>
             <span className="text-sm text-muted-foreground" aria-live="polite">
               {validRange
-                ? `${formatDateRange(validRange.from, validRange.to)} · ${pluralize(nightsBetween(validRange.from, validRange.to), "night")}`
+                ? `${formatDateRange(validRange.from, validRange.to, locale)} · ${tCommon("nights", { count: nightsBetween(validRange.from, validRange.to) })}`
                 : range?.from
-                  ? "Select a check-out date"
-                  : "Any week"}
+                  ? t("selectCheckOut")
+                  : t("anyWeek")}
             </span>
           </div>
           <div className="flex justify-center">
@@ -142,22 +145,22 @@ function SearchForm({
 
         <Separator />
 
-        <section className="grid gap-4" aria-label="Who">
+        <section className="grid gap-4" aria-label={t("who")}>
           <span className="inline-flex items-center gap-1.5 text-sm font-medium">
-            <Users className="size-4 text-muted-foreground" aria-hidden="true" /> Who
+            <Users className="size-4 text-muted-foreground" aria-hidden="true" /> {t("who")}
           </span>
           <Stepper
             id="search-guests"
-            label="Guests"
-            description="Number of people staying"
+            label={t("guests")}
+            description={t("guestsDescription")}
             value={guests}
             max={MAX_GUESTS}
             onChange={setGuests}
           />
           <Stepper
             id="search-rooms"
-            label="Rooms"
-            description="Minimum number of rooms"
+            label={t("rooms")}
+            description={t("roomsDescription")}
             value={rooms}
             max={MAX_ROOMS}
             onChange={setRooms}
@@ -167,10 +170,10 @@ function SearchForm({
 
       <div className="sticky bottom-0 flex items-center justify-between gap-3 border-t bg-popover px-6 py-4">
         <Button type="button" variant="link" className="px-0 text-foreground underline" onClick={onClear}>
-          Clear all
+          {t("clearAll")}
         </Button>
         <Button type="submit" size="lg" className="rounded-full px-7">
-          <Search aria-hidden="true" /> Search
+          <Search aria-hidden="true" /> {t("submit")}
         </Button>
       </div>
     </form>

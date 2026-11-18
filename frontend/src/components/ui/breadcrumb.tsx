@@ -1,5 +1,6 @@
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import type * as React from "react";
 
 import { cn } from "@/lib/utils";
@@ -8,8 +9,9 @@ type Crumb = { label: string; href?: string };
 
 /** Simple accessible breadcrumb trail; the last item is the current page. */
 function Breadcrumbs({ items, className }: { items: Crumb[]; className?: string }) {
+  const t = useTranslations("common");
   return (
-    <nav aria-label="Breadcrumb" className={className}>
+    <nav aria-label={t("breadcrumb")} className={className}>
       <ol className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
         {items.map((item, index) => {
           const isLast = index === items.length - 1;

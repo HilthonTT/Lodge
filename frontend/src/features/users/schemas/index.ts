@@ -1,21 +1,36 @@
 import { z } from "zod";
 
-import { nameSchema, passwordSchema } from "@/features/auth/schemas";
+import { createNameSchemas, createPasswordSchema, type ValidationTranslator } from "@/features/auth/schemas";
 
-export const nameFormSchema = z.object({
-  firstName: nameSchema("first name"),
-  lastName: nameSchema("last name"),
-});
+export const createNameFormSchema = (t: ValidationTranslator) => z.object(createNameSchemas(t));
 
-export const passwordFormSchema = z
-  .object({
-    password: passwordSchema,
-    confirmPassword: z.string().min(1, "Confirm your new password"),
-  })
-  .refine((v) => v.password === v.confirmPassword, {
-    path: ["confirmPassword"],
-    message: "Passwords don't match",
-  });
+export const createPasswordFormSchema = (t: ValidationTranslator) =>
+  z
+    .object({
+      password: createPasswordSchema(t),
+      confirmPassword: z.string().min(1, t("confirmPasswordRequired")),
+    })
+    .refine((v) => v.password === v.confirmPassword, {
+      path: ["confirmPassword"],
+      message: t("passwordsMismatch"),
+    });
 
-export type NameFormValues = z.infer<typeof nameFormSchema>;
-export type PasswordFormValues = z.infer<typeof passwordFormSchema>;
+export const BIO_MAX_LENGTH = 500;
+
+export const createBioFormSchema = (t: ValidationTranslator) =>
+  z.object({ bio: z.string().trim().max(BIO_MAX_LENGTH, t("bioTooLong", { max: String(BIO_MAX_LENGTH) })) });
+
+/** Avatar rules enforced by the API: JPEG/PNG/WebP up to 5 MB. */
+export const AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+export const AVATAR_MAX_MB = 5;
+
+/** Returns the validation message key for an unacceptable avatar file, or null. */
+export function avatarFileProblem(file: File): "avatarType" | "avatarSize" | null {
+  if (!(AVATAR_TYPES as readonly string[]).includes(file.type)) return "avatarType";
+  if (file.size > AVATAR_MAX_MB * 1024 * 1024) return "avatarSize";
+  return null;
+}
+
+export type NameFormValues = z.infer<ReturnType<typeof createNameFormSchema>>;
+export type BioFormValues = z.infer<ReturnType<typeof createBioFormSchema>>;
+export type PasswordFormValues = z.infer<ReturnType<typeof createPasswordFormSchema>>;

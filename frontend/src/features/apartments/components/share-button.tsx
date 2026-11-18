@@ -1,11 +1,14 @@
 "use client";
 
 import { Share2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 
 export function ShareButton({ title }: { title: string }) {
+  const t = useTranslations("apartment");
+
   const onShare = async () => {
     const url = window.location.href;
     try {
@@ -14,15 +17,15 @@ export function ShareButton({ title }: { title: string }) {
         return;
       }
       await navigator.clipboard.writeText(url);
-      toast.success("Link copied to clipboard");
+      toast.success(t("linkCopied"));
     } catch (error) {
-      if ((error as DOMException)?.name !== "AbortError") toast.error("Couldn't share this listing");
+      if ((error as DOMException)?.name !== "AbortError") toast.error(t("shareFailed"));
     }
   };
 
   return (
     <Button variant="ghost" className="rounded-full underline-offset-4 hover:underline" onClick={onShare}>
-      <Share2 aria-hidden="true" /> Share
+      <Share2 aria-hidden="true" /> {t("share")}
     </Button>
   );
 }

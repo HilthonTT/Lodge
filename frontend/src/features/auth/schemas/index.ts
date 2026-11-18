@@ -1,36 +1,67 @@
+import type { useTranslations } from "next-intl";
 import { z } from "zod";
 
+/**
+ * Translator for the `validation` namespace. Schemas are factories so their
+ * messages follow the UI language: `useMemo(() => createLoginSchema(t), [t])`
+ * with `const t = useTranslations("validation")`.
+ */
+export type ValidationTranslator = ReturnType<typeof useTranslations<"validation">>;
+
 /** Mirrors Lodge.Domain.Users.Password rules so users see errors before submitting. */
-export const passwordSchema = z
-  .string()
-  .min(6, "Use at least 6 characters")
-  .regex(/[a-z]/, "Add a lowercase letter")
-  .regex(/[A-Z]/, "Add an uppercase letter")
-  .regex(/\d/, "Add a digit")
-  .regex(/[^a-zA-Z0-9]/, "Add a symbol, e.g. ! or #");
+export const createPasswordSchema = (t: ValidationTranslator) =>
+  z
+    .string()
+    .min(6, t("passwordMin"))
+    .regex(/[a-z]/, t("passwordLowercase"))
+    .regex(/[A-Z]/, t("passwordUppercase"))
+    .regex(/\d/, t("passwordDigit"))
+    .regex(/[^a-zA-Z0-9]/, t("passwordSymbol"));
 
-export const emailSchema = z
-  .string()
-  .trim()
-  .min(1, "Enter your email")
-  .max(256, "Email must be 256 characters or fewer")
-  .pipe(z.email("Enter a valid email address"));
+export const createEmailSchema = (t: ValidationTranslator) =>
+  z
+    .string()
+    .trim()
+    .min(1, t("emailRequired"))
+    .max(256, t("emailTooLong"))
+    .pipe(z.email(t("emailInvalid")));
 
-export const nameSchema = (label: string) =>
-  z.string().trim().min(1, `Enter your ${label}`).max(128, `${label} must be 128 characters or fewer`);
+export const createNameSchemas = (t: ValidationTranslator) => ({
+  firstName: z.string().trim().min(1, t("firstNameRequired")).max(128, t("firstNameTooLong")),
+  lastName: z.string().trim().min(1, t("lastNameRequired")).max(128, t("lastNameTooLong")),
+});
 
 /** Login only checks presence: complexity rules belong to registration. */
-export const loginSchema = z.object({
-  email: emailSchema,
-  password: z.string().min(1, "Enter your password"),
-});
+export const createLoginSchema = (t: ValidationTranslator) =>
+  z.object({
+    email: createEmailSchema(t),
+    password: z.string().min(1, t("passwordRequired")),
+  });
 
-export const registerSchema = z.object({
-  firstName: nameSchema("first name"),
-  lastName: nameSchema("last name"),
-  email: emailSchema,
-  password: passwordSchema,
-});
+export const createRegisterSchema = (t: ValidationTranslator) =>
+  z.object({
+    ...createNameSchemas(t),
+    email: createEmailSchema(t),
+    password: createPasswordSchema(t),
+  });
 
-export type LoginValues = z.infer<typeof loginSchema>;
-export type RegisterValues = z.infer<typeof registerSchema>;
+export const createForgotPasswordSchema = (t: ValidationTranslator) =>
+  z.object({ email: createEmailSchema(t) });
+
+export const createResetPasswordSchema = (t: ValidationTranslator) =>
+  z.object({ password: createPasswordSchema(t) });
+
+/** Authenticator apps show 6 digits (RFC 6238). */
+export const ONE_TIME_CODE_LENGTH = 6;
+
+export const createOneTimeCodeSchema = (t: ValidationTranslator) =>
+  z
+    .string()
+    .trim()
+    .min(1, t("codeRequired"))
+    .regex(/^\d{6}$/, t("codeInvalid"));
+
+export type LoginValues = z.infer<ReturnType<typeof createLoginSchema>>;
+export type RegisterValues = z.infer<ReturnType<typeof createRegisterSchema>>;
+export type ForgotPasswordValues = z.infer<ReturnType<typeof createForgotPasswordSchema>>;
+export type ResetPasswordValues = z.infer<ReturnType<typeof createResetPasswordSchema>>;

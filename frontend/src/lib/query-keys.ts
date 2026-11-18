@@ -1,4 +1,7 @@
 export const queryKeys = {
+  auth: {
+    providers: ["auth", "providers"] as const,
+  },
   apartments: {
     all: ["apartments"] as const,
     price: (id: string, start: string, end: string) =>
@@ -14,5 +17,6 @@ export const queryKeys = {
   },
   users: {
     me: ["users", "me"] as const,
+    profile: (userId: string) => ["users", userId, "profile"] as const,
   },
 };

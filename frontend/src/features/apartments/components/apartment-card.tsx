@@ -1,9 +1,10 @@
 import { BedDouble, Users } from "lucide-react";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 
 import { RemoteImage } from "@/components/shared/remote-image";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatPriceCompact, pluralize } from "@/lib/format";
+import { formatPriceCompact } from "@/lib/format";
 import type { Apartment } from "@/types/api";
 
 import { RatingSummary } from "./rating-summary";
@@ -21,6 +22,8 @@ type ApartmentCardProps = {
 };
 
 export function ApartmentCard({ apartment, query, priority }: ApartmentCardProps) {
+  const t = useTranslations("common");
+  const locale = useLocale();
   const href = `/apartments/${apartment.id}${query ? `?${query}` : ""}`;
   const location = formatLocation(apartment.address);
 
@@ -59,19 +62,19 @@ export function ApartmentCard({ apartment, query, priority }: ApartmentCardProps
           <p className="flex items-center gap-3 text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-1">
               <Users className="size-3.5" aria-hidden="true" />
-              {pluralize(apartment.maximumGuestCount, "guest")}
+              {t("guests", { count: apartment.maximumGuestCount })}
             </span>
             {apartment.maximumRoomCount > 0 && (
               <span className="inline-flex items-center gap-1">
                 <BedDouble className="size-3.5" aria-hidden="true" />
-                {pluralize(apartment.maximumRoomCount, "room")}
+                {t("rooms", { count: apartment.maximumRoomCount })}
               </span>
             )}
           </p>
         )}
         <p className="mt-1">
-          <span className="font-semibold">{formatPriceCompact(apartment.price, apartment.currency)}</span>{" "}
-          <span className="text-sm text-muted-foreground">night</span>
+          <span className="font-semibold">{formatPriceCompact(apartment.price, apartment.currency, locale)}</span>{" "}
+          <span className="text-sm text-muted-foreground">{t("perNight")}</span>
         </p>
       </div>
     </article>

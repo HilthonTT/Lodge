@@ -1,15 +1,16 @@
 "use client";
 
-import { format } from "date-fns";
 import { CalendarX2 } from "lucide-react";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Pagination } from "@/components/shared/pagination";
 import { EmptyState, ErrorState } from "@/components/shared/state";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatDateRange, nightsBetween, parseDateOnly } from "@/lib/dates";
-import { formatPrice, pluralize } from "@/lib/format";
+import { useApiErrorMessage } from "@/i18n/api-errors";
+import { formatDateRange, formatDateTime, formatMediumDate, nightsBetween, parseDateOnly } from "@/lib/dates";
+import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Booking } from "@/types/api";
 
@@ -37,6 +38,8 @@ function hrefFor(search: AdminBookingsSearch) {
 const COLUMNS = "lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1.6fr)_7rem_9.5rem_6.5rem_minmax(0,1.2fr)]";
 
 export function AdminBookingsView({ search }: { search: AdminBookingsSearch }) {
+  const t = useTranslations();
+  const errorMessage = useApiErrorMessage();
   const status = ADMIN_STATUS_FILTERS[search.status].status;
   const { data, isPending, isError, error, refetch, isRefetching, isPlaceholderData } = useAdminBookings({
     page: search.page,
@@ -48,7 +51,7 @@ export function AdminBookingsView({ search }: { search: AdminBookingsSearch }) {
 
   return (
     <div className="grid gap-6">
-      <nav aria-label="Filter by status" className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+      <nav aria-label={t("admin.filterLabel")} className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
         {(Object.keys(ADMIN_STATUS_FILTERS) as AdminStatusFilter[]).map((key) => {
           const active = key === search.status;
           return (
@@ -62,7 +65,7 @@ export function AdminBookingsView({ search }: { search: AdminBookingsSearch }) {
                 active ? "border-foreground bg-foreground text-background" : "bg-card hover:bg-muted",
               )}
             >
-              {ADMIN_STATUS_FILTERS[key].label}
+              {key === "all" ? t("admin.filterAll") : t(`bookings.status.${key}`)}
               {active && data && (
                 <span className="rounded-full bg-background/20 px-1.5 text-xs tabular-nums">{data.totalCount}</span>
               )}
@@ -75,28 +78,28 @@ export function AdminBookingsView({ search }: { search: AdminBookingsSearch }) {
         <AdminBookingsSkeleton rowsOnly />
       ) : isError ? (
         <ErrorState
-          title="We couldn't load bookings"
-          description={error.message}
+          title={t("admin.loadError")}
+          description={errorMessage(error)}
           action={
             <Button variant="outline" onClick={() => refetch()} disabled={isRefetching}>
-              Try again
+              {t("common.tryAgain")}
             </Button>
           }
         />
       ) : data.items.length === 0 ? (
         <EmptyState
           icon={CalendarX2}
-          title={search.page > 1 ? "No bookings on this page" : "No bookings here"}
+          title={search.page > 1 ? t("admin.emptyPageTitle") : t("admin.emptyTitle")}
           description={
             search.status === "all"
-              ? "Bookings from every guest will show up here."
-              : `There are no ${ADMIN_STATUS_FILTERS[search.status].label.toLowerCase()} bookings right now.`
+              ? t("admin.emptyAll")
+              : t("admin.emptyStatus", { status: search.status })
           }
           action={
             (search.page > 1 || search.status !== "all") && (
               <Button asChild variant="outline">
                 <Link href={search.page > 1 ? hrefFor({ ...search, page: 1 }) : PATHNAME}>
-                  {search.page > 1 ? "Back to first page" : "Show all bookings"}
+                  {search.page > 1 ? t("admin.backToFirst") : t("admin.showAll")}
                 </Link>
               </Button>
             )
@@ -117,22 +120,25 @@ export function AdminBookingsView({ search }: { search: AdminBookingsSearch }) {
                 COLUMNS,
               )}
             >
-              <span>Guest</span>
-              <span>Stay</span>
-              <span className="text-right">Total</span>
-              <span>Status</span>
-              <span>Created</span>
-              <span>Actions</span>
+              <span>{t("admin.columns.guest")}</span>
+              <span>{t("admin.columns.stay")}</span>
+              <span className="text-right">{t("admin.columns.total")}</span>
+              <span>{t("admin.columns.status")}</span>
+              <span>{t("admin.columns.created")}</span>
+              <span>{t("admin.columns.actions")}</span>
             </div>
-            <ul className="divide-y" aria-label="Bookings">
+            <ul className="divide-y" aria-label={t("admin.list")}>
               {data.items.map((booking) => (
                 <AdminBookingRow key={booking.id} booking={booking} />
               ))}
             </ul>
           </div>
           <p className="-mt-2 text-sm text-muted-foreground">
-            Showing {(search.page - 1) * ADMIN_PAGE_SIZE + 1}–{(search.page - 1) * ADMIN_PAGE_SIZE + data.items.length}{" "}
-            of {pluralize(data.totalCount, "booking")}
+            {t("admin.showing", {
+              from: String((search.page - 1) * ADMIN_PAGE_SIZE + 1),
+              to: String((search.page - 1) * ADMIN_PAGE_SIZE + data.items.length),
+              total: data.totalCount,
+            })}
           </p>
           <Pagination
             page={search.page}
@@ -147,6 +153,8 @@ export function AdminBookingsView({ search }: { search: AdminBookingsSearch }) {
 }
 
 function AdminBookingRow({ booking }: { booking: Booking }) {
+  const t = useTranslations();
+  const locale = useLocale();
   const start = parseDateOnly(booking.durationStart);
   const end = parseDateOnly(booking.durationEnd);
   const nights = start && end ? nightsBetween(start, end) : 0;
@@ -155,7 +163,7 @@ function AdminBookingRow({ booking }: { booking: Booking }) {
   return (
     <li className={cn("grid gap-3 px-5 py-4 text-sm sm:grid-cols-2 lg:items-center lg:gap-4", COLUMNS)}>
       <div className="grid min-w-0 gap-0.5">
-        <p className="truncate font-medium">{booking.guestName || "Guest"}</p>
+        <p className="truncate font-medium">{booking.guestName || t("common.guestFallback")}</p>
         <a
           href={`mailto:${booking.guestEmail}`}
           className="truncate text-muted-foreground underline-offset-4 hover:underline"
@@ -169,14 +177,14 @@ function AdminBookingRow({ booking }: { booking: Booking }) {
           {booking.apartmentName}
         </Link>
         <p className="text-muted-foreground">
-          {start && end ? formatDateRange(start, end) : "—"}
-          {nights > 0 && <span> · {pluralize(nights, "night")}</span>}
+          {start && end ? formatDateRange(start, end, locale) : "—"}
+          {nights > 0 && <span> · {t("common.nights", { count: nights })}</span>}
         </p>
       </div>
 
       <p className="flex items-center gap-2 font-semibold tabular-nums lg:justify-end">
-        <span className="font-normal text-muted-foreground lg:sr-only">Total</span>
-        {formatPrice(booking.totalPriceAmount, booking.totalPriceCurrency)}
+        <span className="font-normal text-muted-foreground lg:sr-only">{t("admin.columns.total")}</span>
+        {formatPrice(booking.totalPriceAmount, booking.totalPriceCurrency, locale)}
       </p>
 
       <div>
@@ -184,12 +192,12 @@ function AdminBookingRow({ booking }: { booking: Booking }) {
       </div>
 
       <p className="text-muted-foreground">
-        <span className="lg:sr-only">Created </span>
+        <span className="lg:sr-only">{t("admin.columns.created")} </span>
         {Number.isNaN(created.getTime()) ? (
           "—"
         ) : (
-          <time dateTime={booking.createdOnUtc} title={format(created, "PPpp")}>
-            {format(created, "MMM d, yyyy")}
+          <time dateTime={booking.createdOnUtc} title={formatDateTime(created, locale)}>
+            {formatMediumDate(created, locale)}
           </time>
         )}
       </p>
@@ -202,8 +210,9 @@ function AdminBookingRow({ booking }: { booking: Booking }) {
 }
 
 export function AdminBookingsSkeleton({ rowsOnly = false }: { rowsOnly?: boolean }) {
+  const t = useTranslations("admin");
   return (
-    <div className="grid gap-6" role="status" aria-label="Loading bookings">
+    <div className="grid gap-6" role="status" aria-label={t("loading")}>
       {!rowsOnly && (
         <div className="flex gap-2">
           {Array.from({ length: 5 }, (_, i) => (

@@ -11,7 +11,7 @@ import type { ReserveBookingRequest } from "@/types/api";
 import { bookingsApi } from "../api/bookings";
 
 function requireUser(userId: string | null): string {
-  if (!userId) throw new ApiError("Please sign in again to continue.", { status: 401 });
+  if (!userId) throw new ApiError("Please sign in again to continue.", { status: 401, messageKey: "signInAgain" });
   return userId;
 }
 
@@ -53,7 +53,9 @@ export function useCheckout() {
     mutationFn: async (bookingId) => {
       const url = await bookingsApi.checkout(getBrowserHttp(), bookingId, requireUser(userId));
       if (typeof url !== "string" || !/^https:\/\//i.test(url)) {
-        throw new ApiError("The payment provider returned an invalid checkout link.");
+        throw new ApiError("The payment provider returned an invalid checkout link.", {
+          messageKey: "invalidCheckoutLink",
+        });
       }
       return url;
     },

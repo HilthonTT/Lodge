@@ -1,16 +1,22 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 
 import { LoginForm } from "@/features/auth/components/login-form";
 
-export const metadata: Metadata = { title: "Sign in" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("auth.login");
+  return { title: t("metaTitle") };
+}
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const t = await getTranslations("auth.login");
+
   return (
     <div className="grid gap-8">
       <div className="grid gap-2">
-        <h1 className="text-3xl font-semibold">Welcome back</h1>
-        <p className="text-muted-foreground">Sign in to manage your trips and bookings.</p>
+        <h1 className="text-3xl font-semibold">{t("title")}</h1>
+        <p className="text-muted-foreground">{t("subtitle")}</p>
       </div>
       <Suspense>
         <LoginForm />

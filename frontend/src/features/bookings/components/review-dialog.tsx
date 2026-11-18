@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2, Star } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -16,13 +17,14 @@ import {
 import { Field } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
 import { FormError } from "@/features/auth/components/form-error";
+import { useApiErrorMessage } from "@/i18n/api-errors";
 import { cn } from "@/lib/utils";
 import { uuid } from "@/lib/uuid";
 
 import { useCreateReview } from "../hooks/use-bookings";
 
 const MAX_COMMENT = 500;
-const LABELS = ["Terrible", "Poor", "Okay", "Good", "Excellent"];
+const RATINGS = [1, 2, 3, 4, 5] as const;
 
 type ReviewDialogProps = {
   bookingId: string;
@@ -52,6 +54,8 @@ function ReviewForm({
   apartmentName: string;
   onDone: () => void;
 }) {
+  const t = useTranslations();
+  const errorMessage = useApiErrorMessage();
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [comment, setComment] = useState("");
@@ -61,11 +65,11 @@ function ReviewForm({
   const createReview = useCreateReview();
 
   const commentError = !comment.trim()
-    ? "Tell other guests about your stay"
+    ? t("validation.commentRequired")
     : comment.length > MAX_COMMENT
-      ? `Keep it under ${MAX_COMMENT} characters`
+      ? t("validation.commentTooLong", { max: MAX_COMMENT })
       : undefined;
-  const ratingError = rating === 0 ? "Choose a rating" : undefined;
+  const ratingError = rating === 0 ? t("validation.ratingRequired") : undefined;
 
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -73,7 +77,7 @@ function ReviewForm({
     if (commentError || ratingError) return;
     try {
       await createReview.mutateAsync({ bookingId, rating, comment: comment.trim(), idempotencyKey });
-      toast.success("Thanks for your review!");
+      toast.success(t("bookings.review.success"));
       onDone();
     } catch {
       // shown inline
@@ -81,27 +85,28 @@ function ReviewForm({
   };
 
   const shown = hover || rating;
+  const labelFor = (value: number) => t(`bookings.review.labels.${String(value) as "1" | "2" | "3" | "4" | "5"}`);
 
   return (
     <form onSubmit={onSubmit} noValidate className="grid gap-5">
       <DialogHeader>
-        <DialogTitle>Review your stay</DialogTitle>
-        <DialogDescription>How was {apartmentName}?</DialogDescription>
+        <DialogTitle>{t("bookings.review.title")}</DialogTitle>
+        <DialogDescription>{t("bookings.review.description", { name: apartmentName })}</DialogDescription>
       </DialogHeader>
 
-      <FormError message={createReview.error?.message} />
+      <FormError message={errorMessage(createReview.error)} />
 
       <fieldset className="grid gap-2">
-        <legend className="mb-2 text-sm font-medium">Rating</legend>
+        <legend className="mb-2 text-sm font-medium">{t("bookings.review.rating")}</legend>
         <div className="flex items-center gap-3">
-          <div className="flex" role="radiogroup" aria-label="Rating" onMouseLeave={() => setHover(0)}>
-            {[1, 2, 3, 4, 5].map((value) => (
+          <div className="flex" role="radiogroup" aria-label={t("bookings.review.rating")} onMouseLeave={() => setHover(0)}>
+            {RATINGS.map((value) => (
               <button
                 key={value}
                 type="button"
                 role="radio"
                 aria-checked={rating === value}
-                aria-label={`${value} star${value > 1 ? "s" : ""} – ${LABELS[value - 1]}`}
+                aria-label={t("bookings.review.starLabel", { count: value, label: labelFor(value) })}
                 onClick={() => setRating(value)}
                 onMouseEnter={() => setHover(value)}
                 className="rounded-md p-1 transition-transform hover:scale-110 focus-visible:ring-[3px] focus-visible:ring-ring/40 focus-visible:outline-none"
@@ -113,14 +118,14 @@ function ReviewForm({
               </button>
             ))}
           </div>
-          <span className="text-sm text-muted-foreground">{shown ? LABELS[shown - 1] : ""}</span>
+          <span className="text-sm text-muted-foreground">{shown ? labelFor(shown) : ""}</span>
         </div>
         {touched && ratingError && <p className="text-xs font-medium text-destructive">{ratingError}</p>}
       </fieldset>
 
       <Field
         id="review-comment"
-        label="Your review"
+        label={t("bookings.review.yourReview")}
         error={touched ? commentError : undefined}
         aside={
           <span className={cn("text-xs text-muted-foreground tabular-nums", comment.length > MAX_COMMENT && "text-destructive")}>
@@ -134,18 +139,18 @@ function ReviewForm({
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             rows={5}
-            placeholder="What did you love? Anything future guests should know?"
+            placeholder={t("bookings.review.placeholder")}
           />
         )}
       </Field>
 
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onDone}>
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button type="submit" disabled={createReview.isPending}>
           {createReview.isPending && <Loader2 className="animate-spin" aria-hidden="true" />}
-          Submit review
+          {t("bookings.review.submit")}
         </Button>
       </DialogFooter>
     </form>

@@ -2,6 +2,7 @@
 
 import "leaflet/dist/leaflet.css";
 
+import { useTranslations } from "next-intl";
 import { Circle, MapContainer, TileLayer } from "react-leaflet";
 
 export type LeafletMapProps = {
@@ -11,6 +12,7 @@ export type LeafletMapProps = {
 
 /** Approximate-area map. Loaded lazily (no SSR) by `ApartmentMap`. */
 export default function LeafletMap({ center, label }: LeafletMapProps) {
+  const t = useTranslations("apartment");
   return (
     <MapContainer
       center={center}
@@ -18,7 +20,7 @@ export default function LeafletMap({ center, label }: LeafletMapProps) {
       scrollWheelZoom={false}
       className="size-full"
       attributionControl
-      aria-label={`Map showing the approximate location: ${label}`}
+      aria-label={t("mapLabel", { label })}
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

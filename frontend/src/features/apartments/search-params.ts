@@ -7,13 +7,17 @@ export const PAGE_SIZE = 24;
 export const MAX_GUESTS = 16;
 export const MAX_ROOMS = 10;
 
+/** Sort options keyed by URL slug; `labelKey` lives under `search.sort` in messages/*.json. */
 export const SORT_OPTIONS = {
-  recommended: { label: "Recommended" },
-  "top-rated": { label: "Top rated", column: "rating", order: "desc" },
-  "price-asc": { label: "Price: low to high", column: "price_amount", order: "asc" },
-  "price-desc": { label: "Price: high to low", column: "price_amount", order: "desc" },
-  name: { label: "Name (A–Z)", column: "name", order: "asc" },
-} as const satisfies Record<string, { label: string; column?: ApartmentSortColumn; order?: SortOrder }>;
+  recommended: { labelKey: "recommended" },
+  "top-rated": { labelKey: "topRated", column: "rating", order: "desc" },
+  "price-asc": { labelKey: "priceAsc", column: "price_amount", order: "asc" },
+  "price-desc": { labelKey: "priceDesc", column: "price_amount", order: "desc" },
+  name: { labelKey: "name", column: "name", order: "asc" },
+} as const satisfies Record<
+  string,
+  { labelKey: "recommended" | "topRated" | "priceAsc" | "priceDesc" | "name"; column?: ApartmentSortColumn; order?: SortOrder }
+>;
 
 export type SortKey = keyof typeof SORT_OPTIONS;
 

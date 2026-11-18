@@ -2,6 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { createContext, use, useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -36,6 +37,7 @@ export function SessionProvider({
   initialSession: Session | null;
   children: React.ReactNode;
 }) {
+  const t = useTranslations("auth");
   const router = useRouter();
   const queryClient = useQueryClient();
   const [session, setSession] = useState<Session | null>(initialSession);
@@ -54,7 +56,7 @@ export function SessionProvider({
       queryClient.removeQueries({ queryKey: ["users"] });
 
       if (reason === "expired") {
-        toast.info("Your session has expired", { description: "Please sign in again to continue." });
+        toast.info(t("sessionExpired"), { description: t("sessionExpiredDescription") });
       }
 
       const path = window.location.pathname;
@@ -63,7 +65,7 @@ export function SessionProvider({
       if (target) router.replace(target);
       router.refresh();
     },
-    [queryClient, router],
+    [queryClient, router, t],
   );
 
   const updateSession = useCallback((patch: Partial<Pick<Session, "name">>) => {

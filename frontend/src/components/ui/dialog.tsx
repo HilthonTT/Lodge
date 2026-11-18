@@ -1,6 +1,7 @@
 "use client";
 
 import { XIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import type * as React from "react";
 
@@ -29,6 +30,7 @@ function DialogContent({
   showCloseButton = true,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & { showCloseButton?: boolean }) {
+  const t = useTranslations("common");
   return (
     <DialogPrimitive.Portal>
       <DialogOverlay />
@@ -45,7 +47,7 @@ function DialogContent({
         {showCloseButton && (
           <DialogPrimitive.Close className="absolute top-4 right-4 rounded-md p-1 text-muted-foreground transition hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/40 focus-visible:outline-none">
             <XIcon className="size-4" />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">{t("close")}</span>
           </DialogPrimitive.Close>
         )}
       </DialogPrimitive.Content>

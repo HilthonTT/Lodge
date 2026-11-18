@@ -2,10 +2,10 @@
 
 import { Search } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
 import { formatShortDate } from "@/lib/dates";
-import { pluralize } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 import { parseApartmentSearch } from "../search-params";
@@ -13,6 +13,8 @@ import { SearchDialog, type SearchSection } from "./search-dialog";
 
 /** Navbar search pill. Opens the search dialog focused on the clicked segment. */
 export function SearchBar({ className }: { className?: string }) {
+  const t = useTranslations();
+  const locale = useLocale();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
@@ -32,11 +34,11 @@ export function SearchBar({ className }: { className?: string }) {
     setOpen(true);
   };
 
-  const whereLabel = current.q || "Anywhere";
+  const whereLabel = current.q || t("search.bar.anywhere");
   const whenLabel = current.range
-    ? `${formatShortDate(current.range.from)} – ${formatShortDate(current.range.to)}`
-    : "Any week";
-  const whoLabel = current.guests ? pluralize(current.guests, "guest") : "Add guests";
+    ? `${formatShortDate(current.range.from, locale)} – ${formatShortDate(current.range.to, locale)}`
+    : t("search.bar.anyWeek");
+  const whoLabel = current.guests ? t("common.guests", { count: current.guests }) : t("search.bar.addGuests");
 
   const segment =
     "h-full rounded-full px-4 text-sm transition-colors hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-ring/40 focus-visible:outline-none";
@@ -69,7 +71,7 @@ export function SearchBar({ className }: { className?: string }) {
           type="button"
           onClick={() => openAt("where")}
           className="ml-1 grid size-10 place-items-center rounded-full bg-primary text-primary-foreground transition hover:bg-primary/90 focus-visible:ring-[3px] focus-visible:ring-ring/40 focus-visible:outline-none"
-          aria-label="Open search"
+          aria-label={t("search.bar.openSearch")}
         >
           <Search className="size-4" aria-hidden="true" />
         </button>
@@ -86,7 +88,7 @@ export function SearchBar({ className }: { className?: string }) {
       >
         <Search className="size-4 shrink-0" aria-hidden="true" />
         <span className="grid min-w-0 leading-tight">
-          <span className="truncate text-sm font-medium">{current.q || "Where to?"}</span>
+          <span className="truncate text-sm font-medium">{current.q || t("search.bar.whereTo")}</span>
           <span className="truncate text-xs text-muted-foreground">
             {whenLabel} · {whoLabel}
           </span>

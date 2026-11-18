@@ -1,13 +1,15 @@
 import { TentTree } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 
 export function Logo({ className, compact = false }: { className?: string; compact?: boolean }) {
+  const t = useTranslations("common");
   return (
     <Link
       href="/"
-      aria-label="Lodge home"
+      aria-label={t("logoHome")}
       className={cn(
         "group inline-flex items-center gap-2 rounded-lg font-semibold tracking-tight text-foreground",
         className,

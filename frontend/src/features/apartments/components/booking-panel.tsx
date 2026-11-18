@@ -2,6 +2,7 @@
 
 import { AlertCircle, ChevronDown, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useRef, useState } from "react";
 import type { DateRange } from "react-day-picker";
 
@@ -22,7 +23,8 @@ import {
   toDateOnly,
   today,
 } from "@/lib/dates";
-import { formatPrice, formatPriceCompact, pluralize } from "@/lib/format";
+import { useApiErrorMessage } from "@/i18n/api-errors";
+import { formatPrice, formatPriceCompact } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Apartment } from "@/types/api";
 
@@ -47,6 +49,10 @@ export function BookingPanel({
   initialEndDate,
   initialGuests,
 }: BookingPanelProps) {
+  const t = useTranslations("apartment.booking");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
+  const errorMessage = useApiErrorMessage();
   const router = useRouter();
   const { isAuthenticated } = useSession();
   const isDesktop = useMediaQuery("(min-width: 1024px)");
@@ -155,9 +161,9 @@ export function BookingPanel({
       >
         <p className="flex items-baseline gap-1.5">
           <span className="text-2xl font-semibold">
-            {formatPriceCompact(apartment.price, apartment.currency)}
+            {formatPriceCompact(apartment.price, apartment.currency, locale)}
           </span>
-          <span className="text-muted-foreground">night</span>
+          <span className="text-muted-foreground">{tCommon("perNight")}</span>
         </p>
 
         <div className="overflow-hidden rounded-xl border">
@@ -166,18 +172,18 @@ export function BookingPanel({
               <button
                 type="button"
                 className="grid w-full grid-cols-2 divide-x border-b"
-                aria-label="Choose check-in and check-out dates"
+                aria-label={t("chooseDates")}
               >
                 <span className={field}>
-                  <span className="text-[0.65rem] font-semibold tracking-wide uppercase">Check-in</span>
+                  <span className="text-[0.65rem] font-semibold tracking-wide uppercase">{t("checkIn")}</span>
                   <span className={cn("text-sm", !range?.from && "text-muted-foreground")}>
-                    {range?.from ? formatShortDate(range.from) : "Add date"}
+                    {range?.from ? formatShortDate(range.from, locale) : t("addDate")}
                   </span>
                 </span>
                 <span className={field}>
-                  <span className="text-[0.65rem] font-semibold tracking-wide uppercase">Check-out</span>
+                  <span className="text-[0.65rem] font-semibold tracking-wide uppercase">{t("checkOut")}</span>
                   <span className={cn("text-sm", !range?.to && "text-muted-foreground")}>
-                    {range?.to ? formatShortDate(range.to) : "Add date"}
+                    {range?.to ? formatShortDate(range.to, locale) : t("addDate")}
                   </span>
                 </span>
               </button>
@@ -185,10 +191,10 @@ export function BookingPanel({
             <PopoverContent align="end" className="w-auto p-4">
               <div className="mb-3 grid gap-0.5">
                 <p className="font-semibold">
-                  {validStay ? pluralize(nights, "night") : range?.from ? "Select check-out" : "Select check-in"}
+                  {validStay ? tCommon("nights", { count: nights }) : range?.from ? t("selectCheckOut") : t("selectCheckIn")}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Crossed-out nights are booked. You can still check out on one.
+                  {t("bookedHint")}
                 </p>
               </div>
               <Calendar
@@ -205,10 +211,10 @@ export function BookingPanel({
               />
               <div className="mt-3 flex justify-end gap-2">
                 <Button variant="ghost" size="sm" onClick={() => onSelectRange(undefined)}>
-                  Clear dates
+                  {t("clearDates")}
                 </Button>
                 <Button size="sm" onClick={() => setDatesOpen(false)}>
-                  Close
+                  {tCommon("close")}
                 </Button>
               </div>
             </PopoverContent>
@@ -218,8 +224,8 @@ export function BookingPanel({
             <PopoverTrigger asChild>
               <button type="button" className={cn(field, "flex w-full items-center justify-between")}>
                 <span className="grid gap-0.5">
-                  <span className="text-[0.65rem] font-semibold tracking-wide uppercase">Guests</span>
-                  <span className="text-sm">{pluralize(guests, "guest")}</span>
+                  <span className="text-[0.65rem] font-semibold tracking-wide uppercase">{t("guests")}</span>
+                  <span className="text-sm">{tCommon("guests", { count: guests })}</span>
                 </span>
                 <ChevronDown className="size-4 text-muted-foreground" aria-hidden="true" />
               </button>
@@ -227,8 +233,8 @@ export function BookingPanel({
             <PopoverContent align="end" className="w-80">
               <Stepper
                 id="booking-guests"
-                label="Guests"
-                description={`This place allows up to ${pluralize(maxGuests, "guest")}`}
+                label={t("guests")}
+                description={t("maxGuests", { count: maxGuests })}
                 value={guests}
                 max={maxGuests}
                 onChange={onGuestsChange}
@@ -240,17 +246,17 @@ export function BookingPanel({
         {conflict && (
           <p role="alert" className="flex items-start gap-2 text-sm text-destructive">
             <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-            Some of those dates are no longer available. Please pick different dates.
+            {t("conflict")}
           </p>
         )}
         {bookedDatesUnavailable && (
           <p className="text-xs text-muted-foreground">
-            Availability couldn&apos;t be loaded; unavailable dates will be rejected when you reserve.
+            {t("availabilityUnavailable")}
           </p>
         )}
 
         <Button size="lg" className="w-full" onClick={onReserve}>
-          {validStay ? "Reserve" : "Check availability"}
+          {validStay ? t("reserve") : t("checkAvailability")}
         </Button>
 
         <div aria-live="polite" className="grid gap-3">
@@ -258,11 +264,11 @@ export function BookingPanel({
             priceQuery.isError ? (
               <p className="flex items-start gap-2 text-sm text-destructive">
                 <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                {priceQuery.error.message}
+                {errorMessage(priceQuery.error)}
               </p>
             ) : priceQuery.data ? (
               <>
-                <p className="text-center text-xs text-muted-foreground">You won&apos;t be charged yet</p>
+                <p className="text-center text-xs text-muted-foreground">{t("notChargedYet")}</p>
                 <PriceBreakdown
                   price={priceQuery.data}
                   nights={nights}
@@ -270,7 +276,7 @@ export function BookingPanel({
                 />
               </>
             ) : (
-              <div className="grid gap-3" role="status" aria-label="Calculating price">
+              <div className="grid gap-3" role="status" aria-label={t("calculating")}>
                 <Skeleton className="h-4 w-full" />
                 <Skeleton className="h-4 w-5/6" />
                 <Skeleton className="h-5 w-full" />
@@ -278,7 +284,7 @@ export function BookingPanel({
             )
           ) : (
             <p className="text-center text-sm text-muted-foreground">
-              Add your travel dates for the exact total.
+              {t("addDatesForTotal")}
             </p>
           )}
         </div>
@@ -291,25 +297,25 @@ export function BookingPanel({
             {validStay && priceQuery.data ? (
               <>
                 <span className="font-semibold">
-                  {formatPrice(priceQuery.data.totalPrice, priceQuery.data.currency)}
+                  {formatPrice(priceQuery.data.totalPrice, priceQuery.data.currency, locale)}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {formatShortDate(validStay.from)} – {formatShortDate(validStay.to)}
+                  {formatShortDate(validStay.from, locale)} – {formatShortDate(validStay.to, locale)}
                 </span>
               </>
             ) : (
               <>
                 <span className="font-semibold">
-                  {formatPriceCompact(apartment.price, apartment.currency)}{" "}
-                  <span className="font-normal text-muted-foreground">night</span>
+                  {formatPriceCompact(apartment.price, apartment.currency, locale)}{" "}
+                  <span className="font-normal text-muted-foreground">{tCommon("perNight")}</span>
                 </span>
-                <span className="text-xs text-muted-foreground">Add dates for total</span>
+                <span className="text-xs text-muted-foreground">{t("addDatesShort")}</span>
               </>
             )}
           </div>
           <Button onClick={onReserve} disabled={Boolean(validStay) && priceQuery.isFetching && !priceQuery.data}>
             {validStay && priceQuery.isFetching && !priceQuery.data && <Loader2 className="animate-spin" />}
-            {validStay ? "Reserve" : "Check availability"}
+            {validStay ? t("reserve") : t("checkAvailability")}
           </Button>
         </div>
       </div>

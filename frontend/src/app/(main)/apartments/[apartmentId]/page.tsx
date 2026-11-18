@@ -1,6 +1,7 @@
 import { BedDouble, CalendarCheck, MapPin, TentTree, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { Container } from "@/components/shared/container";
 import { RemoteImage } from "@/components/shared/remote-image";
@@ -16,17 +17,21 @@ import { BookingPanel } from "@/features/apartments/components/booking-panel";
 import { RatingSummary } from "@/features/apartments/components/rating-summary";
 import { ReviewsSection } from "@/features/apartments/components/reviews-section";
 import { ShareButton } from "@/features/apartments/components/share-button";
+import { apiErrorMessage } from "@/i18n/api-errors";
 import { attempt } from "@/lib/api/client";
 import { getServerHttp } from "@/lib/api/server";
 import { findCountry } from "@/lib/countries.server";
-import { pluralize } from "@/lib/format";
 
 export async function generateMetadata({
   params,
 }: PageProps<"/apartments/[apartmentId]">): Promise<Metadata> {
   const { apartmentId } = await params;
   const result = await loadApartment(apartmentId);
-  if (!result.ok) return { title: "Stay" };
+  if (!result.ok) {
+    const t = await getTranslations("apartment");
+    return { title: t("metaFallbackTitle") };
+  }
+
   const apartment = result.data;
   return {
     title: apartment.name,
@@ -41,19 +46,25 @@ export default async function ApartmentPage({
   params,
   searchParams,
 }: PageProps<"/apartments/[apartmentId]">) {
-  const [{ apartmentId }, query] = await Promise.all([params, searchParams]);
+  const [{ apartmentId }, query, t, tCommon] = await Promise.all([
+    params,
+    searchParams,
+    getTranslations("apartment"),
+    getTranslations("common"),
+  ]);
   const result = await loadApartment(apartmentId);
 
   if (!result.ok) {
+    const tErrors = await getTranslations("errors.api");
     return (
       <Container>
         <ErrorState
-          title="We can't load this stay right now"
-          description={result.error.message}
+          title={t("loadError")}
+          description={apiErrorMessage(result.error, tErrors)}
           action={
             <Button asChild variant="outline">
               <Link href={`/apartments/${apartmentId}`} prefetch={false}>
-                Try again
+                {tCommon("tryAgain")}
               </Link>
             </Button>
           }
@@ -68,7 +79,6 @@ export default async function ApartmentPage({
     attempt(() => apartmentsApi.bookedDates(http, apartment.id)),
     attempt(() => apartmentsApi.reviews(http, apartment.id, { page: 1, pageSize: 6 })),
   ]);
-
   const country = findCountry(apartment.address.country);
   const location = formatLocation(apartment.address);
   const guestsParam = Number(first(query.guests));
@@ -78,7 +88,7 @@ export default async function ApartmentPage({
       <div className="grid gap-3">
         <Breadcrumbs
           items={[
-            { label: "Stays", href: "/" },
+            { label: t("breadcrumbStays"), href: "/" },
             ...(apartment.address.country
               ? [{ label: apartment.address.country, href: `/search?q=${encodeURIComponent(apartment.address.country)}` }]
               : []),
@@ -116,7 +126,7 @@ export default async function ApartmentPage({
       <div className="relative aspect-[16/10] max-h-[30rem] w-full overflow-hidden rounded-3xl bg-muted sm:aspect-[21/9]">
         <RemoteImage
           src={apartment.imageUrl}
-          alt={`Photo of ${apartment.name}`}
+          alt={t("photoAlt", { name: apartment.name })}
           fill
           priority
           sizes="(min-width: 1280px) 1216px, 100vw"
@@ -128,16 +138,16 @@ export default async function ApartmentPage({
         <div className="grid content-start gap-10">
           <section className="grid gap-4">
             <h2 className="text-xl font-semibold">
-              {apartment.address.city ? `Entire place in ${apartment.address.city}` : "Entire place"}
+              {apartment.address.city ? t("entirePlaceIn", { city: apartment.address.city }) : t("entirePlace")}
             </h2>
             <ul className="flex flex-wrap gap-2 text-sm">
               <li className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5">
                 <Users className="size-4 text-muted-foreground" aria-hidden="true" />
-                Up to {pluralize(apartment.maximumGuestCount, "guest")}
+                {t("upToGuests", { count: apartment.maximumGuestCount })}
               </li>
               <li className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5">
                 <BedDouble className="size-4 text-muted-foreground" aria-hidden="true" />
-                {pluralize(apartment.maximumRoomCount, "room")}
+                {tCommon("rooms", { count: apartment.maximumRoomCount })}
               </li>
             </ul>
           </section>
@@ -149,10 +159,8 @@ export default async function ApartmentPage({
               <TentTree className="size-6" aria-hidden="true" />
             </span>
             <div className="grid gap-1">
-              <h2 className="font-semibold">Hosted by Lodge</h2>
-              <p className="text-sm text-muted-foreground">
-                Every stay is managed directly by the Lodge team.
-              </p>
+              <h2 className="font-semibold">{t("hostedBy")}</h2>
+              <p className="text-sm text-muted-foreground">{t("hostedByDescription")}</p>
             </div>
           </section>
 
@@ -160,20 +168,18 @@ export default async function ApartmentPage({
 
           <section aria-labelledby="about-heading" className="grid gap-3">
             <h2 id="about-heading" className="text-xl font-semibold">
-              About this place
+              {t("about")}
             </h2>
             <p className="leading-relaxed whitespace-pre-line text-muted-foreground">
-              {apartment.description || "The host hasn't added a description yet."}
+              {apartment.description || t("noDescription")}
             </p>
           </section>
 
           <section className="flex items-start gap-4 rounded-2xl bg-muted/60 p-5">
             <CalendarCheck className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
             <p className="text-sm">
-              <span className="font-medium">Reserve now, pay later.</span>{" "}
-              <span className="text-muted-foreground">
-                Your reservation is held while you complete payment from your bookings page.
-              </span>
+              <span className="font-medium">{t("payLaterTitle")}</span>{" "}
+              <span className="text-muted-foreground">{t("payLaterDescription")}</span>
             </p>
           </section>
 
@@ -184,10 +190,10 @@ export default async function ApartmentPage({
               <section aria-labelledby="location-heading" className="grid gap-4">
                 <div className="grid gap-1">
                   <h2 id="location-heading" className="text-xl font-semibold">
-                    Where you&apos;ll be
+                    {t("whereYoullBe")}
                   </h2>
                   <p className="text-sm text-muted-foreground">
-                    {country.flag} {location || country.name} · exact address shared after booking
+                    {country.flag} {location || country.name} · {t("exactAddressLater")}
                   </p>
                 </div>
                 <ApartmentMap center={country.latlng} label={location || country.name} />
@@ -203,7 +209,7 @@ export default async function ApartmentPage({
           />
         </div>
 
-        <aside aria-label="Reserve this stay" className="lg:sticky lg:top-28 lg:self-start">
+        <aside aria-label={t("reserveAside")} className="lg:sticky lg:top-28 lg:self-start">
           <BookingPanel
             apartment={apartment}
             bookedDates={booked.ok ? booked.data : []}
