@@ -9,6 +9,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Providers } from "@/components/providers";
 import { INTL_LOCALES } from "@/i18n/config";
 import { getServerSession } from "@/lib/auth/session.server";
+import { getServerCurrency, loadExchangeRates } from "@/lib/currency.server";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("metadata");
@@ -40,7 +41,13 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   // Decoding the cookie on the server lets the navbar render the right state
   // on first paint (no flash, no hydration mismatch).
-  const [session, locale, t] = await Promise.all([getServerSession(), getLocale(), getTranslations("common")]);
+  const [session, locale, t, currency, rates] = await Promise.all([
+    getServerSession(),
+    getLocale(),
+    getTranslations("common"),
+    getServerCurrency(),
+    loadExchangeRates(),
+  ]);
 
   return (
     <html
@@ -57,7 +64,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         </a>
         {/* Inherits locale and messages from src/i18n/request.ts. */}
         <NextIntlClientProvider>
-          <Providers initialSession={session}>{children}</Providers>
+          <Providers initialSession={session} initialCurrency={currency} initialRates={rates}>{children}</Providers>
         </NextIntlClientProvider>
       </body>
     </html>

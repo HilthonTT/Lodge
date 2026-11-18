@@ -1,4 +1,4 @@
-import { Ban, CheckCircle2, CircleCheckBig, Clock, XCircle } from "lucide-react";
+import { Ban, CheckCircle2, CircleCheckBig, Clock, Hourglass, TimerOff, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,8 @@ export const BOOKING_STATUS = {
   [BookingStatus.Completed]: { labelKey: "completed", variant: "info", icon: CircleCheckBig },
   [BookingStatus.Cancelled]: { labelKey: "cancelled", variant: "muted", icon: XCircle },
   [BookingStatus.Rejected]: { labelKey: "rejected", variant: "destructive", icon: Ban },
+  [BookingStatus.PendingApproval]: { labelKey: "pendingApproval", variant: "info", icon: Hourglass },
+  [BookingStatus.Expired]: { labelKey: "expired", variant: "muted", icon: TimerOff },
 } as const;
 
 export function BookingStatusBadge({ status }: { status: BookingStatus }) {

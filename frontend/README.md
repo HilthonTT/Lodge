@@ -45,11 +45,11 @@ src/
   app/          routes: (main) shop pages + users/[userId] profiles, (auth) login/register,
                 forgot-password, reset-password, verify-email, auth/callback (social login), api/health
   components/   ui/ (shadcn primitives), shared/, layout/, providers
-  features/     apartments | auth | bookings | users  → api/, components/, hooks/, schemas/
+  features/     apartments | auth | bookings | hosting | users | wishlists  → api/, components/, hooks/, schemas/
   i18n/         next-intl setup: locales, request config, language action, typed messages
   lib/          env, api client (axios), auth (JWT cookie), dates, format, query keys
   types/        API contract types (mirrors backend/src/Lodge.Contracts)
-  proxy.ts      auth gate for /bookings, /settings, /stays, /admin (admins only) (Next 16 "proxy")
+  proxy.ts      auth gate for /bookings, /settings, /stays, /wishlists, /hosting, /admin (admins only) (Next 16 "proxy")
 ```
 
 ## Localization
@@ -99,6 +99,27 @@ arguments, and `npm run typecheck` fails on unknown keys and on key drift betwee
 
 Exception: `src/app/global-error.tsx` renders without providers, so its three strings are
 inlined per locale.
+
+### Display currency
+
+The globe dialog also has a **Currency** tab (USD, EUR, GBP, JPY, CHF, CAD, AUD). The choice
+lives in the `LODGE_CURRENCY` cookie; without it, `en` shows USD and `nl`/`fr` show EUR
+(`src/lib/currency.ts`). Rates come from `GET /currencies`, fetched once by the root layout and
+cached by TanStack Query.
+
+* Browsing prices (cards, map pins, calendar, nightly headline) use `<Money>` from
+  `features/payments/components/money.tsx`, which converts and marks the result
+  ("≈ €170", tooltip "≈ converted from USD").
+* Amounts that are charged (checkout, price breakdowns, receipts, refunds) stay in the
+  listing's currency and use `<ChargedAmount>`, which adds the converted amount underneath.
+* The price filter works in USD on the API side: the slider shows the display currency and
+  converts back before writing `minPrice`/`maxPrice` to the URL.
+
+### Payments
+
+`POST /stripe/checkout` returns `{ url }`. In Simulated mode (`GET /payments/config`) that URL
+is this app's `/checkout/simulated?bookingId=…`, a test-mode hosted payment page that confirms
+the booking through `POST /payments/simulated/{id}/complete`.
 
 ## Docker
 

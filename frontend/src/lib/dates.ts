@@ -119,3 +119,34 @@ export function parseStayRange(
 }
 
 export { addDays };
+
+const relativeFormatters = new Map<string, Intl.RelativeTimeFormat>();
+
+/** "just now", "5 min. ago", "yesterday", "3 days ago"; older than a week falls back to the date. */
+export function formatRelativeTime(date: Date, locale: string, now = Date.now()): string {
+  let formatter = relativeFormatters.get(locale);
+  if (!formatter) {
+    formatter = new Intl.RelativeTimeFormat(locale, { numeric: "auto", style: "short" });
+    relativeFormatters.set(locale, formatter);
+  }
+  const seconds = Math.round((date.getTime() - now) / 1000);
+  const abs = Math.abs(seconds);
+  if (abs < 45) return formatter.format(0, "second");
+  if (abs < 3_600) return formatter.format(Math.round(seconds / 60), "minute");
+  if (abs < 86_400) return formatter.format(Math.round(seconds / 3_600), "hour");
+  if (abs < 7 * 86_400) return formatter.format(Math.round(seconds / 86_400), "day");
+  return formatMediumDate(date, locale);
+}
+
+/** Weekday, date and time of an instant in the visitor's time zone, e.g. "Sat, Nov 21 · 10:00 AM". */
+export function formatSessionDateTime(date: Date, locale: string): string {
+  const options = { locale: getDateFnsLocale(locale) };
+  const day = locale === "nl" || locale === "fr" ? "EEE d MMM" : "EEE, MMM d";
+  return `${format(date, day, options)} · ${format(date, "p", options)}`;
+}
+
+/** "Saturday, November 21" / "zaterdag 21 november". */
+export function formatLongDay(date: Date, locale: string): string {
+  const pattern = locale === "nl" || locale === "fr" ? "EEEE d MMMM" : "EEEE, MMMM d";
+  return format(date, pattern, { locale: getDateFnsLocale(locale) });
+}

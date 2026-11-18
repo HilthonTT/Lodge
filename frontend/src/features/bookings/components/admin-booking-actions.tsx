@@ -26,7 +26,7 @@ import { useAdminBookingAction } from "../hooks/use-admin-bookings";
 export function getAdminActions(booking: Booking) {
   const end = parseDateOnly(booking.durationEnd);
   return {
-    canReject: booking.status === BookingStatus.Reserved,
+    canReject: booking.status === BookingStatus.Reserved || booking.status === BookingStatus.PendingApproval,
     canComplete: booking.status === BookingStatus.Confirmed && !!end && end <= today(),
   };
 }

@@ -1,6 +1,18 @@
 "use client";
 
-import { CalendarCheck, CircleUserRound, ClipboardList, LogOut, Settings, ShieldCheck, UserRound } from "lucide-react";
+import {
+  CalendarCheck,
+  CircleUserRound,
+  Bell,
+  ClipboardList,
+  Heart,
+  House,
+  LogOut,
+  MessageCircle,
+  Settings,
+  ShieldCheck,
+  UserRound,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -80,6 +92,26 @@ export function UserMenu() {
           <DropdownMenuItem asChild>
             <Link href="/bookings">
               <CalendarCheck /> {t("myBookings")}
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/messages">
+              <MessageCircle /> {t("messages")}
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/notifications">
+              <Bell /> {t("notifications")}
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/wishlists">
+              <Heart /> {t("wishlists")}
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/hosting">
+              <House /> {t("hosting")}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>

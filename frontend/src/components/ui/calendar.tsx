@@ -21,6 +21,7 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = false,
+  components,
   ...props
 }: React.ComponentProps<typeof DayPicker>) {
   const locale = useLocale();
@@ -73,6 +74,7 @@ function Calendar({
           ) : (
             <ChevronRightIcon className={cn("size-4", chevronClass)} {...rest} />
           ),
+        ...components,
       }}
       {...props}
     />

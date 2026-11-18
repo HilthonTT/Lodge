@@ -10,11 +10,13 @@ export const ADMIN_PAGE_SIZE = 20;
  */
 export const ADMIN_STATUS_FILTERS = {
   all: { status: undefined },
+  pendingApproval: { status: BookingStatus.PendingApproval },
   reserved: { status: BookingStatus.Reserved },
   confirmed: { status: BookingStatus.Confirmed },
   completed: { status: BookingStatus.Completed },
   cancelled: { status: BookingStatus.Cancelled },
   rejected: { status: BookingStatus.Rejected },
+  expired: { status: BookingStatus.Expired },
 } as const satisfies Record<string, { status: BookingStatus | undefined }>;
 
 export type AdminStatusFilter = keyof typeof ADMIN_STATUS_FILTERS;

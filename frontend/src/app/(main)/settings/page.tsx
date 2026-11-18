@@ -1,4 +1,4 @@
-import { CalendarCheck, ChevronRight, type LucideIcon, ShieldCheck, UserRound } from "lucide-react";
+import { Bell, CalendarCheck, ChevronRight, type LucideIcon, ShieldCheck, UserRound } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
@@ -15,6 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
 const SECTIONS = [
   { key: "personalInfo", href: "/settings/personal-info", icon: UserRound },
   { key: "loginSecurity", href: "/settings/login-and-security", icon: ShieldCheck },
+  { key: "notifications", href: "/settings/notifications", icon: Bell },
   { key: "bookings", href: "/bookings", icon: CalendarCheck },
 ] as const satisfies readonly { key: string; href: string; icon: LucideIcon }[];
 

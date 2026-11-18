@@ -1,12 +1,13 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 import { useUserId } from "@/features/auth/session-provider";
 import { getBrowserHttp } from "@/lib/api/browser";
 import { ApiError } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query-keys";
-import type { ReserveBookingRequest } from "@/types/api";
+import type { Booking, CancellationQuote, ReserveBookingRequest } from "@/types/api";
 
 import { bookingsApi } from "../api/bookings";
 
@@ -24,6 +25,30 @@ export function useUserBookings() {
     // Payment status changes via a Stripe webhook, so refresh when the user returns.
     refetchOnWindowFocus: true,
     staleTime: 15_000,
+    // Refunds settle asynchronously (Pending → Succeeded within seconds): poll until they do.
+    refetchInterval: (query) =>
+      query.state.data?.some((b) => b.refundStatus === "Pending") ? 3_000 : false,
+  });
+}
+
+/** A single booking (guest or listing host). */
+export function useBooking(bookingId: string | undefined) {
+  return useQuery<Booking, ApiError>({
+    queryKey: queryKeys.bookings.detail(bookingId ?? ""),
+    queryFn: () => bookingsApi.get(getBrowserHttp(), bookingId!),
+    enabled: Boolean(bookingId),
+    staleTime: 5_000,
+  });
+}
+
+/** What cancelling right now would refund. Always fresh: the tier depends on today's date. */
+export function useCancellationQuote(bookingId: string, enabled: boolean) {
+  return useQuery<CancellationQuote, ApiError>({
+    queryKey: queryKeys.bookings.cancellationQuote(bookingId),
+    queryFn: () => bookingsApi.cancellationQuote(getBrowserHttp(), bookingId),
+    enabled,
+    staleTime: 0,
+    gcTime: 0,
   });
 }
 
@@ -47,33 +72,52 @@ export function useCancelBooking() {
   });
 }
 
+export function useChangeBookingDates() {
+  const queryClient = useQueryClient();
+  return useMutation<void, ApiError, { bookingId: string; apartmentId: string; startDate: string; endDate: string }>({
+    mutationFn: ({ bookingId, startDate, endDate }) =>
+      bookingsApi.changeDates(getBrowserHttp(), bookingId, startDate, endDate),
+    onSuccess: (_data, { apartmentId }) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.bookings.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.apartments.bookedDates(apartmentId) });
+      void queryClient.invalidateQueries({ queryKey: ["apartments", apartmentId, "calendar"] });
+    },
+  });
+}
+
+/**
+ * Accepts Stripe's https checkout links and, in Simulated mode, links back to
+ * this site. Returns the parsed URL, or null for anything else.
+ */
+export function parseCheckoutUrl(value: unknown): URL | null {
+  if (typeof value !== "string") return null;
+  try {
+    const url = new URL(value);
+    if (url.protocol === "https:") return url;
+    return url.origin === window.location.origin ? url : null;
+  } catch {
+    return null;
+  }
+}
+
 export function useCheckout() {
   const userId = useUserId();
-  return useMutation<string, ApiError, string>({
+  const router = useRouter();
+  return useMutation<URL, ApiError, string>({
     mutationFn: async (bookingId) => {
-      const url = await bookingsApi.checkout(getBrowserHttp(), bookingId, requireUser(userId));
-      if (typeof url !== "string" || !/^https:\/\//i.test(url)) {
+      const url = parseCheckoutUrl(await bookingsApi.checkout(getBrowserHttp(), bookingId, requireUser(userId)));
+      if (!url) {
         throw new ApiError("The payment provider returned an invalid checkout link.", {
           messageKey: "invalidCheckoutLink",
         });
       }
       return url;
     },
-    // Hand off to Stripe; it returns to /bookings when done.
-    onSuccess: (url) => window.location.assign(url),
-  });
-}
-
-export function useCreateReview() {
-  const userId = useUserId();
-  const queryClient = useQueryClient();
-  return useMutation<
-    string,
-    ApiError,
-    { bookingId: string; rating: number; comment: string; idempotencyKey: string }
-  >({
-    mutationFn: ({ idempotencyKey, ...body }) =>
-      bookingsApi.review(getBrowserHttp(), { ...body, userId: requireUser(userId) }, idempotencyKey),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.bookings.all }),
+    // Our own simulated checkout is a client-side navigation; Stripe is a full page load
+    // and returns to /bookings when done.
+    onSuccess: (url) => {
+      if (url.origin === window.location.origin) router.push(`${url.pathname}${url.search}`);
+      else window.location.assign(url.href);
+    },
   });
 }

@@ -19,7 +19,8 @@ export const isApartmentId = (value: string) => UUID.test(value);
  */
 export const loadApartment = cache(async (apartmentId: string) => {
   if (!isApartmentId(apartmentId)) notFound();
-  const http = await getServerHttp();
+  // Forward the token so hosts can preview their own unlisted listings.
+  const http = await getServerHttp({ auth: true });
   const result = await attempt(() => apartmentsApi.get(http, apartmentId));
   if (!result.ok && (result.error.isNotFound || result.error.status === 400)) notFound();
   return result;

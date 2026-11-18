@@ -1,5 +1,6 @@
 "use client";
 
+import { format } from "date-fns";
 import { CalendarDays, MapPin, Search, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -16,18 +17,23 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { formatDateRange, nightsBetween, today } from "@/lib/dates";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatDateRange, getDateFnsLocale, nightsBetween, today } from "@/lib/dates";
+import { cn } from "@/lib/utils";
+import type { FlexibleStay } from "@/types/api";
 
+import { formatMonthList, monthToDate, upcomingMonths } from "../flexible";
 import {
   type ApartmentSearch,
   buildUrl,
+  defaultFlexibleMonths,
+  FLEXIBLE_STAYS,
   MAX_GUESTS,
-  MAX_ROOMS,
   toSearchParams,
 } from "../search-params";
+import { LocationAutocomplete } from "./location-autocomplete";
 
 export type SearchSection = "where" | "when" | "who";
 
@@ -49,6 +55,8 @@ export function SearchDialog({ open, onOpenChange, initial, focus }: SearchDialo
   );
 }
 
+type DateMode = "dates" | "flexible";
+
 function SearchForm({
   initial,
   focus,
@@ -59,27 +67,41 @@ function SearchForm({
   onDone: () => void;
 }) {
   const t = useTranslations("search.dialog");
+  const tSearch = useTranslations("search");
   const tCommon = useTranslations("common");
   const locale = useLocale();
   const router = useRouter();
   const [where, setWhere] = useState(initial.q ?? "");
+  const [mode, setMode] = useState<DateMode>(initial.flexible ? "flexible" : "dates");
   const [range, setRange] = useState<DateRange | undefined>(initial.range);
+  const [flexible, setFlexible] = useState<FlexibleStay>(initial.flexible ?? "weekend");
+  const [months, setMonths] = useState<string[]>(initial.months.length ? initial.months : defaultFlexibleMonths().slice(0, 2));
   const [guests, setGuests] = useState(initial.guests ?? 1);
-  const [rooms, setRooms] = useState(initial.rooms ?? 1);
+  const monthOptions = upcomingMonths(12);
 
   const validRange =
     range?.from && range.to && nightsBetween(range.from, range.to) > 0
       ? { from: range.from, to: range.to }
       : undefined;
 
+  const toggleMonth = (month: string) =>
+    setMonths((current) =>
+      current.includes(month) ? current.filter((m) => m !== month) : [...current, month].sort(),
+    );
+
   const onSubmit = (event: React.FormEvent) => {
     event.preventDefault();
+    const isFlexible = mode === "flexible";
     const params = toSearchParams({
+      ...initial,
       q: where.trim() || undefined,
-      range: validRange,
+      range: isFlexible ? undefined : validRange,
+      flexible: isFlexible ? flexible : undefined,
+      months: isFlexible ? (months.length ? months : defaultFlexibleMonths()) : [],
       guests,
-      rooms,
-      sort: initial.sort,
+      // A new destination makes the previous map area meaningless.
+      bounds: undefined,
+      page: 1,
     });
     router.push(buildUrl("/search", params));
     onDone();
@@ -88,9 +110,22 @@ function SearchForm({
   const onClear = () => {
     setWhere("");
     setRange(undefined);
+    setMode("dates");
+    setMonths(defaultFlexibleMonths().slice(0, 2));
     setGuests(1);
-    setRooms(1);
   };
+
+  const whenSummary =
+    mode === "flexible"
+      ? tSearch("flexibleIn", { kind: flexible, months: formatMonthList(months.length ? months : defaultFlexibleMonths(), locale) })
+      : validRange
+        ? `${formatDateRange(validRange.from, validRange.to, locale)} · ${tCommon("nights", { count: nightsBetween(validRange.from, validRange.to) })}`
+        : range?.from
+          ? t("selectCheckOut")
+          : t("anyWeek");
+
+  const chip =
+    "inline-flex h-10 items-center justify-center rounded-full border px-4 text-sm font-medium transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40";
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col">
@@ -104,43 +139,91 @@ function SearchForm({
           <Label htmlFor="search-where" className="gap-1.5">
             <MapPin className="size-4 text-muted-foreground" aria-hidden="true" /> {t("where")}
           </Label>
-          <Input
+          <LocationAutocomplete
             id="search-where"
             value={where}
-            onChange={(e) => setWhere(e.target.value)}
+            onChange={setWhere}
             placeholder={t("wherePlaceholder")}
-            autoComplete="off"
             autoFocus={focus === "where"}
-            maxLength={100}
           />
         </section>
 
         <Separator />
 
-        <section className="grid gap-3" aria-labelledby="search-when-label">
-          <div className="flex items-center justify-between gap-2">
+        <section className="grid gap-4" aria-labelledby="search-when-label">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <span id="search-when-label" className="inline-flex items-center gap-1.5 text-sm font-medium">
               <CalendarDays className="size-4 text-muted-foreground" aria-hidden="true" /> {t("when")}
             </span>
             <span className="text-sm text-muted-foreground" aria-live="polite">
-              {validRange
-                ? `${formatDateRange(validRange.from, validRange.to, locale)} · ${tCommon("nights", { count: nightsBetween(validRange.from, validRange.to) })}`
-                : range?.from
-                  ? t("selectCheckOut")
-                  : t("anyWeek")}
+              {whenSummary}
             </span>
           </div>
-          <div className="flex justify-center">
-            <Calendar
-              mode="range"
-              numberOfMonths={2}
-              selected={range}
-              onSelect={setRange}
-              disabled={{ before: today() }}
-              startMonth={today()}
-              autoFocus={focus === "when"}
-            />
-          </div>
+          <Tabs value={mode} onValueChange={(v) => setMode(v as DateMode)} className="grid gap-5">
+            <TabsList className="mx-auto">
+              <TabsTrigger value="dates">{t("tabDates")}</TabsTrigger>
+              <TabsTrigger value="flexible">{t("tabFlexible")}</TabsTrigger>
+            </TabsList>
+            <TabsContent value="dates" className="flex justify-center">
+              <Calendar
+                mode="range"
+                numberOfMonths={2}
+                selected={range}
+                onSelect={setRange}
+                disabled={{ before: today() }}
+                startMonth={today()}
+                autoFocus={focus === "when"}
+              />
+            </TabsContent>
+            <TabsContent value="flexible" className="grid gap-6">
+              <fieldset className="grid gap-3">
+                <legend className="mb-3 text-center text-base font-semibold">{t("stayFor")}</legend>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {FLEXIBLE_STAYS.map((kind) => (
+                    <button
+                      key={kind}
+                      type="button"
+                      aria-pressed={flexible === kind}
+                      onClick={() => setFlexible(kind)}
+                      className={cn(
+                        chip,
+                        flexible === kind ? "border-foreground bg-foreground text-background" : "bg-card hover:border-foreground/60",
+                      )}
+                    >
+                      {t(`stay.${kind}`)}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+              <fieldset className="grid gap-3">
+                <legend className="mb-3 text-center text-base font-semibold">{t("goIn")}</legend>
+                <div className="-mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-2">
+                  {monthOptions.map((month) => {
+                    const date = monthToDate(month);
+                    const selected = months.includes(month);
+                    return (
+                      <button
+                        key={month}
+                        type="button"
+                        aria-pressed={selected}
+                        onClick={() => toggleMonth(month)}
+                        className={cn(
+                          "grid w-24 shrink-0 snap-start justify-items-center gap-1 rounded-2xl border px-3 py-4 text-sm transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40",
+                          selected ? "border-foreground bg-muted ring-1 ring-foreground" : "bg-card hover:border-foreground/60",
+                        )}
+                      >
+                        <CalendarDays className="size-6" aria-hidden="true" />
+                        <span className="font-medium capitalize">
+                          {format(date, "LLLL", { locale: getDateFnsLocale(locale) })}
+                        </span>
+                        <span className="text-xs text-muted-foreground">{String(date.getFullYear())}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </fieldset>
+            </TabsContent>
+          </Tabs>
         </section>
 
         <Separator />
@@ -156,14 +239,6 @@ function SearchForm({
             value={guests}
             max={MAX_GUESTS}
             onChange={setGuests}
-          />
-          <Stepper
-            id="search-rooms"
-            label={t("rooms")}
-            description={t("roomsDescription")}
-            value={rooms}
-            max={MAX_ROOMS}
-            onChange={setRooms}
           />
         </section>
       </div>

@@ -1,4 +1,4 @@
-import { ArrowLeft, CalendarDays, CreditCard, ShieldCheck, Users } from "lucide-react";
+import { ArrowLeft, CalendarDays, CreditCard, Hourglass, ShieldCheck, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -14,14 +14,17 @@ import { loadApartment } from "@/features/apartments/api/apartments.server";
 import { formatLocation } from "@/features/apartments/components/apartment-card";
 import { PriceBreakdown } from "@/features/apartments/components/price-breakdown";
 import { ReserveButton } from "@/features/bookings/components/reserve-button";
+import { ChargedInNote } from "@/features/payments/components/money";
+import { PaymentModeNote } from "@/features/payments/components/payment-mode";
 import { apiErrorMessage } from "@/i18n/api-errors";
 import { attempt } from "@/lib/api/client";
 import { getServerHttp } from "@/lib/api/server";
 import { formatDateRange, nightsBetween, parseStayRange, toDateOnly } from "@/lib/dates";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("checkout");
-  return { title: t("title") };
+export async function generateMetadata({ params }: PageProps<"/stays/[apartmentId]">): Promise<Metadata> {
+  const [{ apartmentId }, t] = await Promise.all([params, getTranslations("checkout")]);
+  const result = await loadApartment(apartmentId);
+  return { title: result.ok && !result.data.instantBook ? t("requestTitle") : t("title") };
 }
 
 const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
@@ -59,6 +62,9 @@ export default async function StayCheckoutPage({
   }
 
   const apartment = result.data;
+  const instantBook = apartment.instantBook;
+  const hostName = apartment.host?.firstName ?? "";
+  const guestCount = Math.min(guests, apartment.maximumGuestCount || guests);
   const http = await getServerHttp();
   const price = await attempt(() => apartmentsApi.price(http, apartment.id, startDate, endDate));
   const nights = nightsBetween(range.from, range.to);
@@ -71,7 +77,7 @@ export default async function StayCheckoutPage({
             <ArrowLeft />
           </Link>
         </Button>
-        <h1 className="text-2xl font-semibold sm:text-3xl">{t("title")}</h1>
+        <h1 className="text-2xl font-semibold sm:text-3xl">{instantBook ? t("title") : t("requestTitle")}</h1>
       </div>
 
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_26rem] lg:gap-16">
@@ -101,7 +107,7 @@ export default async function StayCheckoutPage({
                   <div>
                     <dt className="font-medium">{t("guests")}</dt>
                     <dd className="text-muted-foreground">
-                      {tCommon("guests", { count: Math.min(guests, apartment.maximumGuestCount || guests) })}
+                      {tCommon("guests", { count: guestCount })}
                     </dd>
                   </div>
                 </div>
@@ -119,13 +125,23 @@ export default async function StayCheckoutPage({
               {t("paymentHeading")}
             </h2>
             <ol className="grid gap-4 text-sm">
-              <li className="flex items-start gap-3">
-                <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
-                <span>
-                  <span className="font-medium">{t("reserveNowTitle")}</span>{" "}
-                  <span className="text-muted-foreground">{t("reserveNowText")}</span>
-                </span>
-              </li>
+              {instantBook ? (
+                <li className="flex items-start gap-3">
+                  <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
+                  <span>
+                    <span className="font-medium">{t("reserveNowTitle")}</span>{" "}
+                    <span className="text-muted-foreground">{t("reserveNowText")}</span>
+                  </span>
+                </li>
+              ) : (
+                <li className="flex items-start gap-3">
+                  <Hourglass className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
+                  <span>
+                    <span className="font-medium">{t("requestStepTitle")}</span>{" "}
+                    <span className="text-muted-foreground">{t("requestStepText", { name: hostName })}</span>
+                  </span>
+                </li>
+              )}
               <li className="flex items-start gap-3">
                 <CreditCard className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
                 <span>
@@ -142,11 +158,19 @@ export default async function StayCheckoutPage({
                 </span>
               </li>
             </ol>
+            <PaymentModeNote />
           </section>
 
           <Separator />
 
-          <ReserveButton apartmentId={apartment.id} startDate={startDate} endDate={endDate} />
+          <ReserveButton
+            apartmentId={apartment.id}
+            startDate={startDate}
+            endDate={endDate}
+            guestCount={guestCount}
+            instantBook={instantBook}
+            hostName={hostName}
+          />
         </div>
 
         <aside aria-label={t("priceSummary")} className="lg:sticky lg:top-28 lg:self-start">
@@ -163,7 +187,10 @@ export default async function StayCheckoutPage({
             <Separator />
             <h2 className="font-semibold">{t("priceDetails")}</h2>
             {price.ok ? (
-              <PriceBreakdown price={price.data} nights={nights} />
+              <>
+                <PriceBreakdown price={price.data} nights={nights} />
+                <ChargedInNote currency={price.data.currency} />
+              </>
             ) : (
               <p role="alert" className="text-sm text-destructive">
                 {apiErrorMessage(price.error, tErrors)}

@@ -8,15 +8,18 @@ import { Circle, MapContainer, TileLayer } from "react-leaflet";
 export type LeafletMapProps = {
   center: [number, number];
   label: string;
+  zoom?: number;
+  /** Radius of the approximate-area circle, in metres. */
+  radius?: number;
 };
 
 /** Approximate-area map. Loaded lazily (no SSR) by `ApartmentMap`. */
-export default function LeafletMap({ center, label }: LeafletMapProps) {
+export default function LeafletMap({ center, label, zoom = 4, radius = 180_000 }: LeafletMapProps) {
   const t = useTranslations("apartment");
   return (
     <MapContainer
       center={center}
-      zoom={4}
+      zoom={zoom}
       scrollWheelZoom={false}
       className="size-full"
       attributionControl
@@ -28,7 +31,7 @@ export default function LeafletMap({ center, label }: LeafletMapProps) {
       />
       <Circle
         center={center}
-        radius={180_000}
+        radius={radius}
         pathOptions={{ color: "#2f8f6f", fillColor: "#2f8f6f", fillOpacity: 0.18, weight: 2 }}
       />
     </MapContainer>

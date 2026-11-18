@@ -5,8 +5,12 @@ import { ThemeProvider } from "next-themes";
 
 import { Toaster } from "@/components/ui/sonner";
 import { SessionProvider } from "@/features/auth/session-provider";
+import { CurrencyProvider } from "@/features/payments/currency-provider";
+import { RealtimeProvider } from "@/features/realtime/realtime-provider";
 import type { ApiError } from "@/lib/api/client";
 import type { Session } from "@/lib/auth/token";
+import type { DisplayCurrency } from "@/lib/currency";
+import type { ExchangeRates } from "@/types/api";
 
 function makeQueryClient() {
   return new QueryClient({
@@ -35,9 +39,13 @@ function getQueryClient() {
 
 export function Providers({
   initialSession,
+  initialCurrency,
+  initialRates,
   children,
 }: {
   initialSession: Session | null;
+  initialCurrency: DisplayCurrency;
+  initialRates: ExchangeRates | null;
   children: React.ReactNode;
 }) {
   const queryClient = getQueryClient();
@@ -46,8 +54,12 @@ export function Providers({
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <QueryClientProvider client={queryClient}>
         <SessionProvider initialSession={initialSession}>
-          {children}
-          <Toaster />
+          <RealtimeProvider>
+            <CurrencyProvider initialCurrency={initialCurrency} initialRates={initialRates}>
+              {children}
+              <Toaster />
+            </CurrencyProvider>
+          </RealtimeProvider>
         </SessionProvider>
       </QueryClientProvider>
     </ThemeProvider>

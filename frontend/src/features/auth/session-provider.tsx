@@ -54,6 +54,11 @@ export function SessionProvider({
       setSession(null);
       queryClient.removeQueries({ queryKey: ["bookings"] });
       queryClient.removeQueries({ queryKey: ["users"] });
+      queryClient.removeQueries({ queryKey: ["hosting"] });
+      queryClient.removeQueries({ queryKey: ["wishlists"] });
+      queryClient.removeQueries({ queryKey: ["messaging"] });
+      queryClient.removeQueries({ queryKey: ["notifications"] });
+      queryClient.removeQueries({ queryKey: ["experience-bookings"] });
 
       if (reason === "expired") {
         toast.info(t("sessionExpired"), { description: t("sessionExpiredDescription") });

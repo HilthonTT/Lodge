@@ -19,20 +19,27 @@ import { BookingCard } from "./booking-card";
 // `labelKey` lives under `bookings` in messages/*.json.
 const FILTERS = [
   { key: "all", labelKey: "filterAll", statuses: null },
+  { key: "requested", labelKey: "status.pendingApproval", statuses: [BookingStatus.PendingApproval] },
   { key: "pending", labelKey: "status.reserved", statuses: [BookingStatus.Reserved] },
   { key: "confirmed", labelKey: "status.confirmed", statuses: [BookingStatus.Confirmed] },
   { key: "completed", labelKey: "status.completed", statuses: [BookingStatus.Completed] },
-  { key: "cancelled", labelKey: "status.cancelled", statuses: [BookingStatus.Cancelled, BookingStatus.Rejected] },
+  {
+    key: "cancelled",
+    labelKey: "status.cancelled",
+    statuses: [BookingStatus.Cancelled, BookingStatus.Rejected, BookingStatus.Expired],
+  },
 ] as const;
 
 type FilterKey = (typeof FILTERS)[number]["key"];
 
 const ORDER: Record<BookingStatus, number> = {
-  [BookingStatus.Reserved]: 0,
-  [BookingStatus.Confirmed]: 1,
-  [BookingStatus.Completed]: 2,
-  [BookingStatus.Cancelled]: 3,
-  [BookingStatus.Rejected]: 4,
+  [BookingStatus.PendingApproval]: 0,
+  [BookingStatus.Reserved]: 1,
+  [BookingStatus.Confirmed]: 2,
+  [BookingStatus.Completed]: 3,
+  [BookingStatus.Cancelled]: 4,
+  [BookingStatus.Rejected]: 5,
+  [BookingStatus.Expired]: 6,
 };
 
 function sortBookings(bookings: Booking[]) {
@@ -49,7 +56,9 @@ export function BookingsView() {
   const errorMessage = useApiErrorMessage();
   const { data, isPending, isError, error, refetch, isRefetching } = useUserBookings();
   const [filter, setFilter] = useState<FilterKey>("all");
-  const highlight = useSearchParams().get("highlight");
+  const searchParams = useSearchParams();
+  // Notifications link with ?bookingId=; older links use ?highlight=.
+  const highlight = searchParams.get("highlight") ?? searchParams.get("bookingId");
 
   const counts = useMemo(() => {
     const result = {} as Record<FilterKey, number>;
