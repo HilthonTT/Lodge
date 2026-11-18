@@ -3,112 +3,102 @@ using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Lodge.Application.Abstractions.Storage;
 using Lodge.Contracts.Storage;
-using Lodge.Infrastructure.Storage.Settings;
 using Microsoft.Extensions.Options;
 
 namespace Lodge.Infrastructure.Storage;
 
 /// <summary>
-/// Represents the blob service.
+/// Stores user files in Azure Blob Storage (Azurite locally). The uploader's id is kept in the blob metadata.
 /// </summary>
-/// <param name="blobServiceClient">The blob service client.</param>
-/// <param name="options">The blob service settings.</param>
-internal sealed class BlobService(
-    BlobServiceClient blobServiceClient, 
-    IOptions<BlobServiceSettings> options) : IBlobService
+internal sealed class BlobService(BlobServiceClient blobServiceClient, IOptions<BlobStorageOptions> options) : IBlobService
 {
     private const string UserIdKey = "UserId";
 
-    private readonly BlobServiceSettings _blobServiceSettings = options.Value;
+    private readonly SemaphoreSlim _containerLock = new(1, 1);
+    private bool _containerCreated;
 
-    /// <inheritdoc />
     public async Task<Guid> UploadAsync(
-        Guid userId, 
-        Stream stream, 
-        string contentType, 
+        Guid userId,
+        Stream stream,
+        string contentType,
         CancellationToken cancellationToken = default)
     {
-        BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(_blobServiceSettings.ContainerName);
+        BlobContainerClient containerClient = await GetContainerAsync(cancellationToken);
 
         Guid fileId = Guid.NewGuid();
 
-        BlobClient blobClient = containerClient.GetBlobClient(fileId.ToString());
-
-        var metaData = new Dictionary<string, string>
-        {
-            { UserIdKey, userId.ToString() }
-        };
-
-        await blobClient.UploadAsync(
-            stream, 
-            new BlobHttpHeaders { ContentType = contentType },
-            metaData,
-            cancellationToken: cancellationToken);
+        await containerClient.GetBlobClient(fileId.ToString()).UploadAsync(
+            stream,
+            new BlobUploadOptions
+            {
+                HttpHeaders = new BlobHttpHeaders { ContentType = contentType },
+                Metadata = new Dictionary<string, string> { [UserIdKey] = userId.ToString() },
+            },
+            cancellationToken);
 
         return fileId;
     }
 
-    /// <inheritdoc />
     public async Task<FileResponse> DownloadAsync(Guid fileId, CancellationToken cancellationToken = default)
     {
-        BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(_blobServiceSettings.ContainerName);
+        Response<BlobDownloadStreamingResult> response = await GetBlobClient(fileId)
+            .DownloadStreamingAsync(cancellationToken: cancellationToken);
 
-        BlobClient blobClient = containerClient.GetBlobClient(fileId.ToString());
-
-        Response<BlobDownloadResult> response = await blobClient.DownloadContentAsync(cancellationToken: cancellationToken);
-
-        return new FileResponse(response.Value.Content.ToStream(), response.Value.Details.ContentType);
+        return new FileResponse(response.Value.Content, response.Value.Details.ContentType);
     }
 
-    /// <inheritdoc />
-    public Task DeleteAsync(Guid fileId,  CancellationToken cancellationToken = default)
-    {
-        BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(_blobServiceSettings.ContainerName);
+    public Task DeleteAsync(Guid fileId, CancellationToken cancellationToken = default) =>
+        GetBlobClient(fileId).DeleteIfExistsAsync(cancellationToken: cancellationToken);
 
-        BlobClient blobClient = containerClient.GetBlobClient(fileId.ToString());
-
-        return blobClient.DeleteIfExistsAsync(cancellationToken: cancellationToken);
-    }
-
-    /// <inheritdoc />
     public async Task<bool> ExistsAsync(Guid fileId, CancellationToken cancellationToken = default)
     {
-        BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(_blobServiceSettings.ContainerName);
-
-        BlobClient blobClient = containerClient.GetBlobClient(fileId.ToString());
-
-        Response<bool> response = await blobClient.ExistsAsync(cancellationToken: cancellationToken);
+        Response<bool> response = await GetBlobClient(fileId).ExistsAsync(cancellationToken);
 
         return response.Value;
     }
 
-    /// <inheritdoc />
     public async Task<bool> IsUserOwnerAsync(Guid fileId, Guid userId, CancellationToken cancellationToken = default)
     {
-        BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(_blobServiceSettings.ContainerName);
+        try
+        {
+            BlobProperties properties = await GetBlobClient(fileId).GetPropertiesAsync(cancellationToken: cancellationToken);
 
-        BlobClient blobClient = containerClient.GetBlobClient(fileId.ToString());
+            return properties.Metadata.TryGetValue(UserIdKey, out string? storedUserId) &&
+                   storedUserId == userId.ToString();
+        }
+        catch (RequestFailedException exception) when (exception.Status == 404)
+        {
+            return false;
+        }
+    }
+
+    private BlobClient GetBlobClient(Guid fileId) =>
+        blobServiceClient.GetBlobContainerClient(options.Value.ContainerName).GetBlobClient(fileId.ToString());
+
+    private async Task<BlobContainerClient> GetContainerAsync(CancellationToken cancellationToken)
+    {
+        BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(options.Value.ContainerName);
+
+        if (_containerCreated)
+        {
+            return containerClient;
+        }
+
+        await _containerLock.WaitAsync(cancellationToken);
 
         try
         {
-            BlobProperties properties = await blobClient.GetPropertiesAsync(cancellationToken: cancellationToken);
-
-            if (!properties.Metadata.TryGetValue(UserIdKey, out string? storedUserId))
+            if (!_containerCreated)
             {
-                return false;
-            }
-
-            if (storedUserId == userId.ToString())
-            {
-                return true;
+                await containerClient.CreateIfNotExistsAsync(cancellationToken: cancellationToken);
+                _containerCreated = true;
             }
         }
-        catch (RequestFailedException ex) when (ex.Status == 404)
+        finally
         {
-            // Handle the case where the blob doesn't exist
-            return false;
+            _containerLock.Release();
         }
 
-        return false;
+        return containerClient;
     }
 }

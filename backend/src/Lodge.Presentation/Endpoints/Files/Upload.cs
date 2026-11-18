@@ -1,4 +1,4 @@
-﻿using Lodge.Application.Files.Upload;
+using Lodge.Application.Files.Upload;
 using Lodge.Contracts.Storage;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Presentation.Extensions;
@@ -20,7 +20,7 @@ internal sealed class Upload : IEndpoint
     {
         app.MapPost("files", async (
             [FromHeader(Name = "X-Idempotency-Key")] Guid requestId,
-            UploadFileRequest request,
+            [FromForm] UploadFileRequest request,
             ISender sender,
             CancellationToken cancellationToken) =>
         {
@@ -30,6 +30,7 @@ internal sealed class Upload : IEndpoint
                 requestId,
                 request.UserId,
                 stream,
+                request.File.Length,
                 request.File.ContentType);
 
             Result<Guid> result = await sender.Send(command, cancellationToken);
@@ -37,6 +38,8 @@ internal sealed class Upload : IEndpoint
             return result.Match(Results.Ok, CustomResults.Problem);
         })
         .WithTags(Tags.Files)
-        .RequireAuthorization();
+        .RequireAuthorization()
+        // JWT-authenticated API: no cookies, so antiforgery tokens are not needed for form posts.
+        .DisableAntiforgery();
     }
 }

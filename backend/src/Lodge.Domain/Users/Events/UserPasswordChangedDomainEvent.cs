@@ -1,5 +1,8 @@
-﻿using Lodge.Domain.Core.Events;
+using Lodge.Domain.Core.Events;
 
 namespace Lodge.Domain.Users.Events;
 
-public sealed record UserPasswordChangedDomainEvent(User User) : IDomainEvent;
+/// <summary>
+/// Raised when a user changes their password.
+/// </summary>
+public sealed record UserPasswordChangedDomainEvent(Guid UserId) : IDomainEvent;

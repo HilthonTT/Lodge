@@ -1,30 +1,29 @@
 ﻿using FluentValidation;
+using Lodge.Application.Core.Errors;
 using Lodge.Domain.Core.Primitives;
 
 namespace Lodge.Application.Core.Extensions;
 
 /// <summary>
-/// Contains extensions methods for fluent validations.
+/// Contains extension methods for FluentValidation.
 /// </summary>
-public static class FluentValidationExtensions
+internal static class FluentValidationExtensions
 {
     /// <summary>
-    /// Specifies a custom error to use if validation fails.
+    /// Uses the specified <see cref="Error"/> code and description for the rule's failure.
     /// </summary>
-    /// <typeparam name="T">The type being validated.</typeparam>
-    /// <typeparam name="TProperty">The property being validated.</typeparam>
-    /// <param name="rule">The current rule.</param>
-    /// <param name="error">The error to use.</param>
-    /// <returns>The same rule builder.</returns>
-    /// <exception cref="ArgumentNullException">Throws an exception if the error is null.</exception>
     public static IRuleBuilderOptions<T, TProperty> WithError<T, TProperty>(
-        this IRuleBuilderOptions<T, TProperty> rule, Error? error)
+        this IRuleBuilderOptions<T, TProperty> rule,
+        Error error)
     {
-        if (error is null)
-        {
-            throw new ArgumentNullException(nameof(error), "The error is required");
-        }
+        ArgumentNullException.ThrowIfNull(error);
 
         return rule.WithErrorCode(error.Code).WithMessage(error.Description);
     }
+
+    public static IRuleBuilderOptions<T, int> ValidPage<T>(this IRuleBuilder<T, int> rule) =>
+        rule.GreaterThanOrEqualTo(1).WithError(ValidationErrors.Paging.PageMustBePositive);
+
+    public static IRuleBuilderOptions<T, int> ValidPageSize<T>(this IRuleBuilder<T, int> rule) =>
+        rule.InclusiveBetween(1, ValidationErrors.Paging.MaxPageSize).WithError(ValidationErrors.Paging.PageSizeOutOfRange);
 }

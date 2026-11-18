@@ -1,4 +1,4 @@
-﻿using Lodge.Domain.Core.Events;
+using Lodge.Domain.Core.Events;
 using Lodge.Domain.Core.Primitives;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -11,10 +11,6 @@ namespace Lodge.Persistence.Outbox;
 /// </summary>
 internal sealed class InsertOutboxMessagesInterceptor : SaveChangesInterceptor
 {
-    private static readonly JsonSerializerSettings SerializerSettings = new()
-    {
-        TypeNameHandling = TypeNameHandling.All
-    };
 
     /// <inheritdoc />
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
@@ -52,8 +48,8 @@ internal sealed class InsertOutboxMessagesInterceptor : SaveChangesInterceptor
             })
             .Select(domainEvent => new OutboxMessage(
                 Guid.NewGuid(),
-                domainEvent.GetType().Name,
-                JsonConvert.SerializeObject(domainEvent, SerializerSettings),
+                domainEvent.GetType().FullName ?? domainEvent.GetType().Name,
+                JsonConvert.SerializeObject(domainEvent, OutboxSerializer.Settings),
                 utcNow))
             .ToList();
 

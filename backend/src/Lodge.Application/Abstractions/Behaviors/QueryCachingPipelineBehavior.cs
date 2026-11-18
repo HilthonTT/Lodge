@@ -6,50 +6,50 @@ using Microsoft.Extensions.Logging;
 namespace Lodge.Application.Abstractions.Behaviors;
 
 /// <summary>
-/// Represents the query caching pipeline behavior.
+/// Caches successful results of <see cref="ICachedQuery"/> requests.
 /// </summary>
-/// <typeparam name="TRequest">The request type.</typeparam>
-/// <typeparam name="TResponse">The response type.</typeparam>
-/// <param name="cacheService">The cache service.</param>
-/// <param name="logger">The logger.</param>
-internal sealed class QueryCachingPipelineBehavior<TRequest, TResponse>(
+/// <remarks>
+/// The cache is consulted <em>before</em> the handler runs, so only queries whose result does not depend on
+/// the caller (public data) may implement <see cref="ICachedQuery"/>; otherwise authorization checks in the
+/// handler would be bypassed on a cache hit.
+/// </remarks>
+internal sealed partial class QueryCachingPipelineBehavior<TRequest, TResponse>(
     ICacheService cacheService,
     ILogger<QueryCachingPipelineBehavior<TRequest, TResponse>> logger)
     : IPipelineBehavior<TRequest, TResponse>
     where TRequest : ICachedQuery
     where TResponse : Result
 {
-    /// <inheritdoc />
     public async Task<TResponse> Handle(
         TRequest request,
-        RequestHandlerDelegate<TResponse> next, 
+        RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
-        TResponse? cachedResult = await cacheService.GetAsync<TResponse>(
-            request.CacheKey,
-            cancellationToken);
-
         string requestName = typeof(TRequest).Name;
+
+        TResponse? cachedResult = await cacheService.GetAsync<TResponse>(request.CacheKey, cancellationToken);
+
         if (cachedResult is not null)
         {
-            logger.LogInformation("Cache hit for {RequestName}", requestName);
-
+            LogCacheHit(logger, requestName);
             return cachedResult;
         }
 
-        logger.LogInformation("Cache miss for {RequestName}", requestName);
+        LogCacheMiss(logger, requestName);
 
-        TResponse result = await next();
+        TResponse result = await next(cancellationToken);
 
         if (result.IsSuccess)
         {
-            await cacheService.SetAsync(
-                request.CacheKey,
-                result,
-                request.Expiration,
-                cancellationToken);
+            await cacheService.SetAsync(request.CacheKey, result, request.Expiration, cancellationToken);
         }
 
         return result;
     }
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Cache hit for {RequestName}")]
+    private static partial void LogCacheHit(ILogger logger, string requestName);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Cache miss for {RequestName}")]
+    private static partial void LogCacheMiss(ILogger logger, string requestName);
 }

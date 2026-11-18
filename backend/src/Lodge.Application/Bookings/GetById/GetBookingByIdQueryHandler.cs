@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using System.Data;
+using Lodge.Application.Abstractions.Assets;
 using Lodge.Application.Abstractions.Authentication;
 using Lodge.Application.Abstractions.Data;
 using Lodge.Application.Abstractions.Messaging;
@@ -6,19 +7,14 @@ using Lodge.Contracts.Bookings;
 using Lodge.Domain.Bookings;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Domain.Users;
-using System.Data;
 
 namespace Lodge.Application.Bookings.GetById;
 
-/// <summary>
-/// Reresents the <see cref="GetBookingByIdQuery"/> handler.
-/// </summary>
-/// <param name="factory">The database connection factory.</param>
 internal sealed class GetBookingByIdQueryHandler(
     IDbConnectionFactory factory,
-    IUserIdentifierProvider userIdentifierProvider) : IQueryHandler<GetBookingByIdQuery, BookingResponse>
+    IUserIdentifierProvider userIdentifierProvider,
+    IAssetUrlResolver assetUrlResolver) : IQueryHandler<GetBookingByIdQuery, BookingResponse>
 {
-    /// <inheritdoc />
     public async Task<Result<BookingResponse>> Handle(GetBookingByIdQuery request, CancellationToken cancellationToken)
     {
         using IDbConnection connection = await factory.GetOpenConnectionAsync(cancellationToken);
@@ -34,6 +30,8 @@ internal sealed class GetBookingByIdQueryHandler(
         {
             return Result.Failure<BookingResponse>(UserErrors.InvalidPermissions);
         }
+
+        booking.ApartmentImageUrl = assetUrlResolver.Resolve(booking.ApartmentImageUrl);
 
         return booking;
     }

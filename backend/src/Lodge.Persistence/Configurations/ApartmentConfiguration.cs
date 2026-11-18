@@ -1,4 +1,4 @@
-﻿using Lodge.Domain.Apartements;
+﻿using Lodge.Domain.Apartments;
 using Lodge.Domain.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

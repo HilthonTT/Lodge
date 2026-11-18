@@ -10,28 +10,18 @@ namespace Lodge.Domain.Users;
 /// </summary>
 public sealed class User : Entity, IAuditableEntity, ISoftDeletableEntity
 {
-    private string _passwordHash;
+    private string _passwordHash = string.Empty;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="User"/> class.
-    /// </summary>
-    /// <param name="firstName">The user first name.</param>
-    /// <param name="lastName">The user last name.</param>
-    /// <param name="email">The user email instance.</param>
-    /// <param name="passwordHash">The user password hash.</param>
     private User(
         Guid id,
-        FirstName firstName, 
-        LastName lastName, 
-        Email email, 
+        FirstName firstName,
+        LastName lastName,
+        Email email,
         Guid? imageId,
         string passwordHash)
         : base(id)
     {
-        Ensure.NotNullOrEmpty(firstName.Value, "The first name is required.");
-        Ensure.NotNullOrEmpty(lastName.Value, "The last name is required.");
-        Ensure.NotNullOrEmpty(email, "The email is required.");
-        Ensure.NotNullOrEmpty(passwordHash, "The password hash is required");
+        Ensure.NotNullOrEmpty(passwordHash);
 
         FirstName = firstName;
         LastName = lastName;
@@ -40,110 +30,89 @@ public sealed class User : Entity, IAuditableEntity, ISoftDeletableEntity
         _passwordHash = passwordHash;
     }
 
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="User"/> class.
-    /// </summary>
-    /// <remarks>
-    /// Required by EF Core.
-    /// </remarks>
     private User()
     {
     }
 
-    public FirstName FirstName { get; private set; }
+    public FirstName FirstName { get; private set; } = null!;
 
-    public LastName LastName { get; private set; }
+    public LastName LastName { get; private set; } = null!;
 
-    public Email Email { get; private set; }
+    public Email Email { get; private set; } = null!;
 
     public string FullName => $"{FirstName.Value} {LastName.Value}";
 
     public Guid? ImageId { get; private set; }
+
+    public UserRole Role { get; private set; } = UserRole.Guest;
 
     public DateTime CreatedOnUtc { get; set; }
 
     public DateTime? ModifiedOnUtc { get; set; }
 
     public DateTime? DeletedOnUtc { get; set; }
-    
+
     public bool Deleted { get; set; }
 
-    /// <summary>
-    /// Creates a new user with the specified first name, last name, email and password hash.
-    /// </summary>
-    /// <param name="firstName">The first name.</param>
-    /// <param name="lastName">The last name.</param>
-    /// <param name="email">The email.</param>
-    /// <param name="passwordHash">The password hash.</param>
-    /// <returns>The newly created user instance.</returns>
     public static User Create(
-        FirstName firstName, 
-        LastName lastName, 
-        Email email, 
-        string passwordHash, 
+        FirstName firstName,
+        LastName lastName,
+        Email email,
+        string passwordHash,
         Guid? imageId = null)
     {
-        var user = new User(
-            Guid.NewGuid(),
-            firstName,
-            lastName,
-            email,
-            imageId,
-            passwordHash);
+        var user = new User(Guid.NewGuid(), firstName, lastName, email, imageId, passwordHash);
 
         user.RaiseDomainEvent(new UserCreatedDomainEvent(user.Id));
 
         return user;
     }
 
-    /// <summary>
-    /// Verifies that the provided password hash matches the password hash.
-    /// </summary>
-    /// <param name="password">The password to be checked against the user password hash.</param>
-    /// <param name="checker">The password hash checker.</param>
-    /// <returns>True if the password hashes match, otherwise false.</returns>
     public bool VerifyPasswordHash(string password, IPasswordHashChecker checker) =>
         !string.IsNullOrWhiteSpace(password) && checker.HashesMatch(_passwordHash, password);
 
-    public Result ChangePassword(string passwordHash)
+    /// <summary>
+    /// Changes the password hash. The caller must ensure that the new password differs from the
+    /// current one (see <see cref="VerifyPasswordHash"/>): salted hashes cannot be compared directly.
+    /// </summary>
+    public void ChangePassword(string passwordHash)
     {
-        if (passwordHash == _passwordHash)
-        {
-            return Result.Failure(UserErrors.CannotChangePassword);
-        }
+        Ensure.NotNullOrEmpty(passwordHash);
 
         _passwordHash = passwordHash;
 
-        RaiseDomainEvent(new UserPasswordChangedDomainEvent(this));
-
-        return Result.Success();
+        RaiseDomainEvent(new UserPasswordChangedDomainEvent(Id));
     }
 
-    /// <summary>
-    /// Changes the user's first and last name.
-    /// </summary>
-    /// <param name="firstName">The new first name.</param>
-    /// <param name="lastName">The new last name.</param>
     public void ChangeName(FirstName firstName, LastName lastName)
     {
-        Ensure.NotNullOrEmpty(firstName.Value, "The first name is required.");
-        Ensure.NotNullOrEmpty(lastName.Value, "The last name is required.");
+        if (FirstName == firstName && LastName == lastName)
+        {
+            return;
+        }
 
         FirstName = firstName;
-
         LastName = lastName;
 
-        RaiseDomainEvent(new UserNameChangedDomainEvent(this));
+        RaiseDomainEvent(new UserNameChangedDomainEvent(Id));
     }
 
-    /// <summary>
-    /// Changes the user's image identifier.
-    /// </summary>
-    /// <param name="imageId">The image identifier.</param>
+    public void ChangeRole(UserRole role)
+    {
+        if (!Enum.IsDefined(role))
+        {
+            throw new ArgumentOutOfRangeException(nameof(role), role, "Unknown user role.");
+        }
+
+        Role = role;
+    }
+
     public void ChangeImage(Guid imageId)
     {
-        Ensure.NotNullOrEmpty(imageId.ToString(), "The image id is required");
+        if (imageId == Guid.Empty)
+        {
+            throw new ArgumentException("The image identifier is required.", nameof(imageId));
+        }
 
         ImageId = imageId;
     }

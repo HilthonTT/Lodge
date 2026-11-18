@@ -1,15 +1,9 @@
-﻿using Lodge.Application.Abstractions.Caching;
+﻿using Lodge.Application.Abstractions.Messaging;
 using Lodge.Contracts.Users;
 
 namespace Lodge.Application.Users.GetById;
 
 /// <summary>
-/// Represents the query for getting a user by its identifier.
+/// Gets a user profile. Users may only read their own profile (it contains the e-mail address).
 /// </summary>
-/// <param name="UserId">The user identifier.</param>
-public sealed record GetUserByIdQuery(Guid UserId) : ICachedQuery<UserResponse>
-{
-    public string CacheKey => CacheKeys.Users.GetById(UserId);
-
-    public TimeSpan? Expiration => TimeSpan.FromMinutes(20);
-}
+public sealed record GetUserByIdQuery(Guid UserId) : IQuery<UserResponse>;

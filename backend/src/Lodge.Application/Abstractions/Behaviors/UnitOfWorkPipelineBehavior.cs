@@ -1,44 +1,40 @@
 ﻿using Lodge.Application.Abstractions.Data;
 using Lodge.Application.Abstractions.Messaging;
+using Lodge.Domain.Core.Primitives;
 using MediatR;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Lodge.Application.Abstractions.Behaviors;
 
 /// <summary>
-/// Represents the unit of work pipeline serving a transactional pipeline middleware.
+/// Wraps every command in a database transaction. The transaction is committed only when the
+/// command succeeds; failed results and exceptions roll back every change (including idempotency records).
 /// </summary>
-/// <typeparam name="TRequest">The request type.</typeparam>
-/// <typeparam name="TResponse">The response type.</typeparam>
-/// <param name="unitOfWork">The unit of work.</param>
 internal sealed class UnitOfWorkPipelineBehavior<TRequest, TResponse>(IUnitOfWork unitOfWork)
     : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IBaseCommand
+    where TResponse : Result
 {
-    /// <inheritdoc />
     public async Task<TResponse> Handle(
-        TRequest request, 
-        RequestHandlerDelegate<TResponse> next, 
+        TRequest request,
+        RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
-        await using IDbContextTransaction transaction = await unitOfWork.BeginTransactionAsync(
-            cancellationToken);
+        await using IDbContextTransaction transaction = await unitOfWork.BeginTransactionAsync(cancellationToken);
 
-        try
+        TResponse response = await next(cancellationToken);
+
+        if (response.IsFailure)
         {
-            TResponse? response = await next();
-
-            await unitOfWork.SaveChangesAsync(cancellationToken);
-
-            await transaction.CommitAsync(cancellationToken);
+            await transaction.RollbackAsync(cancellationToken);
+            unitOfWork.DiscardChanges();
 
             return response;
         }
-        catch (Exception)
-        {
-            await transaction.RollbackAsync(cancellationToken);
 
-            throw;
-        }
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        return response;
     }
 }

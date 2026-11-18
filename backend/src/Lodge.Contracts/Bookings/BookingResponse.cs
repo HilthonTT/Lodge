@@ -89,4 +89,19 @@ public sealed class BookingResponse
     /// Gets or sets the date and time when the booking was created in UTC.
     /// </summary>
     public DateTime CreatedOnUtc { get; set; }
+
+    /// <summary>
+    /// Gets or sets the guest's full name.
+    /// </summary>
+    public string GuestName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the guest's e-mail address.
+    /// </summary>
+    public string GuestEmail { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether a review exists for this booking.
+    /// </summary>
+    public bool HasReview { get; set; }
 }

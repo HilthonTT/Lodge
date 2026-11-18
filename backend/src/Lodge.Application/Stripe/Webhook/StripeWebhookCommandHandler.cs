@@ -1,118 +1,103 @@
-﻿using Lodge.Application.Abstractions.Data;
-using Lodge.Application.Abstractions.Messaging;
-using Lodge.Application.Bookings.Confirm;
+﻿using Lodge.Application.Abstractions.Messaging;
 using Lodge.Application.Core.Errors;
+using Lodge.Application.Stripe.Checkout;
 using Lodge.Domain.Bookings;
-using Lodge.Domain.Core.Guards;
 using Lodge.Domain.Core.Primitives;
-using MediatR;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Stripe;
 using CheckoutSession = Stripe.Checkout.Session;
 
 namespace Lodge.Application.Stripe.Webhook;
 
 /// <summary>
-/// Represents the <see cref="StripeWebhookCommand"/> handler.
+/// Verifies the Stripe signature and confirms the booking once its checkout session has been paid.
+/// The handler is idempotent: Stripe retries deliveries, and replays of an already processed event succeed.
 /// </summary>
-/// <param name="httpContextAccessor">The http context accessor.</param>
-/// <param name="bookingRepository">The booking repository.</param>
-/// <param name="dateTimeProvider">The date time provider.</param>
-/// <param name="configuration">The configuration.</param>
-/// <param name="unitOfWork">The unit of work.</param>
-/// <param name="publisher">The publisher.</param>
-internal sealed class StripeWebhookCommandHandler(
-    IHttpContextAccessor httpContextAccessor,
+internal sealed partial class StripeWebhookCommandHandler(
     IBookingRepository bookingRepository,
     IDateTimeProvider dateTimeProvider,
-    IConfiguration configuration,
-    IUnitOfWork unitOfWork,
-    IPublisher publisher) : ICommandHandler<StripeWebhookCommand>
+    IOptions<StripeOptions> stripeOptions,
+    ILogger<StripeWebhookCommandHandler> logger) : ICommandHandler<StripeWebhookCommand>
 {
-    /// <inheritdoc />
+    private const string PaidStatus = "paid";
+
     public async Task<Result> Handle(StripeWebhookCommand request, CancellationToken cancellationToken)
     {
-        if (httpContextAccessor.HttpContext is null)
+        StripeOptions options = stripeOptions.Value;
+
+        if (!options.IsWebhookConfigured)
         {
-            return Result.Failure(StripeErrors.HttpContextMissing);
+            return Result.Failure(StripeErrors.NotConfigured);
         }
 
-        string json = await new StreamReader(httpContextAccessor.HttpContext.Request.Body)
-            .ReadToEndAsync(cancellationToken);
-
-        string? stripeSignature = httpContextAccessor
-            .HttpContext
-            .Request
-            .Headers["Stripe-Signature"];
-
-        if (string.IsNullOrWhiteSpace(stripeSignature))
+        if (string.IsNullOrWhiteSpace(request.Signature))
         {
             return Result.Failure(StripeErrors.SignatureMissing);
         }
 
-        string? webhookSecret = configuration["Stripe:WebhookSecret"];
-        Ensure.NotNullOrEmpty(webhookSecret, nameof(webhookSecret));
+        Event stripeEvent;
 
-        Event stripeEvent = EventUtility.ConstructEvent(json, stripeSignature, webhookSecret);
-        if (stripeEvent.Data.Object is not CheckoutSession checkoutSession)
+        try
         {
-            return Result.Failure(StripeErrors.NoSessionFound);
+            stripeEvent = EventUtility.ConstructEvent(
+                request.Payload,
+                request.Signature,
+                options.WebhookSecret,
+                throwOnApiVersionMismatch: false);
+        }
+        catch (StripeException exception)
+        {
+            LogInvalidSignature(logger, exception.Message);
+            return Result.Failure(StripeErrors.InvalidSignature);
         }
 
-        Dictionary<string, string> metadata = checkoutSession.Metadata;
+        bool isPaymentEvent = stripeEvent.Type is
+            EventTypes.CheckoutSessionCompleted or
+            EventTypes.CheckoutSessionAsyncPaymentSucceeded;
 
-        if (!metadata.TryGetValue("userId", out string? userIdString) ||
-            !metadata.TryGetValue("bookingId", out string? bookingIdString) ||
-            !Guid.TryParse(userIdString, out Guid userId) ||
-            !Guid.TryParse(bookingIdString, out Guid bookingId))
+        if (!isPaymentEvent || stripeEvent.Data.Object is not CheckoutSession checkoutSession)
+        {
+            LogIgnoredEvent(logger, stripeEvent.Type);
+            return Result.Success();
+        }
+
+        if (checkoutSession.PaymentStatus != PaidStatus)
+        {
+            // Delayed payment methods: wait for checkout.session.async_payment_succeeded.
+            return Result.Success();
+        }
+
+        if (checkoutSession.Metadata is null ||
+            !checkoutSession.Metadata.TryGetValue(StripeCheckoutCommandHandler.BookingIdMetadataKey, out string? bookingIdValue) ||
+            !Guid.TryParse(bookingIdValue, out Guid bookingId))
         {
             return Result.Failure(StripeErrors.InvalidMetadata);
         }
 
-        switch (stripeEvent.Type)
-        {
-            case Events.CheckoutSessionCompleted:
-                Result result = await ConfirmBookingAsync(userId, bookingId, cancellationToken);
-
-                if (result.IsFailure)
-                {
-                    return Result.Failure(result.Error);
-                }
-
-                break;
-        }
-
-        return Result.Success();
+        return await ConfirmBookingAsync(bookingId, cancellationToken);
     }
 
-    /// <summary>
-    /// Confirms the booking.
-    /// </summary>
-    /// <param name="userId">The user identifier.</param>
-    /// <param name="bookingId">The booking identifier.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>An instance of <see cref="Result"/>.</returns>
-    private async Task<Result> ConfirmBookingAsync(Guid userId, Guid bookingId, CancellationToken cancellationToken)
+    private async Task<Result> ConfirmBookingAsync(Guid bookingId, CancellationToken cancellationToken)
     {
         Booking? booking = await bookingRepository.GetByIdAsync(bookingId, cancellationToken);
+
         if (booking is null)
         {
             return Result.Failure(BookingErrors.NotFound(bookingId));
         }
 
-        Result result = booking.Confirm(dateTimeProvider.UtcNow);
-        if (result.IsFailure)
+        if (booking.Status is BookingStatus.Confirmed or BookingStatus.Completed)
         {
-            return Result.Failure(result.Error);
+            return Result.Success();
         }
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        await publisher.Publish(
-            new BookingConfirmedEvent(booking.Id, userId),
-            cancellationToken);
-
-        return Result.Success();
+        return booking.Confirm(dateTimeProvider.UtcNow);
     }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Rejected Stripe webhook call: {Reason}")]
+    private static partial void LogInvalidSignature(ILogger logger, string reason);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Ignoring Stripe event {EventType}")]
+    private static partial void LogIgnoredEvent(ILogger logger, string eventType);
 }

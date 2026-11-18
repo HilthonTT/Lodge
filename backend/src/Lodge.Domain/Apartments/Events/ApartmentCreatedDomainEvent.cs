@@ -1,6 +1,6 @@
 ﻿using Lodge.Domain.Core.Events;
 
-namespace Lodge.Domain.Apartements.Events;
+namespace Lodge.Domain.Apartments.Events;
 
 /// <summary>
 /// Represents the event that is raised when an apartment is created.

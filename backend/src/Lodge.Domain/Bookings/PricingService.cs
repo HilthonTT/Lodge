@@ -1,4 +1,4 @@
-﻿using Lodge.Domain.Apartements;
+﻿using Lodge.Domain.Apartments;
 using Lodge.Domain.Shared;
 
 namespace Lodge.Domain.Bookings;

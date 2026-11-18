@@ -6,33 +6,29 @@ using MediatR;
 namespace Lodge.Application.Abstractions.Behaviors;
 
 /// <summary>
-/// Represents the idempotent request command pipeline behavior.
+/// Rejects commands whose idempotency key has already been processed. It runs inside the unit of work,
+/// so the idempotency record is only persisted when the command succeeds.
 /// </summary>
-/// <typeparam name="TRequest">The request type.</typeparam>
-/// <typeparam name="TResponse">The response type.</typeparam>
-/// <param name="idempotencyService">The idempotency service.</param>
 internal sealed class IdempotentCommandPipelineBehavior<TRequest, TResponse>(
     IIdempotencyService idempotencyService) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IBaseIdempotentCommand
     where TResponse : Result
 {
-    /// <inheritdoc />
     public async Task<TResponse> Handle(
-        TRequest request, 
+        TRequest request,
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
-        if (await idempotencyService.RequestExistsAsync(request.RequestId, cancellationToken))
+        bool created = await idempotencyService.TryCreateRequestAsync(
+            request.RequestId,
+            typeof(TRequest).Name,
+            cancellationToken);
+
+        if (!created)
         {
-            return (TResponse)Result.Failure(IdempotencyErrors.AlreadyProcessed);
+            return ResultFactory.Failure<TResponse>(IdempotencyErrors.AlreadyProcessed);
         }
 
-        string requestName = typeof(TRequest).Name;
-
-        await idempotencyService.CreateRequestAsync(request.RequestId, requestName, cancellationToken);
-
-        TResponse response = await next();
-
-        return response;
+        return await next(cancellationToken);
     }
 }

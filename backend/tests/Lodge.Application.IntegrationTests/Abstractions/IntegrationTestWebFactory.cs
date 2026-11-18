@@ -1,76 +1,90 @@
-﻿using Hangfire;
-using Hangfire.PostgreSql;
-using Lodge.Application.Abstractions.Data;
-using Lodge.Persistence;
+using Hangfire;
+using Lodge.Application.Abstractions.Authentication;
+using Lodge.BackgroundTasks.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.StackExchangeRedis;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
-using Npgsql;
 using Testcontainers.PostgreSql;
 using Testcontainers.Redis;
 
-namespace Application.IntegrationTests.Abstractions;
+namespace Lodge.Application.IntegrationTests.Abstractions;
 
-public class IntegrationTestWebFactory : WebApplicationFactory<Program>, IAsyncLifetime
+/// <summary>
+/// Hosts the API against throw-away PostgreSQL and Redis containers (requires a running Docker engine).
+/// The Hangfire server and the RabbitMQ consumer are not started.
+/// </summary>
+public sealed class IntegrationTestWebFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder()
-        .WithImage("postgres:latest")
-        .WithDatabase("runtrackr")
+    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder("postgres:18-alpine")
+        .WithDatabase("lodge")
         .WithUsername("postgres")
         .WithPassword("postgres")
         .Build();
 
-    private readonly RedisContainer _redisContainer = new RedisBuilder()
-        .WithImage("redis:latest")
-        .Build();
+    private readonly RedisContainer _redisContainer = new RedisBuilder("redis:8-alpine").Build();
+
+    public TestUserIdentifierProvider CurrentUser { get; } = new();
+
+    public async ValueTask InitializeAsync()
+    {
+        await Task.WhenAll(_dbContainer.StartAsync(), _redisContainer.StartAsync());
+    }
+
+    public override async ValueTask DisposeAsync()
+    {
+        await base.DisposeAsync();
+        await _dbContainer.DisposeAsync();
+        await _redisContainer.DisposeAsync();
+    }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.UseEnvironment(Environments.Development);
+
+        builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(
+            new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:Database"] = _dbContainer.GetConnectionString(),
+                ["ConnectionStrings:Cache"] = _redisContainer.GetConnectionString(),
+                ["Database:ApplyMigrationsOnStartup"] = "true",
+                ["Database:SeedDemoData"] = "true",
+                ["Serilog:WriteTo:1:Name"] = "Console",
+            }));
+
         builder.ConfigureTestServices(services =>
         {
-            services.AddHangfire(config =>
-                config.UsePostgreSqlStorage(
-                    options => options.UseNpgsqlConnection(_dbContainer.GetConnectionString())));
+            services.RemoveAll<IUserIdentifierProvider>();
+            services.AddSingleton<IUserIdentifierProvider>(CurrentUser);
 
-            services.RemoveAll(typeof(IDbConnectionFactory));
-            services.TryAddSingleton<IDbConnectionFactory>(_ =>
-                new DbConnectionFactory(new NpgsqlDataSourceBuilder(_dbContainer.GetConnectionString()).Build()));
-
-            services.RemoveAll(typeof(DbContextOptions<LodgeDbContext>));
-            services.AddDbContext<LodgeDbContext>(options =>
-                options
-                    .UseNpgsql(_dbContainer.GetConnectionString())
-                    .UseSnakeCaseNamingConvention());
-
-            services.RemoveAll(typeof(RedisCacheOptions));
-            services.AddStackExchangeRedisCache(redisCacheOptions =>
-                redisCacheOptions.Configuration = _redisContainer.GetConnectionString());
-
-            List<ServiceDescriptor> hostedServices = services
-                .Where(service => typeof(IHostedService).IsAssignableFrom(service.ServiceType))
-                .ToList();
-
-            foreach (var hostedService in hostedServices)
-            {
-                services.Remove(hostedService);
-            }
+            RemoveBackgroundProcessing(services);
         });
     }
 
-    public async Task InitializeAsync()
+    internal static void RemoveBackgroundProcessing(IServiceCollection services)
     {
-        await _dbContainer.StartAsync();
-        await _redisContainer.StartAsync();
-    }
+        System.Reflection.Assembly hangfireAspNetCore = typeof(HangfireServiceCollectionExtensions).Assembly;
 
-    async Task IAsyncLifetime.DisposeAsync()
-    {
-        await _dbContainer.StopAsync();
-        await _redisContainer.StopAsync();
+        List<ServiceDescriptor> hostedServices = services
+            .Where(descriptor => descriptor.ServiceType == typeof(IHostedService) &&
+                                 (descriptor.ImplementationType == typeof(IntegrationEventConsumerBackgroundService) ||
+                                  descriptor.ImplementationFactory?.Method.DeclaringType?.Assembly == hangfireAspNetCore))
+            .ToList();
+
+        foreach (ServiceDescriptor descriptor in hostedServices)
+        {
+            services.Remove(descriptor);
+        }
     }
+}
+
+/// <summary>
+/// A settable stand-in for the HTTP-based user identifier provider.
+/// </summary>
+public sealed class TestUserIdentifierProvider : IUserIdentifierProvider
+{
+    public Guid UserId { get; set; }
 }

@@ -1,141 +1,125 @@
-﻿using Lodge.Application.Abstractions.Cryptography;
+using System.Globalization;
+using System.Security.Cryptography;
+using Lodge.Application.Abstractions.Cryptography;
 using Lodge.Domain.Core.Guards;
 using Lodge.Domain.Users;
-using Microsoft.AspNetCore.Cryptography.KeyDerivation;
-using System.Security.Cryptography;
 
 namespace Lodge.Infrastructure.Cryptography;
 
 /// <summary>
-/// Represents the password hasher, used for hashing passwords and verifying hashed passwords.
+/// Hashes passwords with PBKDF2-HMAC-SHA512 and verifies them.
 /// </summary>
+/// <remarks>
+/// Hashes are self-describing: <c>pbkdf2-sha512$&lt;iterations&gt;$&lt;base64 salt&gt;$&lt;base64 subkey&gt;</c>.
+/// Verification reads the iteration count from the stored hash, so <see cref="DefaultIterations"/> can be raised
+/// later without invalidating existing hashes.
+/// </remarks>
 internal sealed class PasswordHasher : IPasswordHasher, IPasswordHashChecker
 {
-    private const KeyDerivationPrf Prf = KeyDerivationPrf.HMACSHA256;
-    private const int IterationCount = 10000;
-    private const int NumberOfBytesRequested = 256 / 8;
-    private const int SaltSize = 128 / 8;
+    internal const string Algorithm = "pbkdf2-sha512";
+
+    /// <summary>
+    /// The OWASP-recommended iteration count for PBKDF2-HMAC-SHA512.
+    /// </summary>
+    internal const int DefaultIterations = 210_000;
+
+    internal const int SaltSize = 16;
+
+    internal const int SubkeySize = 32;
+
+    private const char Separator = '$';
+
+    // Upper bound for stored iteration counts, so a tampered hash cannot make verification arbitrarily slow.
+    private const int MaxIterations = 10_000_000;
+
+    private static readonly HashAlgorithmName Prf = HashAlgorithmName.SHA512;
 
     /// <inheritdoc />
     public string HashPassword(Password? password)
     {
-        Ensure.NotNull(password, nameof(password));
+        Ensure.NotNull(password);
 
-        string hashedPassword = Convert.ToBase64String(HashPasswordInternal(password.Value));
-
-        return hashedPassword;
+        return Hash(password.Value, DefaultIterations);
     }
 
     /// <inheritdoc />
     public bool HashesMatch(string? passwordHash, string? providedPassword)
     {
-        Ensure.NotNullOrEmpty(passwordHash, nameof(passwordHash));
-        Ensure.NotNullOrEmpty(providedPassword, nameof(providedPassword));
-
-        byte[] decodedHashedPassword = Convert.FromBase64String(passwordHash);
-
-        if (decodedHashedPassword.Length == 0)
+        if (string.IsNullOrEmpty(passwordHash) || string.IsNullOrEmpty(providedPassword))
         {
             return false;
         }
 
-        bool verified = VerifyPasswordHashInternal(decodedHashedPassword, providedPassword);
-
-        return verified;
-    }
-
-    /// <summary>
-    /// Returns the bytes of the hash for the specified password.
-    /// </summary>
-    /// <param name="password">The password to be hashed.</param>
-    /// <returns>The bytes of the hash for the specified password.</returns>
-    private static byte[] HashPasswordInternal(string password)
-    {
-        byte[] salt = GetRandomSalt();
-
-        byte[] subKey = KeyDerivation.Pbkdf2(password, salt, Prf, IterationCount, NumberOfBytesRequested);
-
-        byte[] outputBytes = new byte[salt.Length + subKey.Length];
-
-        Buffer.BlockCopy(salt, 0, outputBytes, 0, salt.Length);
-
-        Buffer.BlockCopy(subKey, 0, outputBytes, salt.Length, subKey.Length);
-
-        return outputBytes;
-    }
-
-    /// <summary>
-    /// Gets a randomly generated salt.
-    /// </summary>
-    /// <returns>The randomly generated salt.</returns>
-    private static byte[] GetRandomSalt()
-    {
-        byte[] salt = new byte[SaltSize];
-
-        RandomNumberGenerator.Fill(salt);
-
-        return salt;
-    }
-
-    /// <summary>
-    /// Verifies the bytes of the hashed password with the specified password.
-    /// </summary>
-    /// <param name="hashedPassword">The bytes of the hashed password.</param>
-    /// <param name="password">The password to verify with.</param>
-    /// <returns>True if the hashes match, otherwise false.</returns>
-    private static bool VerifyPasswordHashInternal(byte[] hashedPassword, string password)
-    {
-        try
-        {
-            byte[] salt = new byte[SaltSize];
-
-            Buffer.BlockCopy(hashedPassword, 0, salt, 0, salt.Length);
-
-            int subKeyLength = hashedPassword.Length - salt.Length;
-
-            if (subKeyLength < SaltSize)
-            {
-                return false;
-            }
-
-            byte[] expectedSubKey = new byte[subKeyLength];
-
-            Buffer.BlockCopy(hashedPassword, salt.Length, expectedSubKey, 0, expectedSubKey.Length);
-
-            byte[] actualSubKey = KeyDerivation.Pbkdf2(password, salt, Prf, IterationCount, subKeyLength);
-
-            return ByteArraysEqual(actualSubKey, expectedSubKey);
-        }
-        catch
-        {
-            return false;
-        }
-    }
-    /// <summary>
-    /// Returns true if the specified byte arrays are equal, otherwise false.
-    /// </summary>
-    /// <param name="a">The first byte array.</param>
-    /// <param name="b">The second byte array.</param>
-    /// <returns>True if the arrays are equal, otherwise false.</returns>
-    private static bool ByteArraysEqual(byte[] a, byte[] b)
-    {
-        if (a is null && b is null)
-        {
-            return true;
-        }
-
-        if (a is null || b is null || a.Length != b.Length)
+        if (!TryParse(passwordHash, out int iterations, out byte[] salt, out byte[] expectedSubkey))
         {
             return false;
         }
 
-        bool areSame = true;
+        byte[] actualSubkey = Rfc2898DeriveBytes.Pbkdf2(providedPassword, salt, iterations, Prf, expectedSubkey.Length);
 
-        for (int i = 0; i < a.Length; i++)
+        return CryptographicOperations.FixedTimeEquals(actualSubkey, expectedSubkey);
+    }
+
+    /// <summary>
+    /// Hashes the password with the specified iteration count.
+    /// </summary>
+    internal static string Hash(string password, int iterations)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(iterations, 1);
+
+        byte[] salt = RandomNumberGenerator.GetBytes(SaltSize);
+        byte[] subkey = Rfc2898DeriveBytes.Pbkdf2(password, salt, iterations, Prf, SubkeySize);
+
+        return string.Join(
+            Separator,
+            Algorithm,
+            iterations.ToString(CultureInfo.InvariantCulture),
+            Convert.ToBase64String(salt),
+            Convert.ToBase64String(subkey));
+    }
+
+    /// <summary>
+    /// Parses a stored hash. Returns false for anything that is not a well-formed hash of this scheme.
+    /// </summary>
+    internal static bool TryParse(string passwordHash, out int iterations, out byte[] salt, out byte[] subkey)
+    {
+        iterations = 0;
+        salt = [];
+        subkey = [];
+
+        string[] parts = passwordHash.Split(Separator);
+
+        if (parts.Length != 4 || !string.Equals(parts[0], Algorithm, StringComparison.Ordinal))
         {
-            areSame &= a[i] == b[i];
+            return false;
         }
 
-        return areSame;
+        if (!int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out iterations) ||
+            iterations is < 1 or > MaxIterations)
+        {
+            iterations = 0;
+            return false;
+        }
+
+        if (!TryFromBase64(parts[2], out salt) || !TryFromBase64(parts[3], out subkey))
+        {
+            return false;
+        }
+
+        return salt.Length > 0 && subkey.Length > 0;
+    }
+
+    private static bool TryFromBase64(string value, out byte[] bytes)
+    {
+        var buffer = new byte[(value.Length * 3 / 4) + 3];
+
+        if (value.Length == 0 || !Convert.TryFromBase64String(value, buffer, out int written))
+        {
+            bytes = [];
+            return false;
+        }
+
+        bytes = buffer[..written];
+        return true;
     }
 }

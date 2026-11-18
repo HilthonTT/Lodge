@@ -1,46 +1,49 @@
 ﻿using Lodge.Domain.Core.Primitives;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using Serilog.Context;
 
 namespace Lodge.Application.Abstractions.Behaviors;
 
 /// <summary>
-/// Represents the request logging pipeline behavior.
+/// Logs the start and outcome of every request.
 /// </summary>
-/// <typeparam name="TRequest">The request type.</typeparam>
-/// <typeparam name="TResponse">The response type.</typeparam>
-/// <param name="logger">The logger.</param>
-internal sealed class RequestLoggingPipelineBehavior<TRequest, TResponse>(
+internal sealed partial class RequestLoggingPipelineBehavior<TRequest, TResponse>(
     ILogger<RequestLoggingPipelineBehavior<TRequest, TResponse>> logger)
     : IPipelineBehavior<TRequest, TResponse>
     where TRequest : class
     where TResponse : Result
 {
-    /// <inheritdoc />
     public async Task<TResponse> Handle(
-        TRequest request, 
-        RequestHandlerDelegate<TResponse> next, 
+        TRequest request,
+        RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
         string requestName = typeof(TRequest).Name;
 
-        logger.LogInformation("Processing request {RequestName}", requestName);
+        LogProcessing(logger, requestName);
 
-        TResponse result = await next();
+        TResponse result = await next(cancellationToken);
 
         if (result.IsSuccess)
         {
-            logger.LogInformation("Completed request {RequestName}", requestName);
-            
-            return result;
+            LogCompleted(logger, requestName);
         }
-
-        using (LogContext.PushProperty("Error", result.Error, true))
+        else
         {
-            logger.LogError("Completed request {RequestName} with error", requestName);
+            LogFailed(logger, requestName, result.Error.Code, result.Error.Description);
         }
 
         return result;
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Processing request {RequestName}")]
+    private static partial void LogProcessing(ILogger logger, string requestName);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Completed request {RequestName}")]
+    private static partial void LogCompleted(ILogger logger, string requestName);
+
+    [LoggerMessage(
+        Level = LogLevel.Warning,
+        Message = "Completed request {RequestName} with error {ErrorCode}: {ErrorDescription}")]
+    private static partial void LogFailed(ILogger logger, string requestName, string errorCode, string errorDescription);
 }

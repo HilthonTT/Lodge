@@ -1,9 +1,9 @@
-﻿using Lodge.Domain.Apartements.Events;
+﻿using Lodge.Domain.Apartments.Events;
 using Lodge.Domain.Core.Abstractions;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Domain.Shared;
 
-namespace Lodge.Domain.Apartements;
+namespace Lodge.Domain.Apartments;
 
 /// <summary>
 /// Represents the apartment entity.
@@ -57,21 +57,21 @@ public sealed class Apartment : Entity, IAuditableEntity
     {
     }
 
-    public Name Name { get; private set; }
+    public Name Name { get; private set; } = null!;
 
-    public Description Description { get; private set; }
+    public Description Description { get; private set; } = null!;
 
-    public Address Address { get; private set; }
+    public Address Address { get; private set; } = null!;
 
-    public Money Price { get; private set; }
+    public Money Price { get; private set; } = null!;
 
-    public Money CleaningFee { get; private set; }
+    public Money CleaningFee { get; private set; } = null!;
 
     public int MaximumRoomCount { get; private set; }
 
     public int MaximumGuestCount { get; private set; }
 
-    public string ImageUrl { get; private set; }
+    public string ImageUrl { get; private set; } = string.Empty;
 
     public DateTime? LastBookedOnUtc  { get; internal set; }
 

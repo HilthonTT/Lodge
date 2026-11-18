@@ -1,66 +1,31 @@
 ﻿using Lodge.Application.Abstractions.Messaging;
-using Lodge.Infrastructure.Messaging.Settings;
-using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using RabbitMQ.Client;
-using System.Text;
 
 namespace Lodge.Infrastructure.Messaging;
 
 /// <summary>
-/// Represents the integration event publisher.
+/// Publishes integration events as persistent messages to the integration event queue.
 /// </summary>
-/// <param name="options">The message broker settings options.</param>
-internal sealed class IntegrationEventPublisher : IIntegrationEventPublisher, IDisposable
+internal sealed class IntegrationEventPublisher(RabbitMqConnectionProvider connectionProvider) : IIntegrationEventPublisher
 {
-    private static readonly JsonSerializerSettings JsonSerializerSettings = new()
+    public async Task PublishAsync(IIntegrationEvent integrationEvent, CancellationToken cancellationToken = default)
     {
-        TypeNameHandling = TypeNameHandling.Auto,
-    };
+        await using IChannel channel = await connectionProvider.CreateChannelAsync(cancellationToken);
 
-    private readonly MessageBrokerSettings _messageBrokerSettings;
-    private readonly IConnection _connection;
-    private readonly IModel _channel;
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="IntegrationEventPublisher"/> class.
-    /// </summary>
-    /// <param name="messageBrokerSettings"></param>
-    public IntegrationEventPublisher(IOptions<MessageBrokerSettings> messageBrokerSettings)
-    {
-        _messageBrokerSettings = messageBrokerSettings.Value;
-
-        ConnectionFactory factory = new()
+        var properties = new BasicProperties
         {
-            HostName = _messageBrokerSettings.HostName,
-            Port = _messageBrokerSettings.Port,
-            UserName = _messageBrokerSettings.UserName,
-            Password = _messageBrokerSettings.Password,
+            Persistent = true,
+            ContentType = "application/json",
+            Type = IntegrationEventSerializer.GetTypeName(integrationEvent),
+            MessageId = Guid.NewGuid().ToString(),
         };
 
-        _connection = factory.CreateConnection();
-
-        _channel = _connection.CreateModel();
-
-        _channel.QueueDeclare(_messageBrokerSettings.QueueName, false, false, false);
-    }
-
-    public void Publish(IIntegrationEvent integrationEvent)
-    {
-        string payload = JsonConvert.SerializeObject(
-            integrationEvent, 
-            typeof(IIntegrationEvent), 
-            JsonSerializerSettings);
-
-        byte[] body = Encoding.UTF8.GetBytes(payload);
-
-        _channel.BasicPublish(string.Empty, _messageBrokerSettings.QueueName, body: body);
-    }
-
-    public void Dispose()
-    {
-        _connection?.Dispose();
-
-        _channel?.Dispose();
+        await channel.BasicPublishAsync(
+            exchange: string.Empty,
+            routingKey: connectionProvider.Options.QueueName,
+            mandatory: false,
+            basicProperties: properties,
+            body: IntegrationEventSerializer.Serialize(integrationEvent),
+            cancellationToken: cancellationToken);
     }
 }

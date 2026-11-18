@@ -2,34 +2,21 @@
 using Lodge.Application.Abstractions.Data;
 using Lodge.Application.Abstractions.Messaging;
 using Lodge.Application.Core.Exceptions;
-using Lodge.Domain.Apartements;
+using Lodge.Domain.Apartments;
 using Lodge.Domain.Bookings;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Domain.Users;
-using MediatR;
 
 namespace Lodge.Application.Bookings.Reserve;
 
-/// <summary>
-/// Represents the <see cref="ReserveBookingCommand"/> handler.
-/// </summary>
-/// <param name="userIdentifierProvider">The user identifier provider.</param>
-/// <param name="apartmentRepository">The apartment repository.</param>
-/// <param name="bookingRepository">The booking repository.</param>
-/// <param name="unitOfWork">The unit of work.</param>
-/// <param name="pricingService">The pricing service.</param>
-/// <param name="dateTimeProvider">The date time provider.</param>
-/// <param name="publisher">The publisher.</param>
 internal sealed class ReserveBookingCommandHandler(
     IUserIdentifierProvider userIdentifierProvider,
     IApartmentRepository apartmentRepository,
     IBookingRepository bookingRepository,
     IUnitOfWork unitOfWork,
     PricingService pricingService,
-    IDateTimeProvider dateTimeProvider,
-    IPublisher publisher) : ICommandHandler<ReserveBookingCommand, Guid>
+    IDateTimeProvider dateTimeProvider) : ICommandHandler<ReserveBookingCommand, Guid>
 {
-    /// <inheritdoc />
     public async Task<Result<Guid>> Handle(ReserveBookingCommand request, CancellationToken cancellationToken)
     {
         if (request.UserId != userIdentifierProvider.UserId)
@@ -38,15 +25,24 @@ internal sealed class ReserveBookingCommandHandler(
         }
 
         Apartment? apartment = await apartmentRepository.GetByIdAsync(request.ApartmentId, cancellationToken);
+
         if (apartment is null)
         {
             return Result.Failure<Guid>(ApartmentErrors.NotFound(request.ApartmentId));
         }
 
         Result<DateRange> durationResult = DateRange.Create(request.StartDate, request.EndDate);
+
         if (durationResult.IsFailure)
         {
             return Result.Failure<Guid>(durationResult.Error);
+        }
+
+        DateTime utcNow = dateTimeProvider.UtcNow;
+
+        if (durationResult.Value.Start < DateOnly.FromDateTime(utcNow))
+        {
+            return Result.Failure<Guid>(BookingErrors.StartDateInPast);
         }
 
         if (await bookingRepository.IsOverlappingAsync(apartment, durationResult.Value, cancellationToken))
@@ -54,28 +50,21 @@ internal sealed class ReserveBookingCommandHandler(
             return Result.Failure<Guid>(BookingErrors.Overlap);
         }
 
+        var booking = Booking.Reserve(apartment, request.UserId, durationResult.Value, utcNow, pricingService);
+
+        bookingRepository.Insert(booking);
+
         try
         {
-            var booking = Booking.Reserve(
-                apartment, 
-                userIdentifierProvider.UserId,
-                durationResult.Value, 
-                dateTimeProvider.UtcNow, 
-                pricingService);
-
-            bookingRepository.Insert(booking);
-
+            // Saving bumps the apartment's concurrency token (LastBookedOnUtc / xmin), so two concurrent
+            // reservations for the same apartment cannot both pass the overlap check.
             await unitOfWork.SaveChangesAsync(cancellationToken);
-
-            await publisher.Publish(
-                new BookingReservedEvent(booking.Id, userIdentifierProvider.UserId),
-                cancellationToken);
-
-            return booking.Id;
         }
         catch (ConcurrencyException)
         {
             return Result.Failure<Guid>(BookingErrors.Overlap);
         }
+
+        return booking.Id;
     }
 }

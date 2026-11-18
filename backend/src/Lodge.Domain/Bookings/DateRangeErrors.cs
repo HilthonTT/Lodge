@@ -3,10 +3,11 @@
 namespace Lodge.Domain.Bookings;
 
 /// <summary>
-/// Contains all the date range errors
+/// Contains the date range errors.
 /// </summary>
 public static class DateRangeErrors
 {
     public static readonly Error StartDatePrecedesEndDate = Error.Problem(
-        "DateRange.StartDatePrecedesEndDate", "The start date precedes the end date");
+        "DateRange.StartDatePrecedesEndDate",
+        "The end date must be after the start date");
 }

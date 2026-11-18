@@ -1,114 +1,125 @@
 ﻿using Lodge.Application.Abstractions.Messaging;
-using Lodge.BackgroundTasks.Services;
-using Lodge.Infrastructure.Messaging.Settings;
+using Lodge.Infrastructure.Messaging;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using System.Text;
 
 namespace Lodge.BackgroundTasks.Tasks;
 
 /// <summary>
-/// Represents the integration event consumer background service.
+/// Consumes integration events from RabbitMQ and dispatches them to the MediatR integration event handlers.
 /// </summary>
-internal sealed class IntegrationEventConsumerBackgroundService : IHostedService, IDisposable
+/// <remarks>
+/// Messages are acknowledged only after all handlers succeeded. A failing message is redelivered once and
+/// dropped (logged) when it fails again, so a poison message cannot block the queue.
+/// </remarks>
+internal sealed partial class IntegrationEventConsumerBackgroundService(
+    RabbitMqConnectionProvider connectionProvider,
+    IServiceScopeFactory serviceScopeFactory,
+    ILogger<IntegrationEventConsumerBackgroundService> logger) : BackgroundService
 {
-    private static readonly JsonSerializerSettings SerializerSettings = new()
+    private const ushort PrefetchCount = 10;
+    private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(5);
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        TypeNameHandling = TypeNameHandling.All
-    };
+        IChannel? channel = null;
 
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IModel _channel;
-    private readonly IConnection _connection;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="IntegrationEventConsumerBackgroundService"/>
-    /// </summary>
-    /// <param name="logger">The logger.</param>
-    /// <param name="options">The message broker settings options.</param>
-    /// <param name="serviceProvider">The service provider.</param>
-    public IntegrationEventConsumerBackgroundService(
-        ILogger<IntegrationEventConsumerBackgroundService> logger,
-        IOptions<MessageBrokerSettings> options,
-        IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-        MessageBrokerSettings messageBrokerSettings = options.Value;
-
-        var factory = new ConnectionFactory
+        while (channel is null && !stoppingToken.IsCancellationRequested)
         {
-            HostName = messageBrokerSettings.HostName,
-            Port = messageBrokerSettings.Port,
-            UserName = messageBrokerSettings.UserName,
-            Password = messageBrokerSettings.Password
-        };
+            try
+            {
+                channel = await connectionProvider.CreateChannelAsync(stoppingToken);
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException)
+            {
+                LogBrokerUnavailable(logger, exception, RetryDelay.TotalSeconds);
+                await Task.Delay(RetryDelay, stoppingToken);
+            }
+        }
 
-        _connection = factory.CreateConnection();
+        if (channel is null)
+        {
+            return;
+        }
 
-        _channel = _connection.CreateModel();
+        await using (channel)
+        {
+            await channel.BasicQosAsync(prefetchSize: 0, prefetchCount: PrefetchCount, global: false, stoppingToken);
 
-        _channel.QueueDeclare(messageBrokerSettings.QueueName, false, false, false);
+            var consumer = new AsyncEventingBasicConsumer(channel);
+            consumer.ReceivedAsync += (_, eventArgs) => OnMessageReceivedAsync(channel, eventArgs, stoppingToken);
+
+            await channel.BasicConsumeAsync(
+                connectionProvider.Options.QueueName,
+                autoAck: false,
+                consumer,
+                stoppingToken);
+
+            LogConsuming(logger, connectionProvider.Options.QueueName);
+
+            try
+            {
+                await Task.Delay(Timeout.Infinite, stoppingToken);
+            }
+            catch (OperationCanceledException)
+            {
+                // Host is shutting down.
+            }
+        }
+    }
+
+    private async Task OnMessageReceivedAsync(
+        IChannel channel,
+        BasicDeliverEventArgs eventArgs,
+        CancellationToken cancellationToken)
+    {
+        IIntegrationEvent? integrationEvent =
+            IntegrationEventSerializer.Deserialize(eventArgs.BasicProperties.Type, eventArgs.Body.Span);
+
+        if (integrationEvent is null)
+        {
+            LogUnknownMessage(logger, eventArgs.BasicProperties.Type);
+            await channel.BasicNackAsync(eventArgs.DeliveryTag, multiple: false, requeue: false, cancellationToken);
+            return;
+        }
 
         try
         {
-            var consumer = new EventingBasicConsumer(_channel);
+            using IServiceScope scope = serviceScopeFactory.CreateScope();
 
-            consumer.Received += OnIntegrationEventReceived;
+            IPublisher publisher = scope.ServiceProvider.GetRequiredService<IPublisher>();
 
-            _channel.BasicConsume(messageBrokerSettings.QueueName, false, consumer);
+            await publisher.Publish(integrationEvent, cancellationToken);
+
+            await channel.BasicAckAsync(eventArgs.DeliveryTag, multiple: false, cancellationToken);
         }
-        catch (Exception e)
+        catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            logger.LogCritical("ERROR: Failed to process the integration events: {Message}", e.Message);
+            LogHandlingFailed(logger, exception, integrationEvent.GetType().Name, eventArgs.Redelivered);
+
+            await channel.BasicNackAsync(
+                eventArgs.DeliveryTag,
+                multiple: false,
+                requeue: !eventArgs.Redelivered,
+                cancellationToken);
         }
     }
 
-    /// <inheritdoc />
-    public Task StartAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Message broker unavailable, retrying in {DelaySeconds}s")]
+    private static partial void LogBrokerUnavailable(ILogger logger, Exception exception, double delaySeconds);
 
-    /// <inheritdoc />
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        Dispose();
+    [LoggerMessage(Level = LogLevel.Information, Message = "Consuming integration events from queue {QueueName}")]
+    private static partial void LogConsuming(ILogger logger, string queueName);
 
-        return Task.CompletedTask;
-    }
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Dropping message with unknown integration event type {Type}")]
+    private static partial void LogUnknownMessage(ILogger logger, string? type);
 
-    /// <inheritdoc />
-    public void Dispose()
-    {
-        _channel?.Dispose();
-        _connection?.Dispose();
-    }
-
-    /// <summary>
-    /// Processes the integration event received from the message queue.
-    /// </summary>
-    /// <param name="sender">The sender.</param>
-    /// <param name="eventArgs">The event arguments.</param>
-    private void OnIntegrationEventReceived(object? sender, BasicDeliverEventArgs eventArgs)
-    {
-        string body = Encoding.UTF8.GetString(eventArgs.Body.Span);
-
-        IIntegrationEvent integrationEvent = JsonConvert.DeserializeObject<IIntegrationEvent>(
-            body, 
-            SerializerSettings)!;
-
-        using IServiceScope scope = _serviceProvider.CreateScope();
-
-        IIntegrationEventConsumer integrationEventConsumer = 
-            scope.ServiceProvider.GetRequiredService<IIntegrationEventConsumer>();
-
-        integrationEventConsumer.Consume(integrationEvent);
-
-        _channel.BasicAck(eventArgs.DeliveryTag, false);
-    }
+    [LoggerMessage(
+        Level = LogLevel.Error,
+        Message = "Failed to handle integration event {EventType} (redelivered: {Redelivered})")]
+    private static partial void LogHandlingFailed(ILogger logger, Exception exception, string eventType, bool redelivered);
 }

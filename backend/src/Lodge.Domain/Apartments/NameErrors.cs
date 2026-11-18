@@ -1,6 +1,6 @@
 ﻿using Lodge.Domain.Core.Primitives;
 
-namespace Lodge.Domain.Apartements;
+namespace Lodge.Domain.Apartments;
 
 /// <summary>
 /// Represents the name's domain errors.

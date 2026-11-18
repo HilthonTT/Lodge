@@ -1,18 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dapper" Version="2.1.35" />
-    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.9.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.8" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Serilog" Version="4.0.1" />
-    <PackageReference Include="Stripe.net" Version="45.7.0" />
+    <PackageReference Include="Dapper" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="MediatR" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Stripe.net" />
   </ItemGroup>
 
   <ItemGroup>
@@ -21,8 +18,9 @@
   </ItemGroup>
 
   <ItemGroup>
-	<InternalsVisibleTo Include="Application.UnitTests" />
-	<InternalsVisibleTo Include="Api.FunctionalTests" />
+    <InternalsVisibleTo Include="Lodge.Application.UnitTests" />
+    <InternalsVisibleTo Include="Lodge.Application.IntegrationTests" />
+    <InternalsVisibleTo Include="Lodge.Api.FunctionalTests" />
   </ItemGroup>
 
 </Project>

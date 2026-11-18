@@ -1,6 +1,6 @@
 ﻿using Lodge.Application.Abstractions.Messaging;
 using Lodge.Contracts.Common;
-using Lodge.Domain.Apartements;
+using Lodge.Domain.Apartments;
 using Lodge.Domain.Bookings;
 using Lodge.Domain.Core.Primitives;
 

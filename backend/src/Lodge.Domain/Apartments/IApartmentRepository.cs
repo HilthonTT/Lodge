@@ -1,4 +1,4 @@
-﻿namespace Lodge.Domain.Apartements;
+﻿namespace Lodge.Domain.Apartments;
 
 /// <summary>
 /// Represents the apartment repository interface

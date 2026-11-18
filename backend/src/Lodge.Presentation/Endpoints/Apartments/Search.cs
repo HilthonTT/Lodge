@@ -1,4 +1,4 @@
-﻿using Lodge.Application.Apartments.Search;
+using Lodge.Application.Apartments.Search;
 using Lodge.Contracts.Apartments;
 using Lodge.Contracts.Common;
 using Lodge.Domain.Core.Primitives;
@@ -24,8 +24,8 @@ internal sealed class Search : IEndpoint
             [FromQuery] string? searchTerm,
             [FromQuery] string? sortColumn,
             [FromQuery] string? sortOrder,
-            [FromQuery] int page,
-            [FromQuery] int pageSize,
+            [FromQuery] int? page,
+            [FromQuery] int? pageSize,
             [FromQuery] int? guestCount,
             [FromQuery] int? roomCount,
             [FromQuery] DateOnly? startDate,
@@ -36,9 +36,9 @@ internal sealed class Search : IEndpoint
             var query = new SearchApartmentQuery(
                 searchTerm, 
                 sortColumn, 
-                sortOrder, 
-                page, 
-                pageSize, 
+                sortOrder,
+                page ?? Paging.DefaultPage,
+                pageSize ?? Paging.DefaultPageSize,
                 startDate, 
                 endDate,
                 guestCount,

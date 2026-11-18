@@ -1,4 +1,4 @@
-﻿using Lodge.Domain.Apartements;
+﻿using Lodge.Domain.Apartments;
 using Lodge.Domain.Bookings;
 using Lodge.Domain.Reviews;
 using Lodge.Domain.Users;
@@ -16,8 +16,11 @@ internal sealed class ReviewConfiguration : IEntityTypeConfiguration<Review>
     {
         builder.HasKey(review => review.Id);
 
-        builder.Property(review => review.Rating)
-            .HasConversion(rating => rating.Value, value => Rating.Create(value).Value);
+        // A complex property (rather than a value converter) so that queries can aggregate on the rating value.
+        builder.ComplexProperty(review => review.Rating, ratingBuilder =>
+            ratingBuilder.Property(rating => rating.Value)
+                .HasColumnName("rating")
+                .IsRequired());
 
         builder.Property(review => review.Comment)
             .HasMaxLength(Comment.MaxLength)

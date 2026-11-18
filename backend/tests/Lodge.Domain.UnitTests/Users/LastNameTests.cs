@@ -1,8 +1,7 @@
-﻿using FluentAssertions;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Domain.Users;
 
-namespace Domain.UnitTests.Users;
+namespace Lodge.Domain.UnitTests.Users;
 
 public class LastNameTests
 {

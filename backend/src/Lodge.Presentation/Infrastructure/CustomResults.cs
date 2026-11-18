@@ -1,4 +1,4 @@
-﻿using Lodge.Domain.Core.Primitives;
+using Lodge.Domain.Core.Primitives;
 using Microsoft.AspNetCore.Http;
 
 namespace Lodge.Presentation.Infrastructure;
@@ -86,6 +86,7 @@ public static class CustomResults
         errorType switch
         {
             ErrorType.Validation => StatusCodes.Status400BadRequest,
+            ErrorType.Problem => StatusCodes.Status400BadRequest,
             ErrorType.NotFound => StatusCodes.Status404NotFound,
             ErrorType.Conflict => StatusCodes.Status409Conflict,
             ErrorType.Permission => StatusCodes.Status403Forbidden,

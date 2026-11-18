@@ -1,5 +1,5 @@
-﻿using Lodge.Application.Bookings.Complete;
-using Lodge.Contracts.Bookings;
+using Lodge.Application.Abstractions.Authentication;
+using Lodge.Application.Bookings.Complete;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Presentation.Extensions;
 using Lodge.Presentation.Infrastructure;
@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Routing;
 namespace Lodge.Presentation.Endpoints.Bookings;
 
 /// <summary>
-/// Represents the endpoint for completing a booking.
+/// Represents the (admin-only) endpoint for completing a booking. No request body is needed.
 /// </summary>
 internal sealed class Complete : IEndpoint
 {
@@ -20,17 +20,16 @@ internal sealed class Complete : IEndpoint
     {
         app.MapPut("bookings/{bookingId}/complete", async (
             Guid bookingId,
-            CompleteBookingRequest request,
             ISender sender,
             CancellationToken cancellationToken) =>
         {
-            var command = new CompleteBookingCommand(request.UserId, bookingId);
+            var command = new CompleteBookingCommand(bookingId);
 
             Result result = await sender.Send(command, cancellationToken);
 
             return result.Match(Results.NoContent, CustomResults.Problem);
         })
         .WithTags(Tags.Bookings)
-        .RequireAuthorization();
+        .RequireAuthorization(AuthorizationPolicies.Admin);
     }
 }

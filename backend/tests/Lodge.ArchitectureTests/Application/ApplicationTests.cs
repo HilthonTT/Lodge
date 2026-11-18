@@ -1,9 +1,9 @@
-﻿using FluentAssertions;
 using FluentValidation;
 using Lodge.Application.Abstractions.Messaging;
 using NetArchTest.Rules;
+using TestResult = NetArchTest.Rules.TestResult;
 
-namespace ArchitectureTests.Application;
+namespace Lodge.ArchitectureTests.Application;
 
 public class ApplicationTests : BaseTest
 {

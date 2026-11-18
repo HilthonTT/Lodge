@@ -7,7 +7,7 @@ namespace Lodge.Application.Users;
 /// <summary>
 /// Contains all the user queries.
 /// </summary>
-public static class UserQueries
+internal static class UserQueries
 {
     /// <summary>
     /// Fetches the user by its identifier.
@@ -25,9 +25,10 @@ public static class UserQueries
                 u.first_name AS FirstName,
                 u.last_name AS LastName,
                 u.image_id AS ImageId,
-                u.created_on_utc AS CreatedOnUtc
+                u.created_on_utc AS CreatedOnUtc,
+                u.role AS Role
             FROM users u
-            WHERE u.id = @UserId
+            WHERE u.id = @UserId AND u.deleted = FALSE
             """;
 
         UserResponse? user = await connection.QueryFirstOrDefaultAsync<UserResponse>(

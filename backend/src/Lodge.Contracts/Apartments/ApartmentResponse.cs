@@ -33,7 +33,7 @@ public sealed class ApartmentResponse
     /// <summary>
     /// Gets the image url.
     /// </summary>
-    public string ImageUrl { get; init; } = string.Empty;
+    public string ImageUrl { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets the maximum room count.
@@ -46,7 +46,17 @@ public sealed class ApartmentResponse
     public int MaximumGuestCount { get; set; }
 
     /// <summary>
+    /// Gets or sets the average review rating, rounded to one decimal; <c>null</c> when there are no reviews.
+    /// </summary>
+    public decimal? AverageRating { get; set; }
+
+    /// <summary>
+    /// Gets or sets the number of reviews.
+    /// </summary>
+    public int ReviewCount { get; set; }
+
+    /// <summary>
     /// Gets and sets the address.
     /// </summary>
-    public AddressResponse Address { get; set; }
+    public AddressResponse Address { get; set; } = new();
 }

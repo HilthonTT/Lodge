@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -6,41 +6,35 @@ using Microsoft.Extensions.Logging;
 namespace Lodge.Presentation.Infrastructure;
 
 /// <summary>
-/// Represents the global exception handler.
-/// Avoids to leak out information about the exception to the user.
+/// Turns unhandled exceptions into a 500 problem details response (without leaking exception details).
 /// </summary>
-internal sealed class GlobalExceptionHandler : IExceptionHandler
+internal sealed partial class GlobalExceptionHandler(
+    IProblemDetailsService problemDetailsService,
+    ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
-    private readonly ILogger<GlobalExceptionHandler> _logger;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="GlobalExceptionHandler"/> class.
-    /// </summary>
-    /// <param name="logger">The logger.</param>
-    public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger)
-    {
-        _logger = logger;
-    }
-
-    /// <inheritdoc />
-    public async ValueTask<bool> TryHandleAsync(
-        HttpContext httpContext, 
-        Exception exception, 
+    public ValueTask<bool> TryHandleAsync(
+        HttpContext httpContext,
+        Exception exception,
         CancellationToken cancellationToken)
     {
-        _logger.LogError(exception, "Unhandled exception occured");
+        LogUnhandledException(logger, exception);
 
-        var problemDetails = new ProblemDetails
+        httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
+
+        return problemDetailsService.TryWriteAsync(new ProblemDetailsContext
         {
-            Status = StatusCodes.Status500InternalServerError,
-            Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.1",
-            Title = "Server Error",
-        };
-
-        httpContext.Response.StatusCode = problemDetails.Status.Value;
-
-        await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
-
-        return true;
+            HttpContext = httpContext,
+            Exception = exception,
+            ProblemDetails = new ProblemDetails
+            {
+                Status = StatusCodes.Status500InternalServerError,
+                Type = "https://tools.ietf.org/html/rfc9110#section-15.6.1",
+                Title = "Server failure",
+                Detail = "An unexpected error occurred",
+            },
+        });
     }
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Unhandled exception occurred")]
+    private static partial void LogUnhandledException(ILogger logger, Exception exception);
 }

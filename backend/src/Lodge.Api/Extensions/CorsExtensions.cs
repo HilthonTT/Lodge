@@ -1,35 +1,27 @@
-﻿using Lodge.Domain.Core.Guards;
-
-namespace Lodge.Api.Extensions;
+﻿namespace Lodge.Api.Extensions;
 
 /// <summary>
-/// Contains all the Cors extension methods.
+/// Configures CORS for the browser frontend.
 /// </summary>
-public static class CorsExtensions
+internal static class CorsExtensions
 {
-    /// <summary>
-    /// Adds the cors policies into the API.
-    /// </summary>
-    /// <param name="services">The service collection.</param>
-    /// <returns>The same service collection.</returns>
+    private const string AllowedOriginsKey = "Cors:AllowedOrigins";
+
     public static IServiceCollection AddFrontendCors(this IServiceCollection services, IConfiguration configuration)
     {
-        string? frontendUrl = configuration["AllowedOrigin"];
+        string[] allowedOrigins = configuration.GetSection(AllowedOriginsKey).Get<string[]>() ?? [];
 
-        Ensure.NotNullOrEmpty(frontendUrl, nameof(frontendUrl));
-
-        services.AddCors(options =>
+        if (allowedOrigins.Length == 0)
         {
-            options.AddPolicy("AllowSpecificOrigin", policy =>
-            {
-                policy
-                    .WithOrigins(frontendUrl)
-                    .AllowAnyHeader()
-                    .AllowAnyMethod()
-                    .AllowCredentials()
-                    .Build();
-            });
-        });
+            allowedOrigins = ["http://localhost:3000"];
+        }
+
+        services.AddCors(options => options.AddDefaultPolicy(policy => policy
+            .WithOrigins(allowedOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials()
+            .WithExposedHeaders("api-supported-versions", "X-Correlation-Id")));
 
         return services;
     }

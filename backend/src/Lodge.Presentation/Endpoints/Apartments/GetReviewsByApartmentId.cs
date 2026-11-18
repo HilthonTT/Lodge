@@ -1,4 +1,4 @@
-﻿using Lodge.Application.Reviews.GetByApartmentId;
+using Lodge.Application.Reviews.GetByApartmentId;
 using Lodge.Contracts.Common;
 using Lodge.Contracts.Reviews;
 using Lodge.Domain.Core.Primitives;
@@ -22,12 +22,12 @@ internal sealed class GetReviewsByApartmentId : IEndpoint
     {
         app.MapGet("apartments/{apartmentId}/reviews", async (
             Guid apartmentId,
-            [FromQuery] int page,
-            [FromQuery] int pageSize,
+            [FromQuery] int? page,
+            [FromQuery] int? pageSize,
             ISender sender,
             CancellationToken cancellationToken) =>
         {
-            var query = new GetReviewsByApartmentIdQuery(apartmentId, page, pageSize);
+            var query = new GetReviewsByApartmentIdQuery(apartmentId, page ?? Paging.DefaultPage, pageSize ?? Paging.DefaultPageSize);
 
             Result<PagedList<ReviewResponse>> result = await sender.Send(query, cancellationToken);
 

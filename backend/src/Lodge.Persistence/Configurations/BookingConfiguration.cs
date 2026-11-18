@@ -1,4 +1,4 @@
-﻿using Lodge.Domain.Apartements;
+﻿using Lodge.Domain.Apartments;
 using Lodge.Domain.Bookings;
 using Lodge.Domain.Shared;
 using Lodge.Domain.Users;
