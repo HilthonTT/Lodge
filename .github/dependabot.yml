@@ -7,6 +7,14 @@ updates:
     groups:
       dotnet:
         patterns: ["*"]
+    ignore:
+      # Stay on EF Core 10 until Npgsql.EntityFrameworkCore.PostgreSQL and
+      # EFCore.NamingConventions ship stable EF Core 11 versions.
+      - dependency-name: "Microsoft.EntityFrameworkCore*"
+        update-types: ["version-update:semver-major"]
+      # Newer majors are commercially licensed.
+      - dependency-name: "MediatR"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: npm
     directory: /frontend
@@ -15,6 +23,10 @@ updates:
     groups:
       frontend:
         patterns: ["*"]
+    ignore:
+      # typescript-eslint (used by eslint-config-next) doesn't support TypeScript 7 yet.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
