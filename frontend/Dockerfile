@@ -1,14 +1,14 @@
 # syntax=docker/dockerfile:1.7
 
 # ---- deps: install exact dependency tree from the lockfile ----
-FROM node:24-alpine AS deps
+FROM node:26-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 
 # ---- build: compile the standalone Next.js server ----
-FROM node:24-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 # NEXT_PUBLIC_* values are inlined into the client bundle at build time.
@@ -21,7 +21,7 @@ COPY . .
 RUN npm run build
 
 # ---- runtime: minimal image running as a non-root user ----
-FROM node:24-alpine AS runner
+FROM node:26-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
