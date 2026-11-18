@@ -1,47 +1,12 @@
-using System.ComponentModel.DataAnnotations;
 using Lodge.Application.Abstractions.Data;
-using Lodge.Application.Abstractions.Messaging;
 using Lodge.Application.Payments;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Domain.Payouts;
-using Lodge.Domain.Payouts.Events;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using StripeException = Stripe.StripeException;
 
 namespace Lodge.Application.Payouts;
-
-/// <summary>
-/// Pays the due host payouts.
-/// </summary>
-public interface IPayDuePayoutsJob
-{
-    /// <summary>
-    /// Pays every due payout (scheduled or on hold, dated today or earlier): a Stripe transfer to the host's connected
-    /// account, or a simulated transfer. Payouts of hosts without an active payout account are put on hold.
-    /// </summary>
-    /// <returns>The number of paid payouts.</returns>
-    Task<int> PayDueAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Pays the due payouts of one host (e.g. once they connected a payout account).
-    /// </summary>
-    Task<int> PayDueForHostAsync(Guid hostId, CancellationToken cancellationToken = default);
-}
-
-/// <summary>
-/// Settings of the daily payout job (section <c>BackgroundJobs:Payouts</c>).
-/// </summary>
-public sealed class PayoutJobOptions
-{
-    public const string SectionName = "BackgroundJobs:Payouts";
-
-    /// <summary>
-    /// Hangfire cron expression (UTC). Defaults to daily at 05:00.
-    /// </summary>
-    [Required]
-    public string Schedule { get; set; } = "0 5 * * *";
-}
 
 internal sealed partial class PayDuePayoutsJob(
     IDbContext context,
@@ -126,14 +91,4 @@ internal sealed partial class PayDuePayoutsJob(
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Paid {Paid} of {Due} due payouts")]
     private static partial void LogPaid(ILogger logger, int paid, int due);
-}
-
-/// <summary>
-/// Retries the payouts on hold once the host's payout account becomes active.
-/// </summary>
-internal sealed class PayHeldPayoutsOnPayoutAccountActivatedDomainEventHandler(IPayDuePayoutsJob payDuePayoutsJob)
-    : IDomainEventHandler<PayoutAccountActivatedDomainEvent>
-{
-    public Task Handle(PayoutAccountActivatedDomainEvent notification, CancellationToken cancellationToken) =>
-        payDuePayoutsJob.PayDueForHostAsync(notification.UserId, cancellationToken);
 }

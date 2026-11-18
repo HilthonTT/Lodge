@@ -1,59 +1,6 @@
-using System.Globalization;
 using Lodge.Domain.Bookings;
 
 namespace Lodge.Domain.Apartments;
-
-/// <summary>
-/// The length of a flexible-date search ("a weekend / a week / a month in December or January").
-/// </summary>
-public enum FlexibleStayLength
-{
-    /// <summary>
-    /// Friday to Sunday (2 nights).
-    /// </summary>
-    Weekend = 1,
-
-    /// <summary>
-    /// 7 nights, any start day.
-    /// </summary>
-    Week = 2,
-
-    /// <summary>
-    /// 28 nights, any start day.
-    /// </summary>
-    Month = 3,
-}
-
-/// <summary>
-/// A calendar month, written <c>yyyy-MM</c> (e.g. <c>2026-12</c>).
-/// </summary>
-public readonly record struct YearMonth(int Year, int Month)
-{
-    public DateOnly FirstDay => new(Year, Month, 1);
-
-    public int DayCount => DateTime.DaysInMonth(Year, Month);
-
-    public static bool TryParse(string? value, out YearMonth yearMonth)
-    {
-        yearMonth = default;
-
-        if (!DateOnly.TryParseExact(
-                value?.Trim(),
-                "yyyy-MM",
-                CultureInfo.InvariantCulture,
-                DateTimeStyles.None,
-                out DateOnly date))
-        {
-            return false;
-        }
-
-        yearMonth = new YearMonth(date.Year, date.Month);
-
-        return true;
-    }
-
-    public override string ToString() => $"{Year:D4}-{Month:D2}";
-}
 
 /// <summary>
 /// Finds stay windows for flexible-date searches. A window "is in" a month when its check-in date is in that month

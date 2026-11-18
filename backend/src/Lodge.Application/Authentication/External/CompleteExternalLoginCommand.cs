@@ -16,8 +16,3 @@ public sealed record CompleteExternalLoginCommand(
     string? State,
     string? ProviderError,
     string? Correlation) : ICommand<ExternalLoginResult>;
-
-/// <summary>
-/// The outcome of a successful social login: either an access token or (with 2FA) a two-factor challenge token.
-/// </summary>
-public sealed record ExternalLoginResult(string? Token, string? TwoFactorToken, string ReturnUrl);

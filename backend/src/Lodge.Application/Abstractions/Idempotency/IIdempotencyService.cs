@@ -24,38 +24,3 @@ public interface IIdempotencyService
     /// <param name="response">The serialized result.</param>
     void Complete(Guid requestId, string name, string response);
 }
-
-/// <summary>
-/// The state of an idempotency key.
-/// </summary>
-public enum IdempotencyStatus
-{
-    /// <summary>The key is new: run the command.</summary>
-    New,
-
-    /// <summary>The key was used by a successful request of the same type.</summary>
-    Completed,
-
-    /// <summary>The key was used by a request of another type.</summary>
-    KeyReused,
-
-    /// <summary>Another request with the same key is still being processed.</summary>
-    InProgress,
-}
-
-/// <summary>
-/// The result of <see cref="IIdempotencyService.BeginAsync"/>.
-/// </summary>
-/// <param name="Status">The state of the key.</param>
-/// <param name="Response">
-/// The serialized result of the first request (<see cref="IdempotencyStatus.Completed"/>); null for keys recorded
-/// before results were stored.
-/// </param>
-public sealed record IdempotencyCheck(IdempotencyStatus Status, string? Response = null)
-{
-    public static readonly IdempotencyCheck New = new(IdempotencyStatus.New);
-
-    public static readonly IdempotencyCheck KeyReused = new(IdempotencyStatus.KeyReused);
-
-    public static readonly IdempotencyCheck InProgress = new(IdempotencyStatus.InProgress);
-}

@@ -29,32 +29,3 @@ public interface IExternalAuthenticationService
         string? correlation,
         CancellationToken cancellationToken = default);
 }
-
-/// <summary>
-/// The redirect to an external provider.
-/// </summary>
-/// <param name="AuthorizationUrl">The provider's authorization URL, including state and PKCE challenge.</param>
-/// <param name="Correlation">The protected value to store in the correlation cookie.</param>
-public sealed record ExternalLoginChallenge(string AuthorizationUrl, string Correlation);
-
-/// <summary>
-/// The verified result of a provider callback.
-/// </summary>
-public sealed record ExternalLoginCallback(ExternalIdentity Identity, string ReturnUrl);
-
-/// <summary>
-/// The user's identity at an external provider.
-/// </summary>
-/// <param name="Provider">The lower-case provider name.</param>
-/// <param name="ProviderKey">The stable user identifier at the provider.</param>
-/// <param name="Email">The e-mail address, if the provider shared one.</param>
-/// <param name="EmailVerified">Whether the provider has verified <paramref name="Email"/>.</param>
-/// <param name="FirstName">The first (given) name, if known.</param>
-/// <param name="LastName">The last (family) name, if known.</param>
-public sealed record ExternalIdentity(
-    string Provider,
-    string ProviderKey,
-    string? Email,
-    bool EmailVerified,
-    string? FirstName,
-    string? LastName);

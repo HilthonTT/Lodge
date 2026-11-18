@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using Lodge.Application.Abstractions.Data;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Domain.Experiences;
@@ -7,51 +6,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Lodge.Application.Experiences;
-
-/// <summary>
-/// The recurring experience jobs.
-/// </summary>
-public interface IExperienceJobs
-{
-    /// <summary>
-    /// Completes the confirmed bookings whose session has ended (daily).
-    /// </summary>
-    /// <returns>The number of completed bookings.</returns>
-    Task<int> CompletePastSessionsAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Releases the spots of unpaid bookings older than <see cref="ExperienceJobOptions.PaymentHoldMinutes"/>, and of
-    /// unpaid bookings whose session has started.
-    /// </summary>
-    /// <returns>The number of released bookings.</returns>
-    Task<int> ExpireUnpaidHoldsAsync(CancellationToken cancellationToken = default);
-}
-
-/// <summary>
-/// Settings of the experience jobs (section <c>BackgroundJobs:Experiences</c>).
-/// </summary>
-public sealed class ExperienceJobOptions
-{
-    public const string SectionName = "BackgroundJobs:Experiences";
-
-    /// <summary>
-    /// Hangfire cron expression (UTC) of the completion job. Defaults to daily at 03:15.
-    /// </summary>
-    [Required]
-    public string CompleteSchedule { get; set; } = "15 3 * * *";
-
-    /// <summary>
-    /// Hangfire cron expression (UTC) of the job that releases unpaid holds. Defaults to every 15 minutes.
-    /// </summary>
-    [Required]
-    public string ExpireHoldsSchedule { get; set; } = "*/15 * * * *";
-
-    /// <summary>
-    /// How long spots stay held for an unpaid booking. Defaults to 60 minutes.
-    /// </summary>
-    [Range(5, 24 * 60)]
-    public int PaymentHoldMinutes { get; set; } = 60;
-}
 
 internal sealed partial class ExperienceJobs(
     IDbContext context,

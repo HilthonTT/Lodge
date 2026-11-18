@@ -177,7 +177,9 @@ DocProject/Help/Html2
 DocProject/Help/html
 
 # Click-Once directory
-publish/
+# Anchored to the repository root: git matches ignore patterns case-insensitively on Windows,
+# so an unanchored "publish/" also swallowed source folders such as Reviews/Publish/.
+/publish/
 
 # Publish Web Output
 *.[Pp]ublish.xml

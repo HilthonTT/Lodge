@@ -10,18 +10,6 @@ using Microsoft.Extensions.Options;
 namespace Lodge.Application.Hosting.Superhost;
 
 /// <summary>
-/// Grants or revokes the Superhost status.
-/// </summary>
-public interface IUpdateSuperhostStatusJob
-{
-    /// <summary>
-    /// Re-evaluates every host (and every current Superhost) against the requirements.
-    /// </summary>
-    /// <returns>The number of users whose status changed.</returns>
-    Task<int> UpdateAsync(CancellationToken cancellationToken = default);
-}
-
-/// <summary>
 /// Daily job: a host is a Superhost while their track record (<see cref="HostPerformance"/>) meets the configured
 /// <see cref="SuperhostOptions"/>. The cached apartments of affected hosts are evicted, since they show the badge.
 /// </summary>

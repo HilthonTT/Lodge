@@ -16,8 +16,3 @@ public sealed record ReserveBookingRequest(
     DateOnly EndDate,
     int GuestCount,
     string? MessageToHost = null);
-
-/// <summary>
-/// Moves a pending or reserved booking to new dates.
-/// </summary>
-public sealed record ChangeBookingDatesRequest(DateOnly StartDate, DateOnly EndDate);

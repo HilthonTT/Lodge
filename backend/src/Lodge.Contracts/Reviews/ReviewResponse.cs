@@ -55,39 +55,3 @@ public sealed class ReviewResponse
     /// </summary>
     public bool IsPublished { get; init; }
 }
-
-/// <summary>
-/// The category ratings of a review (each 1 to 5).
-/// </summary>
-public sealed record CategoryRatingsDto
-{
-    public int Cleanliness { get; init; }
-
-    public int Accuracy { get; init; }
-
-    public int CheckIn { get; init; }
-
-    public int Communication { get; init; }
-
-    public int Location { get; init; }
-
-    public int Value { get; init; }
-}
-
-/// <summary>
-/// The host's reply to a review.
-/// </summary>
-public sealed record HostReplyResponse(string Text, DateTime CreatedOnUtc, DateTime? ModifiedOnUtc);
-
-/// <summary>
-/// Creates or edits the host's reply to a published review (<c>PUT /hosting/reviews/{reviewId}/reply</c>).
-/// </summary>
-/// <param name="Text">The reply (1 to 1000 characters).</param>
-public sealed record ReviewReplyRequest(string Text);
-
-/// <summary>
-/// The host reviews the guest of a completed stay (<c>POST /hosting/bookings/{bookingId}/guest-review</c>).
-/// </summary>
-/// <param name="Rating">The rating (1 to 5).</param>
-/// <param name="Comment">The comment (at most 500 characters).</param>
-public sealed record GuestReviewRequest(int Rating, string Comment);

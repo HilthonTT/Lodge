@@ -95,6 +95,3 @@ public sealed class FunctionalTestWebAppFactory : WebApplicationFactory<Program>
         });
     }
 }
-
-[CollectionDefinition(nameof(FunctionalTestCollection))]
-public sealed class FunctionalTestCollection : ICollectionFixture<FunctionalTestWebAppFactory>;

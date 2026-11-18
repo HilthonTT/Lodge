@@ -82,11 +82,3 @@ public sealed class IntegrationTestWebFactory : WebApplicationFactory<Program>, 
         }
     }
 }
-
-/// <summary>
-/// A settable stand-in for the HTTP-based user identifier provider.
-/// </summary>
-public sealed class TestUserIdentifierProvider : IUserIdentifierProvider
-{
-    public Guid UserId { get; set; }
-}
