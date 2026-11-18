@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Lodge.Infrastructure\Lodge.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lodge.Application.IntegrationTests" />
+    <InternalsVisibleTo Include="Lodge.Api.FunctionalTests" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,166 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ------------------------------------------------------------------ */
+/* Design tokens                                                       */
+/* ------------------------------------------------------------------ */
+
+:root {
+  --radius: 0.75rem;
+
+  --background: oklch(0.99 0.003 95);
+  --foreground: oklch(0.21 0.014 255);
+
+  --card: oklch(1 0 0);
+  --card-foreground: var(--foreground);
+  --popover: oklch(1 0 0);
+  --popover-foreground: var(--foreground);
+
+  /* Brand: pine green */
+  --primary: oklch(0.5 0.105 168);
+  --primary-foreground: oklch(0.99 0.01 168);
+
+  --secondary: oklch(0.96 0.006 95);
+  --secondary-foreground: oklch(0.25 0.014 255);
+
+  --muted: oklch(0.965 0.005 95);
+  --muted-foreground: oklch(0.5 0.014 255);
+
+  --accent: oklch(0.955 0.025 168);
+  --accent-foreground: oklch(0.33 0.07 168);
+
+  --destructive: oklch(0.58 0.21 27);
+  --destructive-foreground: oklch(0.99 0 0);
+
+  --success: oklch(0.55 0.13 155);
+  --warning: oklch(0.7 0.15 70);
+  --info: oklch(0.56 0.14 250);
+  --star: oklch(0.78 0.16 75);
+
+  --border: oklch(0.915 0.006 95);
+  --input: oklch(0.89 0.008 95);
+  --ring: oklch(0.5 0.105 168);
+}
+
+.dark {
+  --background: oklch(0.165 0.01 255);
+  --foreground: oklch(0.96 0.004 95);
+
+  --card: oklch(0.205 0.012 255);
+  --card-foreground: var(--foreground);
+  --popover: oklch(0.215 0.012 255);
+  --popover-foreground: var(--foreground);
+
+  --primary: oklch(0.74 0.12 168);
+  --primary-foreground: oklch(0.2 0.04 168);
+
+  --secondary: oklch(0.26 0.012 255);
+  --secondary-foreground: oklch(0.96 0.004 95);
+
+  --muted: oklch(0.25 0.012 255);
+  --muted-foreground: oklch(0.7 0.012 255);
+
+  --accent: oklch(0.29 0.04 168);
+  --accent-foreground: oklch(0.9 0.06 168);
+
+  --destructive: oklch(0.65 0.2 25);
+  --destructive-foreground: oklch(0.99 0 0);
+
+  --success: oklch(0.72 0.14 155);
+  --warning: oklch(0.8 0.14 75);
+  --info: oklch(0.72 0.12 250);
+  --star: oklch(0.82 0.15 80);
+
+  --border: oklch(0.3 0.012 255);
+  --input: oklch(0.34 0.012 255);
+  --ring: oklch(0.74 0.12 168);
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-star: var(--star);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
+  --shadow-card: 0 1px 2px oklch(0 0 0 / 0.04), 0 8px 24px -12px oklch(0 0 0 / 0.12);
+  --shadow-float: 0 2px 6px oklch(0 0 0 / 0.06), 0 18px 40px -16px oklch(0 0 0 / 0.22);
+}
+
+/* ------------------------------------------------------------------ */
+/* Base                                                                */
+/* ------------------------------------------------------------------ */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    scrollbar-gutter: stable;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "ss01", "cv11";
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply tracking-tight text-balance;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* Leaflet tiles look harsh on a dark UI: dim and invert them. */
+.dark .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9);
+}
+.leaflet-container {
+  font-family: inherit;
+  background: var(--muted);
+}

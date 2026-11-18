@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="MediatR" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Stripe.net" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Lodge.Contracts\Lodge.Contracts.csproj" />
+    <ProjectReference Include="..\Lodge.Domain\Lodge.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lodge.Application.UnitTests" />
+    <InternalsVisibleTo Include="Lodge.Application.IntegrationTests" />
+    <InternalsVisibleTo Include="Lodge.Api.FunctionalTests" />
+  </ItemGroup>
+
+</Project>

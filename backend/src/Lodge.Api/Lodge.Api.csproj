@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <UserSecretsId>2d40b6d4-3fce-4cdd-aa06-e3abd881ece3</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Scalar.AspNetCore" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Sinks.Seq" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Lodge.Application\Lodge.Application.csproj" />
+    <ProjectReference Include="..\Lodge.BackgroundTasks\Lodge.BackgroundTasks.csproj" />
+    <ProjectReference Include="..\Lodge.Domain\Lodge.Domain.csproj" />
+    <ProjectReference Include="..\Lodge.Infrastructure\Lodge.Infrastructure.csproj" />
+    <ProjectReference Include="..\Lodge.Persistence\Lodge.Persistence.csproj" />
+    <ProjectReference Include="..\Lodge.Presentation\Lodge.Presentation.csproj" />
+  </ItemGroup>
+
+</Project>

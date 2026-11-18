@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="NSubstitute" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Lodge.Application\Lodge.Application.csproj" />
+    <ProjectReference Include="..\..\src\Lodge.Infrastructure\Lodge.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
