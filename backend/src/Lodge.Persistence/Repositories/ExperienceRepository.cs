@@ -41,6 +41,9 @@ internal sealed class ExperienceRepository(LodgeDbContext context) : IExperience
     public Task<ExperienceBooking?> GetBookingAsync(Guid bookingId, CancellationToken cancellationToken = default) =>
         context.ExperienceBookings.FirstOrDefaultAsync(booking => booking.Id == bookingId, cancellationToken);
 
+    public Task ReloadBookingAsync(ExperienceBooking booking, CancellationToken cancellationToken = default) =>
+        context.Entry(booking).ReloadAsync(cancellationToken);
+
     public Task<List<ExperienceBooking>> GetActiveBookingsOfSessionAsync(
         Guid sessionId,
         CancellationToken cancellationToken = default) =>

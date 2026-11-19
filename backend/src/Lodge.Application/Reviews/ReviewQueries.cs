@@ -99,7 +99,7 @@ internal static class ReviewQueries
 
         var arguments = new DynamicParameters(parameters);
         arguments.Add("PageSize", pageSize);
-        arguments.Add("Offset", (page - 1) * pageSize);
+        arguments.Add("Offset", (page - 1L) * pageSize);
 
         using SqlMapper.GridReader grid = await connection.QueryMultipleAsync(sql, arguments);
 

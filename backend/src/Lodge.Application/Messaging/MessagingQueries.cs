@@ -152,7 +152,7 @@ internal static class MessagingQueries
                 UserId = userId,
                 ConversationId = conversationId ?? Guid.Empty,
                 PageSize = pageSize,
-                Offset = (page - 1) * pageSize,
+                Offset = (page - 1L) * pageSize,
             });
 
         int totalCount = await grid.ReadSingleAsync<int>();

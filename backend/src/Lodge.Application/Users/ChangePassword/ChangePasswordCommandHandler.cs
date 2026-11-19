@@ -39,6 +39,12 @@ internal sealed class ChangePasswordCommandHandler(
             return Result.Failure(UserErrors.PasswordNotSet);
         }
 
+        // A valid access token alone must not be enough to take over the account.
+        if (!user.VerifyPasswordHash(request.CurrentPassword, passwordHashChecker))
+        {
+            return Result.Failure(UserErrors.InvalidCurrentPassword);
+        }
+
         // Hashes are salted, so the only way to detect "same password" is to verify it.
         if (user.VerifyPasswordHash(request.Password, passwordHashChecker))
         {

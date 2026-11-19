@@ -23,7 +23,7 @@ internal sealed class ChangePassword : IEndpoint
             ISender sender,
             CancellationToken cancellationToken) =>
         {
-            var command = new ChangePasswordCommand(userId, request.Password);
+            var command = new ChangePasswordCommand(userId, request.CurrentPassword, request.Password);
 
             Result result = await sender.Send(command, cancellationToken);
 

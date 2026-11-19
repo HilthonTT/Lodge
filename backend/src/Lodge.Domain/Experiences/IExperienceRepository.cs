@@ -19,6 +19,12 @@ public interface IExperienceRepository
 
     Task<ExperienceBooking?> GetBookingAsync(Guid bookingId, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Re-reads a tracked booking from the database. Call it after <see cref="GetSessionForUpdateAsync"/>: every
+    /// status change of an active booking happens under its session's lock, so the reloaded state is current.
+    /// </summary>
+    Task ReloadBookingAsync(ExperienceBooking booking, CancellationToken cancellationToken = default);
+
     Task<List<ExperienceBooking>> GetActiveBookingsOfSessionAsync(Guid sessionId, CancellationToken cancellationToken = default);
 
     /// <summary>

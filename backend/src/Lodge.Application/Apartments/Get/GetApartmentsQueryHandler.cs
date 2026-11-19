@@ -27,7 +27,7 @@ internal sealed class GetApartmentsQueryHandler(IDbConnectionFactory factory, Ap
             ORDER BY a.name, a.id
             LIMIT @PageSize OFFSET @Offset
             """,
-            new { request.PageSize, Offset = (request.Page - 1) * request.PageSize });
+            new { request.PageSize, Offset = (request.Page - 1L) * request.PageSize });
 
         return new PagedList<ApartmentResponse>(items, request.Page, request.PageSize, totalCount);
     }

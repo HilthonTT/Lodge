@@ -14,6 +14,7 @@ namespace Lodge.Application.Experiences;
 /// </summary>
 internal sealed class ExperiencePayments(
     IDbContext context,
+    IExperienceRepository experienceRepository,
     IPayoutRepository payoutRepository,
     IOptions<PaymentsOptions> paymentsOptions,
     IDateTimeProvider dateTimeProvider)
@@ -27,6 +28,10 @@ internal sealed class ExperiencePayments(
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(booking);
+
+        // Serialise with the hold-expiry job and cancellations (which lock the session), then re-read the booking.
+        await experienceRepository.GetSessionForUpdateAsync(booking.SessionId, cancellationToken);
+        await experienceRepository.ReloadBookingAsync(booking, cancellationToken);
 
         if (booking.Status is ExperienceBookingStatus.Confirmed or ExperienceBookingStatus.Completed)
         {

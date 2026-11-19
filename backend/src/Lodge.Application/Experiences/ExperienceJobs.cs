@@ -59,6 +59,12 @@ internal sealed partial class ExperienceJobs(
 
             ExperienceSession? session = await experienceRepository.GetSessionForUpdateAsync(booking.SessionId, cancellationToken);
 
+            if (session is not null)
+            {
+                // The hold was read before the lock: it may since have been paid or cancelled.
+                await experienceRepository.ReloadBookingAsync(booking, cancellationToken);
+            }
+
             if (session is not null && booking.ExpireHold(session, utcNow))
             {
                 released++;

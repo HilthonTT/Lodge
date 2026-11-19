@@ -27,6 +27,9 @@ internal sealed class CancelExperienceBookingCommandHandler(
             return Result.Failure(ExperienceSessionErrors.NotFound(booking.SessionId));
         }
 
+        // The booking was read before the lock: a concurrent cancel may already have released its seats.
+        await experienceRepository.ReloadBookingAsync(booking, cancellationToken);
+
         Result<decimal> cancelled = booking.Cancel(session, dateTimeProvider.UtcNow, byHost: false);
 
         if (cancelled.IsFailure)

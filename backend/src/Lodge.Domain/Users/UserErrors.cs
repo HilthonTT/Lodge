@@ -35,6 +35,10 @@ public static class UserErrors
         "User.VerificationEmailThrottled",
         "A verification e-mail was sent less than a minute ago. Please wait before requesting another one.");
 
+    public static Error InvalidCurrentPassword => Error.Problem(
+        "User.InvalidCurrentPassword",
+        "The current password is incorrect.");
+
     public static Error PasswordNotSet => Error.Problem(
         "User.PasswordNotSet",
         "This account has no password yet. Use 'Forgot password' to set one.");

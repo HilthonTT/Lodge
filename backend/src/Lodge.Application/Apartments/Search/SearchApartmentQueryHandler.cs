@@ -70,7 +70,7 @@ internal sealed class SearchApartmentQueryHandler(
             parameters);
 
         parameters.Add("PageSize", request.PageSize);
-        parameters.Add("Offset", (request.Page - 1) * request.PageSize);
+        parameters.Add("Offset", (request.Page - 1L) * request.PageSize);
 
         List<ApartmentResponse> items = await apartmentReader.QueryAsync(
             connection,

@@ -6,5 +6,6 @@ namespace Lodge.Application.Users.ChangePassword;
 /// Represents the change password command.
 /// </summary>
 /// <param name="UserId">The user identifier.</param>
-/// <param name="Password">The password.</param>
-public sealed record ChangePasswordCommand(Guid UserId, string Password) : ICommand;
+/// <param name="CurrentPassword">The current password.</param>
+/// <param name="Password">The new password.</param>
+public sealed record ChangePasswordCommand(Guid UserId, string CurrentPassword, string Password) : ICommand;

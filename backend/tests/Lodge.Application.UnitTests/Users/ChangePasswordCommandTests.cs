@@ -9,6 +9,7 @@ namespace Lodge.Application.UnitTests.Users;
 
 public class ChangePasswordCommandTests
 {
+    private const string CurrentPassword = "Curr3nt-Password";
     private const string NewPassword = "N3w-Password";
 
     private readonly User _user = User.Create(
@@ -40,9 +41,10 @@ public class ChangePasswordCommandTests
     public async Task Handle_Should_Fail_WhenNewPasswordEqualsCurrentPassword()
     {
         // Regression: salted hashes were compared, so "same password" was never detected.
+        _passwordHashChecker.HashesMatch("current-hash", CurrentPassword).Returns(true);
         _passwordHashChecker.HashesMatch("current-hash", NewPassword).Returns(true);
 
-        Result result = await _handler.Handle(new ChangePasswordCommand(_user.Id, NewPassword), default);
+        Result result = await _handler.Handle(new ChangePasswordCommand(_user.Id, CurrentPassword, NewPassword), default);
 
         result.Error.Should().Be(UserErrors.CannotChangePassword);
     }
@@ -50,18 +52,27 @@ public class ChangePasswordCommandTests
     [Fact]
     public async Task Handle_Should_ChangePassword_WhenPasswordIsNew()
     {
-        _passwordHashChecker.HashesMatch(Arg.Any<string>(), Arg.Any<string>()).Returns(false);
+        _passwordHashChecker.HashesMatch("current-hash", CurrentPassword).Returns(true);
 
-        Result result = await _handler.Handle(new ChangePasswordCommand(_user.Id, NewPassword), default);
+        Result result = await _handler.Handle(new ChangePasswordCommand(_user.Id, CurrentPassword, NewPassword), default);
 
         result.IsSuccess.Should().BeTrue();
         _user.VerifyPasswordHash(NewPassword, new HashEqualsChecker("new-hash")).Should().BeTrue();
     }
 
     [Fact]
+    public async Task Handle_Should_Fail_WhenCurrentPasswordIsWrong()
+    {
+        // Regression: a stolen access token was enough to set a new password.
+        Result result = await _handler.Handle(new ChangePasswordCommand(_user.Id, "wrong", NewPassword), default);
+
+        result.Error.Should().Be(UserErrors.InvalidCurrentPassword);
+    }
+
+    [Fact]
     public async Task Handle_Should_Fail_ForAnotherUser()
     {
-        Result result = await _handler.Handle(new ChangePasswordCommand(Guid.NewGuid(), NewPassword), default);
+        Result result = await _handler.Handle(new ChangePasswordCommand(Guid.NewGuid(), CurrentPassword, NewPassword), default);
 
         result.Error.Should().Be(UserErrors.InvalidPermissions);
     }

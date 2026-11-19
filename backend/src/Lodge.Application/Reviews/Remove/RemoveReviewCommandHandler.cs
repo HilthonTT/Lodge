@@ -35,6 +35,13 @@ internal sealed class RemoveReviewCommandHandler(
             return Result.Failure(UserErrors.InvalidPermissions);
         }
 
+        // Published reviews are permanent: deleting and re-posting would let a guest answer the host's review after
+        // reading it, defeating the double-blind period.
+        if (review.IsPublished)
+        {
+            return Result.Failure(ReviewErrors.AlreadyPublished);
+        }
+
         reviewRepository.Remove(review);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

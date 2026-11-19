@@ -97,7 +97,7 @@ internal static class NotificationQueries
             ORDER BY n.created_on_utc DESC, n.id
             LIMIT @PageSize OFFSET @Offset;
             """,
-            new { UserId = userId, PageSize = pageSize, Offset = (page - 1) * pageSize });
+            new { UserId = userId, PageSize = pageSize, Offset = (page - 1L) * pageSize });
 
         int totalCount = await grid.ReadSingleAsync<int>();
         List<NotificationResponse> items = [.. (await grid.ReadAsync<NotificationRow>()).Select(row => row.ToResponse())];

@@ -188,7 +188,7 @@ internal static class ExperienceQueries
                 MinPrice = query.MinPrice ?? 0,
                 MaxPrice = query.MaxPrice ?? 0,
                 query.PageSize,
-                Offset = (query.Page - 1) * query.PageSize,
+                Offset = (query.Page - 1L) * query.PageSize,
             });
 
         int totalCount = await grid.ReadSingleAsync<int>();
@@ -303,7 +303,7 @@ internal static class ExperienceQueries
             ORDER BY r.created_on_utc DESC, r.id
             LIMIT @PageSize OFFSET @Offset;
             """,
-            new { ExperienceId = experienceId, PageSize = pageSize, Offset = (page - 1) * pageSize });
+            new { ExperienceId = experienceId, PageSize = pageSize, Offset = (page - 1L) * pageSize });
 
         int totalCount = await grid.ReadSingleAsync<int>();
 
@@ -347,7 +347,7 @@ internal static class ExperienceQueries
             ORDER BY e.created_on_utc DESC, e.id
             LIMIT @PageSize OFFSET @Offset;
             """,
-            new { HostId = hostId, Now = utcNow, PageSize = pageSize, Offset = (page - 1) * pageSize });
+            new { HostId = hostId, Now = utcNow, PageSize = pageSize, Offset = (page - 1L) * pageSize });
 
         int totalCount = await grid.ReadSingleAsync<int>();
 
@@ -430,7 +430,7 @@ internal static class ExperienceQueries
                 HostId = hostId,
                 ExperienceId = experienceId ?? Guid.Empty,
                 PageSize = pageSize,
-                Offset = (page - 1) * pageSize,
+                Offset = (page - 1L) * pageSize,
             });
 
         int totalCount = await grid.ReadSingleAsync<int>();

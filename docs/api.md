@@ -193,7 +193,7 @@ The tables below list the important error codes for each section. The OpenAPI do
 | GET | `/users/auth` | User | — | The current user (`UserResponse`). |
 | GET | `/users/{userId}` | Self | — | `UserResponse`. |
 | PUT | `/users/{userId}` | Self | `{ firstName, lastName, imageId, bio? }` | `204`. `imageId` must be a file uploaded by the same user. A `null` `bio` leaves it unchanged, `""` clears it, and it can be at most 500 characters. |
-| PUT | `/users/{userId}/change-password` | Self | `{ password }` | `204`. Social-only accounts get `400 User.PasswordNotSet` and must use forgot-password. |
+| PUT | `/users/{userId}/change-password` | Self | `{ currentPassword, password }` | `204`. A wrong current password gives `400 User.InvalidCurrentPassword`. Social-only accounts get `400 User.PasswordNotSet` and must use forgot-password. |
 | GET | `/users/{userId}/profile` | — | — | Public profile; see below. |
 | POST | `/users/{userId}/avatar` | Self | multipart `file` | JPEG, PNG or WebP, at most 5 MB. The **file content** is checked (magic bytes), not just the declared type. Returns `200 { avatarUrl }`. |
 | DELETE | `/users/{userId}/avatar` | Self | — | `204`. |

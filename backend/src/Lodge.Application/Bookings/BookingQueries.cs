@@ -132,7 +132,7 @@ internal static class BookingQueries
                 HostId = hostId ?? Guid.Empty,
                 ApartmentId = apartmentId ?? Guid.Empty,
                 PageSize = pageSize,
-                Offset = (page - 1) * pageSize,
+                Offset = (page - 1L) * pageSize,
             });
 
         int totalCount = await grid.ReadSingleAsync<int>();

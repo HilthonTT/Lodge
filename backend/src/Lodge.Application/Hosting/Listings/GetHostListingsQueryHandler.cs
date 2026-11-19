@@ -81,7 +81,7 @@ internal sealed class GetHostListingsQueryHandler(
                 OwnerId = caller.Value.UserId,
                 Today = DateOnly.FromDateTime(dateTimeProvider.UtcNow).ToDateTime(TimeOnly.MinValue),
                 request.PageSize,
-                Offset = (request.Page - 1) * request.PageSize,
+                Offset = (request.Page - 1L) * request.PageSize,
             });
 
         int totalCount = await grid.ReadSingleAsync<int>();

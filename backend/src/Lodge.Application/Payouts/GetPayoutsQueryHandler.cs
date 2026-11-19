@@ -65,7 +65,7 @@ internal sealed class GetPayoutsQueryHandler(IHostAccess hostAccess, IDbConnecti
                 HostId = caller.Value.UserId,
                 Status = status ?? string.Empty,
                 request.PageSize,
-                Offset = (request.Page - 1) * request.PageSize,
+                Offset = (request.Page - 1L) * request.PageSize,
             });
 
         int totalCount = await grid.ReadSingleAsync<int>();

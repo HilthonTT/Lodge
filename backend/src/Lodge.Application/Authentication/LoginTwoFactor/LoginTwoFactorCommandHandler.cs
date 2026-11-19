@@ -15,7 +15,7 @@ internal sealed class LoginTwoFactorCommandHandler(
     ICacheService cacheService) : ICommandHandler<LoginTwoFactorCommand, TokenResponse>
 {
     /// <summary>
-    /// Failed attempts allowed per challenge token, so a 5-minute token cannot be used to brute-force codes.
+    /// Failed attempts allowed per user within the 10-minute window, so codes cannot be brute-forced.
     /// </summary>
     internal const int MaxAttempts = 5;
 
@@ -28,7 +28,8 @@ internal sealed class LoginTwoFactorCommandHandler(
             return Result.Failure<TokenResponse>(AuthenticationErrors.InvalidTwoFactorToken);
         }
 
-        string attemptsKey = $"two-factor-attempts:{challenge.TokenId}";
+        // Counted per user, not per challenge: otherwise logging in again would hand out a fresh set of attempts.
+        string attemptsKey = $"two-factor-attempts:{challenge.UserId}";
         int failedAttempts = await cacheService.GetAsync<int>(attemptsKey, cancellationToken);
 
         if (failedAttempts >= MaxAttempts)

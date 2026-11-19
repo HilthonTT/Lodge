@@ -47,6 +47,7 @@ public class StripeWebhookTests
             Substitute.For<IExperienceRepository>(),
             new ExperiencePayments(
                 Substitute.For<IDbContext>(),
+                Substitute.For<IExperienceRepository>(),
                 _payoutRepository,
                 Options.Create(new PaymentsOptions()),
                 Substitute.For<IDateTimeProvider>()),
