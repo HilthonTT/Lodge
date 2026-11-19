@@ -20,7 +20,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatDateRange, getDateFnsLocale, nightsBetween, today } from "@/lib/dates";
+import { earliestCheckIn, formatDateRange, getDateFnsLocale, nightsBetween, today } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import type { FlexibleStay } from "@/types/api";
 
@@ -170,7 +170,7 @@ function SearchForm({
                 numberOfMonths={2}
                 selected={range}
                 onSelect={setRange}
-                disabled={{ before: today() }}
+                disabled={{ before: earliestCheckIn() }}
                 startMonth={today()}
                 autoFocus={focus === "when"}
               />

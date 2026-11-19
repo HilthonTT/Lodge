@@ -59,6 +59,7 @@ export function useReserveBooking() {
     onSuccess: (_id, { body }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.bookings.byUser(body.userId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.apartments.bookedDates(body.apartmentId) });
+      void queryClient.invalidateQueries({ queryKey: ["apartments", body.apartmentId, "calendar"] });
     },
   });
 }
@@ -68,7 +69,15 @@ export function useCancelBooking() {
   const queryClient = useQueryClient();
   return useMutation<void, ApiError, string>({
     mutationFn: (bookingId) => bookingsApi.cancel(getBrowserHttp(), bookingId, requireUser(userId)),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.bookings.all }),
+    onSettled: (_data, _error, bookingId) => {
+      queryClient.removeQueries({ queryKey: queryKeys.bookings.cancellationQuote(bookingId) });
+      // Freed nights must show as available again on the listing.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.apartments.all });
+      return queryClient.invalidateQueries({
+        queryKey: queryKeys.bookings.all,
+        predicate: (query) => query.queryKey[3] !== "cancellation-quote",
+      });
+    },
   });
 }
 

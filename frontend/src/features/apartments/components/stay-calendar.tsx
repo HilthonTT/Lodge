@@ -5,7 +5,7 @@ import type { DateRange, DayButtonProps, Matcher } from "react-day-picker";
 
 import { Calendar } from "@/components/ui/calendar";
 import { useDisplayMoney } from "@/features/payments/currency-provider";
-import { addDays, nightsBetween, parseDateOnly, type StayRange, toDateOnly, today } from "@/lib/dates";
+import { addDays, earliestCheckIn, nightsBetween, parseDateOnly, type StayRange, toDateOnly, today } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import type { CalendarDay } from "@/types/api";
 
@@ -61,7 +61,7 @@ export function StayCalendar({
   }, [bookedDates, days, ownStay]);
 
   const disabled = useMemo<Matcher[]>(() => {
-    const past = { before: today() };
+    const past = { before: earliestCheckIn() };
     // Picking check-out: only check-in is set (react-day-picker may report it as a 0-night range).
     if (selected?.from && (!selected.to || nightsBetween(selected.from, selected.to) === 0)) {
       const from = selected.from;

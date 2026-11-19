@@ -81,8 +81,8 @@ export function useDeleteAvatar() {
 
 export function useChangePassword() {
   const { session } = useSession();
-  return useMutation<void, ApiError, string>({
-    mutationFn: (password) => usersApi.changePassword(getBrowserHttp(), requireUser(session?.userId), password),
+  return useMutation<void, ApiError, { currentPassword: string; password: string }>({
+    mutationFn: (body) => usersApi.changePassword(getBrowserHttp(), requireUser(session?.userId), body),
   });
 }
 

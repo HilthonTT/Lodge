@@ -31,7 +31,7 @@ import { useOwnReview } from "@/features/reviews/hooks/use-reviews";
 import { ReviewDialog } from "@/features/reviews/components/review-dialog";
 import { MessageBookingParty } from "@/features/messaging/components/message-booking-party";
 import { useApiErrorMessage } from "@/i18n/api-errors";
-import { formatDateRange, formatMediumDate, nightsBetween, parseDateOnly, today } from "@/lib/dates";
+import { formatDateRange, formatMediumDate, nightsBetween, parseDateOnly, today, utcToday } from "@/lib/dates";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { type Booking, BookingStatus } from "@/types/api";
@@ -63,8 +63,8 @@ export function BookingCard({
   const hasStarted = start ? start <= today() : true;
   const isPending = booking.status === BookingStatus.PendingApproval;
   const isUnpaid = isPending || booking.status === BookingStatus.Reserved;
-  // The API allows cancelling pending, reserved (unpaid) and confirmed bookings before check-in.
-  const canCancel = (isUnpaid || booking.status === BookingStatus.Confirmed) && !hasStarted;
+  // The API allows cancelling pending, reserved (unpaid) and confirmed bookings up to and including check-in day.
+  const canCancel = (isUnpaid || booking.status === BookingStatus.Confirmed) && (start ? start >= utcToday() : false);
   // Only requests and unpaid reservations can move; confirmed stays must be cancelled instead.
   const canChangeDates = isUnpaid && !hasStarted;
   const isActive = isUnpaid || booking.status === BookingStatus.Confirmed;

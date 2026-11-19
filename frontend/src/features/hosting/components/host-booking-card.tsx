@@ -23,7 +23,7 @@ import { RefundStatusBadge } from "@/features/bookings/components/refund-status"
 import { requestExpiresAt } from "@/features/bookings/components/request-countdown";
 import { MessageBookingParty } from "@/features/messaging/components/message-booking-party";
 import { useApiErrorMessage } from "@/i18n/api-errors";
-import { formatDateRange, nightsBetween, parseDateOnly, today } from "@/lib/dates";
+import { formatDateRange, nightsBetween, parseDateOnly, utcToday } from "@/lib/dates";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { type Booking, BookingStatus } from "@/types/api";
@@ -118,7 +118,7 @@ export function HostBookingCard({ booking, compact }: { booking: Booking; compac
   const end = parseDateOnly(booking.durationEnd);
   const nights = start && end ? nightsBetween(start, end) : 0;
   const pending = booking.status === BookingStatus.PendingApproval;
-  const canHostCancel = booking.status === BookingStatus.Confirmed && (start ? start > today() : false);
+  const canHostCancel = booking.status === BookingStatus.Confirmed && (start ? start >= utcToday() : false);
   const canReviewGuest = booking.status === BookingStatus.Completed && booking.canReview && !booking.hasGuestReview;
 
   return (

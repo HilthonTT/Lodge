@@ -686,6 +686,7 @@
       "password": "Mot de passe",
       "passwordValue": "Utilisez un mot de passe robuste que vous n’utilisez nulle part ailleurs.",
       "update": "Modifier",
+      "currentPassword": "Mot de passe actuel",
       "newPassword": "Nouveau mot de passe",
       "confirmPassword": "Confirmer le nouveau mot de passe",
       "updatePassword": "Modifier le mot de passe",

@@ -16,6 +16,7 @@ const ERROR_CODE_KEYS = {
   "User.EmailAlreadyVerified": "emailAlreadyVerified",
   "User.EmailNotVerified": "emailNotVerified",
   "User.PasswordNotSet": "passwordNotSet",
+  "User.InvalidCurrentPassword": "invalidPassword",
   "User.InvalidAvatar": "invalidAvatar",
   "User.AvatarTooLarge": "avatarTooLarge",
   "User.BioTooLong": "bioTooLong",

@@ -33,8 +33,17 @@ function getCurrencyFormatter(locale: string, currency: string, fractionDigits: 
  */
 export function formatPrice(amount: number, currency: string, locale: string) {
   const value = Number.isFinite(amount) ? Math.round(amount * 100) / 100 : 0;
-  const digits = Number.isInteger(value) ? 0 : 2;
-  return getCurrencyFormatter(locale, currency || "USD", digits).format(value);
+  const code = currency || "USD";
+  const digits = Number.isInteger(value) ? 0 : Math.min(2, currencyMinorDigits(locale, code));
+  return getCurrencyFormatter(locale, code, digits).format(value);
+}
+
+/** Decimal places the currency uses (2 for USD/EUR, 0 for JPY); 2 for an unknown code. */
+function currencyMinorDigits(locale: string, currency: string): number {
+  return (
+    getFormatter(locale, `cur:${currency}:default`, { style: "currency", currency }, { maximumFractionDigits: 2 })
+      .resolvedOptions().maximumFractionDigits ?? 2
+  );
 }
 
 /** Price rounded to whole units, for compact display (cards, headlines). */

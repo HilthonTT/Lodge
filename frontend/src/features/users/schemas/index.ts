@@ -7,6 +7,7 @@ export const createNameFormSchema = (t: ValidationTranslator) => z.object(create
 export const createPasswordFormSchema = (t: ValidationTranslator) =>
   z
     .object({
+      currentPassword: z.string().min(1, t("passwordRequired")),
       password: createPasswordSchema(t),
       confirmPassword: z.string().min(1, t("confirmPasswordRequired")),
     })

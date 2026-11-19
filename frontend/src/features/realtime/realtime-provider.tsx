@@ -142,6 +142,9 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
         if (disposed) return;
         attempt = 0;
         setStatus("connected");
+        // Polling stops once connected: fetch anything that arrived since the last poll or the previous connection.
+        void latest.current.queryClient.invalidateQueries({ queryKey: queryKeys.messaging.all });
+        void latest.current.queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
       } catch {
         // Hub unreachable (or the effect was cleaned up mid-negotiation): poll and retry later.
         if (disposed) return;

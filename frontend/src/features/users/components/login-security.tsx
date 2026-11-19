@@ -131,14 +131,14 @@ function PasswordForm({ onNoPassword }: { onNoPassword: () => void }) {
   const schema = useMemo(() => createPasswordFormSchema(tValidation), [tValidation]);
   const form = useForm<PasswordFormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { password: "", confirmPassword: "" },
+    defaultValues: { currentPassword: "", password: "", confirmPassword: "" },
     mode: "onTouched",
   });
   const { errors } = form.formState;
 
-  const onSubmit = form.handleSubmit(async ({ password }) => {
+  const onSubmit = form.handleSubmit(async ({ currentPassword, password }) => {
     try {
-      await changePassword.mutateAsync(password);
+      await changePassword.mutateAsync({ currentPassword, password });
       toast.success(t("settings.security.changed"), { description: t("settings.security.changedDescription") });
       signOut({ redirectTo: "/login" });
     } catch (error) {
@@ -149,6 +149,16 @@ function PasswordForm({ onNoPassword }: { onNoPassword: () => void }) {
   return (
     <form onSubmit={onSubmit} noValidate className="grid max-w-md gap-4">
       <FormError message={errorMessage(changePassword.error)} />
+      <Field id="current-password" label={t("settings.security.currentPassword")} error={errors.currentPassword?.message}>
+        {(control) => (
+          <PasswordInput
+            {...control}
+            {...form.register("currentPassword")}
+            autoComplete="current-password"
+            disabled={changePassword.isPending}
+          />
+        )}
+      </Field>
       <Field
         id="new-password"
         label={t("settings.security.newPassword")}

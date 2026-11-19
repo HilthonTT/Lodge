@@ -31,6 +31,22 @@ export function today(): Date {
   return startOfDay(new Date());
 }
 
+/** The API's "today" (it compares dates in UTC), as a local midnight Date. */
+export function utcToday(): Date {
+  const now = new Date();
+  return new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+}
+
+/**
+ * Earliest check-in the API accepts and the visitor still sees as today or later: the later of the local and
+ * UTC dates. West of UTC in the evening, the local "today" is already in the past for the API.
+ */
+export function earliestCheckIn(): Date {
+  const local = today();
+  const utc = utcToday();
+  return utc > local ? utc : local;
+}
+
 export function nightsBetween(start: Date, end: Date): number {
   return Math.max(0, differenceInCalendarDays(end, start));
 }
@@ -114,7 +130,7 @@ export function parseStayRange(
   const from = parseDateOnly(startDate);
   const to = parseDateOnly(endDate);
   if (!from || !to) return undefined;
-  if (from < today() || to <= from) return undefined;
+  if (from < earliestCheckIn() || to <= from) return undefined;
   return { from, to };
 }
 

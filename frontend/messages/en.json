@@ -686,6 +686,7 @@
       "password": "Password",
       "passwordValue": "Use a strong password you don't use anywhere else.",
       "update": "Update",
+      "currentPassword": "Current password",
       "newPassword": "New password",
       "confirmPassword": "Confirm new password",
       "updatePassword": "Update password",

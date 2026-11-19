@@ -21,8 +21,8 @@ export const usersApi = {
   update: (http: Http, userId: string, body: UpdateUserRequest) =>
     http.put<void>(userPath(userId), body).then(() => undefined),
 
-  changePassword: (http: Http, userId: string, password: string) =>
-    http.put<void>(`${userPath(userId)}/change-password`, { password }).then(() => undefined),
+  changePassword: (http: Http, userId: string, body: { currentPassword: string; password: string }) =>
+    http.put<void>(`${userPath(userId)}/change-password`, body).then(() => undefined),
 
   uploadAvatar: (http: Http, userId: string, file: File) => {
     const form = new FormData();

@@ -686,6 +686,7 @@
       "password": "Wachtwoord",
       "passwordValue": "Gebruik een sterk wachtwoord dat je nergens anders gebruikt.",
       "update": "Wijzigen",
+      "currentPassword": "Huidig wachtwoord",
       "newPassword": "Nieuw wachtwoord",
       "confirmPassword": "Bevestig je nieuwe wachtwoord",
       "updatePassword": "Wachtwoord wijzigen",
