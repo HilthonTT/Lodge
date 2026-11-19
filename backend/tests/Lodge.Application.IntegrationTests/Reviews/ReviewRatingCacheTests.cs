@@ -65,11 +65,13 @@ public class ReviewRatingCacheTests(IntegrationTestWebFactory factory) : BaseInt
         Result update = await Sender.Send(new UpdateReviewCommand(userId, created.Value, 5, "Actually lovely.", Categories));
         update.Error.Code.Should().Be("Review.AlreadyPublished");
 
-        (await Sender.Send(new RemoveReviewCommand(created.Value))).IsSuccess.Should().BeTrue();
+        // ...and permanent: removing one would let the guest re-post after reading the host's review.
+        Result remove = await Sender.Send(new RemoveReviewCommand(created.Value));
+        remove.Error.Code.Should().Be("Review.AlreadyPublished");
 
         ApartmentResponse afterRemove = (await Sender.Send(new GetApartmentByIdQuery(apartment.Id))).Value;
-        afterRemove.ReviewCount.Should().Be(before.ReviewCount);
-        afterRemove.AverageRating.Should().Be(before.AverageRating);
+        afterRemove.ReviewCount.Should().Be(afterPublish.ReviewCount);
+        afterRemove.AverageRating.Should().Be(afterPublish.AverageRating);
     }
 
     private async Task<Guid> AddCompletedBookingAsync(Apartment apartment, Guid userId)
