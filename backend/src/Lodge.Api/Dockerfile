@@ -15,12 +15,13 @@ COPY backend/src/Lodge.Domain/Lodge.Domain.csproj backend/src/Lodge.Domain/
 COPY backend/src/Lodge.Infrastructure/Lodge.Infrastructure.csproj backend/src/Lodge.Infrastructure/
 COPY backend/src/Lodge.Persistence/Lodge.Persistence.csproj backend/src/Lodge.Persistence/
 COPY backend/src/Lodge.Presentation/Lodge.Presentation.csproj backend/src/Lodge.Presentation/
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \
-    dotnet restore backend/src/Lodge.Api/Lodge.Api.csproj
+# No --mount=type=cache here: the restored packages must live in this layer. A cache mount is not exported to
+# the CI layer cache (type=gha), so a cached restore layer would come back with an empty package folder and the
+# --no-restore publish below would fail with NETSDK1064.
+RUN dotnet restore backend/src/Lodge.Api/Lodge.Api.csproj
 
 COPY backend/src/ backend/src/
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \
-    dotnet publish backend/src/Lodge.Api/Lodge.Api.csproj \
+RUN dotnet publish backend/src/Lodge.Api/Lodge.Api.csproj \
         --configuration $BUILD_CONFIGURATION \
         --no-restore \
         --output /app/publish \

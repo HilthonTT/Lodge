@@ -7,12 +7,12 @@ WORKDIR /src
 
 COPY global.json Directory.Build.props Directory.Packages.props .editorconfig ./
 COPY backend/src/Lodge.Gateway/Lodge.Gateway.csproj backend/src/Lodge.Gateway/
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \
-    dotnet restore backend/src/Lodge.Gateway/Lodge.Gateway.csproj
+# No --mount=type=cache: packages must live in this layer, since cache mounts are not exported to the CI layer
+# cache and a cached restore layer would leave --no-restore publish without packages (NETSDK1064).
+RUN dotnet restore backend/src/Lodge.Gateway/Lodge.Gateway.csproj
 
 COPY backend/src/Lodge.Gateway/ backend/src/Lodge.Gateway/
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \
-    dotnet publish backend/src/Lodge.Gateway/Lodge.Gateway.csproj \
+RUN dotnet publish backend/src/Lodge.Gateway/Lodge.Gateway.csproj \
         --configuration $BUILD_CONFIGURATION \
         --no-restore \
         --output /app/publish \
