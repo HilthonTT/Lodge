@@ -457,7 +457,7 @@ public sealed class ExperienceTests(FunctionalTestWebAppFactory factory) : Hosti
         await ShouldFailWithAsync(
             await guest.PostAsJsonAsync($"api/v1/experience-bookings/{bookingId}/review", new ExperienceReviewRequest(6, "Too good")),
             HttpStatusCode.BadRequest,
-            "Rating.Invalid");
+            "CreateReview.RatingMustBeBetweenOneAndFive");
 
         HttpResponseMessage reviewed = await guest.PostAsJsonAsync(
             $"api/v1/experience-bookings/{bookingId}/review",
