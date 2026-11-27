@@ -1,6 +1,8 @@
 using Lodge.Application.Abstractions.App;
 using Lodge.Application.Abstractions.Authentication;
 using Lodge.Application.Authentication.External;
+using Lodge.Application.Authentication.External.Challenge;
+using Lodge.Application.Authentication.External.Complete;
 using Lodge.Domain.Core.Primitives;
 using MediatR;
 using Microsoft.AspNetCore.Builder;

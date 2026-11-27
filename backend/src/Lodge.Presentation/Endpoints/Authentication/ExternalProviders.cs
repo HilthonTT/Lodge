@@ -1,4 +1,5 @@
 using Lodge.Application.Authentication.External;
+using Lodge.Application.Authentication.External.GetProviders;
 using Lodge.Contracts.Authentication;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Presentation.Extensions;

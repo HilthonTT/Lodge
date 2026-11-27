@@ -1,4 +1,10 @@
 using Lodge.Application.Notifications;
+using Lodge.Application.Notifications.Get;
+using Lodge.Application.Notifications.GetPreferences;
+using Lodge.Application.Notifications.GetUnreadCount;
+using Lodge.Application.Notifications.MarkAllRead;
+using Lodge.Application.Notifications.MarkRead;
+using Lodge.Application.Notifications.UpdatePreferences;
 using Lodge.Contracts.Common;
 using Lodge.Contracts.Messaging;
 using Lodge.Contracts.Notifications;

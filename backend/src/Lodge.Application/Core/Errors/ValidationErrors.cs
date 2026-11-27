@@ -183,12 +183,9 @@ internal static class ValidationErrors
         internal static readonly Error BookingIdIsRequired = Error.Validation(
             "CreateReview.BookingIdIsRequired", "The booking identifier is required");
 
-        
         internal static readonly Error RatingMustBeBetweenOneAndFive = Error.Validation(
             "CreateReview.RatingMustBeBetweenOneAndFive",
             "The rating must be between 1 and 5");
-
-        
 
         internal static readonly Error CommentIsRequired = Error.Validation(
             "CreateReview.CommentIsRequired", "The comment is required");
@@ -208,12 +205,9 @@ internal static class ValidationErrors
         internal static readonly Error UserIdIsRequired = Error.Validation(
            "UpdateReview.UserIdIsRequired", "The user identifier is required");
 
-        
         internal static readonly Error RatingMustBeBetweenOneAndFive = Error.Validation(
             "UpdateReview.RatingMustBeBetweenOneAndFive",
             "The rating must be between 1 and 5");
-
-        
 
         internal static readonly Error CommentIsRequired = Error.Validation(
             "UpdateReview.CommentIsRequired", "The comment is required");
@@ -364,5 +358,185 @@ internal static class ValidationErrors
         internal static readonly Error InvalidQuery = Error.Validation(
             "Locations.InvalidQuery",
             "The search text must be between 2 and 100 characters");
+    }
+
+    /// <summary>
+    /// Contains the experience errors.
+    /// </summary>
+    internal static class Experiences
+    {
+        internal static readonly Error ExperienceIdIsRequired = Error.Validation(
+            "Experiences.ExperienceIdIsRequired", "The experience identifier is required");
+
+        internal static readonly Error ExperienceBookingIdIsRequired = Error.Validation(
+            "Experiences.ExperienceBookingIdIsRequired", "The experience booking identifier is required");
+
+        internal static readonly Error SessionIdIsRequired = Error.Validation(
+            "Experiences.SessionIdIsRequired", "The session identifier is required");
+
+        internal static readonly Error RequestIdIsRequired = Error.Validation(
+            "Experiences.RequestIdIsRequired", "The request identifier is required");
+
+        internal static readonly Error UserIdIsRequired = Error.Validation(
+            "Experiences.UserIdIsRequired", "The user identifier is required");
+
+        internal static readonly Error ExperienceIsRequired = Error.Validation(
+            "Experiences.ExperienceIsRequired", "The experience details are required");
+
+        internal static readonly Error SessionsAreRequired = Error.Validation(
+            "Experiences.SessionsAreRequired", "The sessions are required");
+    }
+
+    /// <summary>
+    /// Contains the apartment errors.
+    /// </summary>
+    internal static class Apartments
+    {
+        internal static readonly Error ApartmentIdIsRequired = Error.Validation(
+            "Apartments.ApartmentIdIsRequired", "The apartment identifier is required");
+    }
+
+    /// <summary>
+    /// Contains the booking errors.
+    /// </summary>
+    internal static class Bookings
+    {
+        internal static readonly Error BookingIdIsRequired = Error.Validation(
+            "Bookings.BookingIdIsRequired", "The booking identifier is required");
+
+        internal static readonly Error UserIdIsRequired = Error.Validation(
+            "Bookings.UserIdIsRequired", "The user identifier is required");
+    }
+
+    /// <summary>
+    /// Contains the file errors.
+    /// </summary>
+    internal static class Files
+    {
+        internal static readonly Error FileIdIsRequired = Error.Validation(
+            "Files.FileIdIsRequired", "The file identifier is required");
+
+        internal static readonly Error UserIdIsRequired = Error.Validation(
+            "Files.UserIdIsRequired", "The user identifier is required");
+    }
+
+    /// <summary>
+    /// Contains the hosting errors.
+    /// </summary>
+    internal static class Hosting
+    {
+        internal static readonly Error BookingIdIsRequired = Error.Validation(
+            "Hosting.BookingIdIsRequired", "The booking identifier is required");
+
+        internal static readonly Error ApartmentIdIsRequired = Error.Validation(
+            "Hosting.ApartmentIdIsRequired", "The listing identifier is required");
+
+        internal static readonly Error ReviewIdIsRequired = Error.Validation(
+            "Hosting.ReviewIdIsRequired", "The review identifier is required");
+    }
+
+    /// <summary>
+    /// Contains the messaging errors.
+    /// </summary>
+    internal static class Messaging
+    {
+        internal static readonly Error ConversationIdIsRequired = Error.Validation(
+            "Messaging.ConversationIdIsRequired", "The conversation identifier is required");
+
+        internal static readonly Error ApartmentIdIsRequired = Error.Validation(
+            "Messaging.ApartmentIdIsRequired", "The apartment identifier is required");
+    }
+
+    /// <summary>
+    /// Contains the notification errors.
+    /// </summary>
+    internal static class Notifications
+    {
+        internal static readonly Error NotificationIdIsRequired = Error.Validation(
+            "Notifications.NotificationIdIsRequired", "The notification identifier is required");
+
+        internal static readonly Error UserIdIsRequired = Error.Validation(
+            "Notifications.UserIdIsRequired", "The user identifier is required");
+    }
+
+    /// <summary>
+    /// Contains the payment errors.
+    /// </summary>
+    internal static class Payments
+    {
+        internal static readonly Error BookingIdIsRequired = Error.Validation(
+            "Payments.BookingIdIsRequired", "The booking identifier is required");
+    }
+
+    /// <summary>
+    /// Contains the wishlist errors.
+    /// </summary>
+    internal static class Wishlists
+    {
+        internal static readonly Error WishlistIdIsRequired = Error.Validation(
+            "Wishlists.WishlistIdIsRequired", "The wishlist identifier is required");
+
+        internal static readonly Error ApartmentIdIsRequired = Error.Validation(
+            "Wishlists.ApartmentIdIsRequired", "The apartment identifier is required");
+    }
+
+    /// <summary>
+    /// Contains the user errors.
+    /// </summary>
+    internal static class Users
+    {
+        internal static readonly Error UserIdIsRequired = Error.Validation(
+            "Users.UserIdIsRequired", "The user identifier is required");
+    }
+
+    /// <summary>
+    /// Contains the two-factor errors.
+    /// </summary>
+    internal static class TwoFactor
+    {
+        internal static readonly Error UserIdIsRequired = Error.Validation(
+            "TwoFactor.UserIdIsRequired", "The user identifier is required");
+
+        internal static readonly Error CodeIsRequired = Error.Validation(
+            "TwoFactor.CodeIsRequired", "The verification code is required");
+    }
+
+    /// <summary>
+    /// Contains the reset password errors.
+    /// </summary>
+    internal static class ResetPassword
+    {
+        internal static readonly Error TokenIsRequired = Error.Validation(
+            "ResetPassword.TokenIsRequired", "The reset token is required");
+
+        internal static readonly Error PasswordIsRequired = Error.Validation(
+            "ResetPassword.PasswordIsRequired", "The password is required");
+    }
+
+    /// <summary>
+    /// Contains the verify email errors.
+    /// </summary>
+    internal static class VerifyEmail
+    {
+        internal static readonly Error TokenIsRequired = Error.Validation(
+            "VerifyEmail.TokenIsRequired", "The verification token is required");
+    }
+
+    /// <summary>
+    /// Contains the external login errors.
+    /// </summary>
+    internal static class ExternalLogin
+    {
+        internal static readonly Error ProviderIsRequired = Error.Validation(
+            "ExternalLogin.ProviderIsRequired", "The provider is required");
+    }
+
+    /// <summary>
+    /// Contains the Stripe webhook errors.
+    /// </summary>
+    internal static class StripeWebhook
+    {
+        internal static readonly Error PayloadIsRequired = Error.Validation(
+            "StripeWebhook.PayloadIsRequired", "The payload is required");
     }
 }

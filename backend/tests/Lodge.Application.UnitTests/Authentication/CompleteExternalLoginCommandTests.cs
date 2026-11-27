@@ -1,5 +1,6 @@
 using Lodge.Application.Abstractions.Authentication;
 using Lodge.Application.Authentication.External;
+using Lodge.Application.Authentication.External.Complete;
 using Lodge.Application.Core.Errors;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Domain.Users;

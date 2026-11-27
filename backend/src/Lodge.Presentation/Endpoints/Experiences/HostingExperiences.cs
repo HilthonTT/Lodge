@@ -1,4 +1,14 @@
 using Lodge.Application.Experiences;
+using Lodge.Application.Experiences.Create;
+using Lodge.Application.Experiences.CreateSessions;
+using Lodge.Application.Experiences.Delete;
+using Lodge.Application.Experiences.DeleteSession;
+using Lodge.Application.Experiences.GetHostBookings;
+using Lodge.Application.Experiences.GetHostExperience;
+using Lodge.Application.Experiences.GetHostExperiences;
+using Lodge.Application.Experiences.GetHostSessions;
+using Lodge.Application.Experiences.SetStatus;
+using Lodge.Application.Experiences.Update;
 using Lodge.Contracts.Common;
 using Lodge.Contracts.Experiences;
 using Lodge.Domain.Core.Primitives;

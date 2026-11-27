@@ -1,5 +1,12 @@
 using Lodge.Application.Hosting.Listings;
+using Lodge.Application.Hosting.Listings.Create;
+using Lodge.Application.Hosting.Listings.Delete;
+using Lodge.Application.Hosting.Listings.Get;
+using Lodge.Application.Hosting.Listings.GetById;
+using Lodge.Application.Hosting.Listings.SetStatus;
+using Lodge.Application.Hosting.Listings.Update;
 using Lodge.Application.Hosting.Photos;
+using Lodge.Application.Hosting.Photos.Upload;
 using Lodge.Contracts.Apartments;
 using Lodge.Contracts.Common;
 using Lodge.Contracts.Hosting;

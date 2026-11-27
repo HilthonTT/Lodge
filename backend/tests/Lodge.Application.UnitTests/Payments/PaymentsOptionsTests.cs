@@ -1,4 +1,5 @@
 using Lodge.Application.Payments;
+using Lodge.Application.Payments.GetCurrencies;
 using Lodge.Contracts.Payments;
 using Lodge.Domain.Apartments;
 using Lodge.Domain.Bookings;

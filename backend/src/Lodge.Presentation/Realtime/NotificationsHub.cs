@@ -1,4 +1,5 @@
 using Lodge.Application.Notifications;
+using Lodge.Application.Notifications.GetUnreadCounts;
 using Lodge.Contracts.Notifications;
 using Lodge.Domain.Core.Primitives;
 using MediatR;

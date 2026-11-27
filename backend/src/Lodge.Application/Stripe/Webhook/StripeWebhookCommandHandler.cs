@@ -1,6 +1,7 @@
 ﻿using Lodge.Application.Abstractions.Messaging;
 using Lodge.Application.Core.Errors;
 using Lodge.Application.Experiences;
+using Lodge.Application.Experiences.Checkout;
 using Lodge.Application.Payments;
 using Lodge.Application.Stripe.Checkout;
 using Lodge.Domain.Bookings;

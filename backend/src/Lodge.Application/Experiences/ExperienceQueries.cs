@@ -1,6 +1,7 @@
 using System.Data;
 using Dapper;
 using Lodge.Application.Abstractions.App;
+using Lodge.Application.Experiences.Search;
 using Lodge.Contracts.Experiences;
 using Lodge.Domain.Experiences;
 

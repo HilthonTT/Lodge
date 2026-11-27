@@ -1,5 +1,6 @@
 ﻿using Lodge.Application.Apartments.GetById;
 using Lodge.Application.Hosting.Bookings;
+using Lodge.Application.Hosting.Bookings.CreateGuestReview;
 using Lodge.Application.IntegrationTests.Abstractions;
 using Lodge.Application.Reviews.Create;
 using Lodge.Application.Reviews.Remove;

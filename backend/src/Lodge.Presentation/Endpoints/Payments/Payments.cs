@@ -1,4 +1,7 @@
 using Lodge.Application.Payments;
+using Lodge.Application.Payments.CompleteSimulated;
+using Lodge.Application.Payments.GetConfig;
+using Lodge.Application.Payments.GetCurrencies;
 using Lodge.Contracts.Payments;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Presentation.Extensions;

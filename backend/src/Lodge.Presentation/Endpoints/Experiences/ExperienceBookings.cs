@@ -1,4 +1,11 @@
 using Lodge.Application.Experiences;
+using Lodge.Application.Experiences.Cancel;
+using Lodge.Application.Experiences.Checkout;
+using Lodge.Application.Experiences.Complete;
+using Lodge.Application.Experiences.CreateReview;
+using Lodge.Application.Experiences.GetBooking;
+using Lodge.Application.Experiences.GetUserBookings;
+using Lodge.Application.Experiences.Reserve;
 using Lodge.Contracts.Common;
 using Lodge.Contracts.Experiences;
 using Lodge.Contracts.Payments;

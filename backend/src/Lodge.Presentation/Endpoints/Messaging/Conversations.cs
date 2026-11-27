@@ -1,4 +1,11 @@
 using Lodge.Application.Messaging;
+using Lodge.Application.Messaging.GetConversationById;
+using Lodge.Application.Messaging.GetConversations;
+using Lodge.Application.Messaging.GetMessages;
+using Lodge.Application.Messaging.GetUnreadCount;
+using Lodge.Application.Messaging.MarkRead;
+using Lodge.Application.Messaging.Send;
+using Lodge.Application.Messaging.StartConversation;
 using Lodge.Contracts.Common;
 using Lodge.Contracts.Messaging;
 using Lodge.Domain.Core.Primitives;

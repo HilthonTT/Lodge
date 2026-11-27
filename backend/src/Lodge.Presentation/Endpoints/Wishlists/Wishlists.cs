@@ -1,4 +1,12 @@
 using Lodge.Application.Wishlists;
+using Lodge.Application.Wishlists.AddItem;
+using Lodge.Application.Wishlists.Create;
+using Lodge.Application.Wishlists.Delete;
+using Lodge.Application.Wishlists.Get;
+using Lodge.Application.Wishlists.GetById;
+using Lodge.Application.Wishlists.GetSavedApartmentIds;
+using Lodge.Application.Wishlists.RemoveItem;
+using Lodge.Application.Wishlists.Rename;
 using Lodge.Contracts.Common;
 using Lodge.Contracts.Wishlists;
 using Lodge.Domain.Core.Primitives;

@@ -1,4 +1,5 @@
 using Lodge.Application.Locations;
+using Lodge.Application.Locations.Suggest;
 using Lodge.Contracts.Apartments;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Presentation.Extensions;

@@ -1,5 +1,9 @@
 using System.Security.Claims;
 using Lodge.Application.Experiences;
+using Lodge.Application.Experiences.GetById;
+using Lodge.Application.Experiences.GetReviews;
+using Lodge.Application.Experiences.GetSessions;
+using Lodge.Application.Experiences.Search;
 using Lodge.Contracts.Common;
 using Lodge.Contracts.Experiences;
 using Lodge.Domain.Core.Primitives;

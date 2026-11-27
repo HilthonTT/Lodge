@@ -1,4 +1,6 @@
 using Lodge.Application.Hosting.Calendar;
+using Lodge.Application.Hosting.Calendar.Get;
+using Lodge.Application.Hosting.Calendar.Update;
 using Lodge.Contracts.Apartments;
 using Lodge.Contracts.Hosting;
 using Lodge.Domain.Core.Primitives;

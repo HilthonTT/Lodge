@@ -3,6 +3,7 @@ using Lodge.Application.Abstractions.Assets;
 using Lodge.Application.Apartments.Search;
 using Lodge.Application.Bookings;
 using Lodge.Application.Hosting.Calendar;
+using Lodge.Application.Hosting.Calendar.Update;
 using Lodge.Application.Hosting.Listings;
 using Lodge.Contracts.Bookings;
 using Lodge.Contracts.Hosting;

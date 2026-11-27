@@ -1,4 +1,5 @@
 using Lodge.Application.Bookings.Cancel;
+using Lodge.Application.Bookings.GetCancellationQuote;
 using Lodge.Contracts.Bookings;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Presentation.Extensions;

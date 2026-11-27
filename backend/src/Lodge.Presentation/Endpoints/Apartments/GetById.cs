@@ -1,5 +1,6 @@
 ﻿using Lodge.Application.Apartments.GetById;
 using Lodge.Application.Hosting.Listings;
+using Lodge.Application.Hosting.Listings.GetById;
 using Lodge.Contracts.Apartments;
 using Lodge.Domain.Core.Primitives;
 using Lodge.Presentation.Extensions;

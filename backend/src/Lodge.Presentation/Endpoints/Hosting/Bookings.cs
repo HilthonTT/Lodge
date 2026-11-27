@@ -1,4 +1,9 @@
 using Lodge.Application.Hosting.Bookings;
+using Lodge.Application.Hosting.Bookings.Accept;
+using Lodge.Application.Hosting.Bookings.Cancel;
+using Lodge.Application.Hosting.Bookings.CreateGuestReview;
+using Lodge.Application.Hosting.Bookings.Decline;
+using Lodge.Application.Hosting.Bookings.Get;
 using Lodge.Application.Hosting.Summary;
 using Lodge.Contracts.Bookings;
 using Lodge.Contracts.Common;
